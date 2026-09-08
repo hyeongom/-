@@ -1,9 +1,9 @@
-<index.html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>무인도 생존 낚시</title>
+    <title>열 바다의 항해자</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='52' font-size='52'%3E%F0%9F%8F%9D%EF%B8%8F%3C/text%3E%3C/svg%3E">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -819,18 +819,22 @@ window.IslandRemodel = (() => {
         const solid = [], luminous = [], obstacles = [], paths = [];
         const placements = [];
         const districts = [];
+        let houseFrame = null;
+        const turnPoint=(x,z,cx,cz,angle)=>({x:cx+Math.cos(angle)*(x-cx)+Math.sin(angle)*(z-cz),z:cz-Math.sin(angle)*(x-cx)+Math.cos(angle)*(z-cz)});
         let landmarkMode = false;
         let landmarkBase = 0;
-        const monumentScale = 1 + level * .09;
+        const monumentScale = 1 + level * .018;
         let seed = 2903 + level * 7919;
         const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
         const height = (x, z) => {
+            if(houseFrame)({x,z}=turnPoint(x,z,houseFrame.x,houseFrame.z,houseFrame.yaw));
             if (!landmarkMode) return ground(route.x + x, route.z + z);
             const actual = ground(route.x + x * monumentScale, route.z + backZ + (z - backZ) * monumentScale);
             return landmarkBase + (actual - landmarkBase) / monumentScale;
         };
         const blocked = (x, z, padding = 0) => reserved(route.x + x, route.z + z, padding);
         function block(x, y, z, w, h, d, color, yaw = 0, glow = false, tilt = 0) {
+            if(houseFrame){({x,z}=turnPoint(x,z,houseFrame.x,houseFrame.z,houseFrame.yaw));yaw+=houseFrame.yaw;}
             if (landmarkMode && level > 0) {
                 const scaledX = x * monumentScale, scaledZ = backZ + (z - backZ) * monumentScale;
                 // One rigid transform per landmark: never move roof/wall blocks independently.
@@ -843,7 +847,20 @@ window.IslandRemodel = (() => {
             if (landmarkMode && level > 0) { x *= monumentScale; z = backZ + (z - backZ) * monumentScale; radius *= monumentScale; }
             obstacles.push({ x: route.x + x, z: route.z + z, radius, height:height*(landmarkMode?monumentScale:1), islandIndex: level });
         }
-        function path(ax, az, bx, bz, width = 3.6) {
+        function path(ax, az, bx, bz, width = 3.6, depth = 0) {
+            // Roads built after houses must go around them too, not only the other way round.
+            const lengthSq=(bx-ax)**2+(bz-az)**2;
+            if(lengthSq<.01)return;
+            for(const home of placements){
+                const radius=Math.hypot(home.w,home.d)/2+width/2+1;
+                const t=Math.max(0,Math.min(1,((home.x-ax)*(bx-ax)+(home.z-az)*(bz-az))/lengthSq));
+                if(Math.hypot(home.x-ax-(bx-ax)*t,home.z-az-(bz-az)*t)>=radius)continue;
+                if(depth>=10||Math.hypot(home.x-ax,home.z-az)<radius||Math.hypot(home.x-bx,home.z-bz)<radius)return;
+                const length=Math.sqrt(lengthSq),nx=-(bz-az)/length,nz=(bx-ax)/length;
+                const side=(home.x-ax)*nx+(home.z-az)*nz>0?-1:1;
+                const mx=home.x+nx*side*radius*1.6,mz=home.z+nz*side*radius*1.6;
+                path(ax,az,mx,mz,width,depth+1);path(mx,mz,bx,bz,width,depth+1);return;
+            }
             const length = Math.hypot(bx - ax, bz - az), count = Math.ceil(length / .8);
             const yaw = Math.atan2(bx - ax, bz - az);
             for (let n = 0; n <= count; n++) {
@@ -852,7 +869,7 @@ window.IslandRemodel = (() => {
                 if (y < -.1) continue;
                 block(x, y + .015, z, width, .09, .86, n % 4 ? p.stone : p.trim, yaw);
                 paths.push({ x, z, width });
-                if (n % 3 === 0) {
+                if (n % 6 === 0) {
                     [-1, 1].forEach(side => {
                         const xx = x + Math.cos(yaw) * side * (width / 2 + .22), zz = z - Math.sin(yaw) * side * (width / 2 + .22);
                         block(xx, height(xx, zz) + .12, zz, .32, .24, .7, p.trim, yaw);
@@ -889,10 +906,13 @@ window.IslandRemodel = (() => {
                 }
             }
         }
-        function footprint(x,z,w,d) {
+        function footprint(x,z,w,d,angle=0) {
             const samples=[];
             const nx=Math.ceil(w),nz=Math.ceil(d);
-            for(let i=0;i<=nx;i++)for(let j=0;j<=nz;j++)samples.push(height(x-w/2+w*i/nx,z-d/2+d*j/nz));
+            for(let i=0;i<=nx;i++)for(let j=0;j<=nz;j++){
+                const point=turnPoint(x-w/2+w*i/nx,z-d/2+d*j/nz,x,z,angle);
+                samples.push(height(point.x,point.z));
+            }
             return {low:Math.min(...samples),high:Math.max(...samples)};
         }
         function foundation(x,z,w,d,floorY) {
@@ -906,18 +926,21 @@ window.IslandRemodel = (() => {
         function building(x, z, scale = 1, floors = 1) {
             const w = 5.6 * scale, d = 4.8 * scale;
             const requestedX=x,requestedZ=z;
-            let plot=null;
+            let plot=null,facing=0;
             for(let attempt=0;attempt<49;attempt++) {
                 const angle=attempt*2.4,radius=attempt===0?0:3+Math.floor((attempt-1)/8)*3;
                 const cx=requestedX+Math.cos(angle)*radius,cz=requestedZ+Math.sin(angle)*radius;
-                const sample=footprint(cx,cz,w+.4,d+.4);
+                const nearest=paths.reduce((best,p)=>!best||Math.hypot(p.x-cx,p.z-cz)<Math.hypot(best.x-cx,best.z-cz)?p:best,null);
+                const yaw=nearest?Math.atan2(cx-nearest.x,cz-nearest.z):Math.atan2(cx,cz);
+                const sample=footprint(cx,cz,w+.4,d+.4,yaw);
                 if(sample.low<.1 || sample.high-sample.low>1.1 || blocked(cx,cz,Math.hypot(w,d)/2))continue;
                 if(paths.some(point=>Math.hypot(point.x-cx,point.z-cz)<point.width/2+Math.hypot(w,d)/2+.4))continue;
                 if(obstacles.some(point=>Math.hypot(point.x-route.x-cx,point.z-route.z-cz)<point.radius+Math.hypot(w,d)/2+1))continue;
-                x=cx;z=cz;plot=sample;break;
+                x=cx;z=cz;plot=sample;facing=yaw;break;
             }
             if(!plot)return;
             const floorY = plot.high + .08;
+            houseFrame={x,z,yaw:facing};
             const h = 3.25 * floors;
             foundation(x,z,w,d,floorY);
             block(x, floorY + h / 2, z, w, h, d, p.wall);
@@ -932,9 +955,10 @@ window.IslandRemodel = (() => {
                 }
             }
             block(x, floorY + 1, z - d / 2 - .07, 1.1, 2, .15, p.stone);
-            roof(x, floorY + h + .1, z, w + 1.1, d + 1.3, level >= 8 ? 2 : 1);
+            roof(x, floorY + h + .1, z, w + 1.1, d + 1.3, 1);
             obstacle(x, z, Math.hypot(w, d) * .52);
-            placements.push({ kind: 'house', x, z, floorY, low:plot.low, high:plot.high, w, d });
+            const entry=turnPoint(x,z-Math.hypot(w,d)/2-3,x,z,facing);
+            placements.push({ kind: 'house', x, z, yaw:facing,entryX:entry.x,entryZ:entry.z, floorY, low:plot.low, high:plot.high, w, d });
             const entryZ=z-d/2;
             const stepCount=Math.max(1,Math.ceil((floorY-height(x,entryZ-2))/.2));
             for(let step=0;step<stepCount;step++) {
@@ -942,7 +966,7 @@ window.IslandRemodel = (() => {
                 const top=Math.max(height(x,zz)+.04,floorY-step*.2);
                 foundation(x,zz,1.5,.42,top);
             }
-            if(x!==requestedX||z!==requestedZ)path(requestedX,requestedZ-d/2-2,x,entryZ-stepCount*.4,1.8);
+            houseFrame=null;
         }
         function tree(x, z, size) {
             const y = height(x, z);
@@ -1027,7 +1051,7 @@ window.IslandRemodel = (() => {
             }
             const nearNav=plan.trail.reduce((best,p)=>Math.hypot(p[0]-plan.nav[0],p[1]-plan.nav[1])<Math.hypot(best[0]-plan.nav[0],best[1]-plan.nav[1])?p:best);
             path(...nearNav,plan.nav[0],plan.nav[1]-2.2,2.6);
-            if([2,8,9].includes(level))gate(...plan.trail[1],9,4+level*.4);
+            if([2,8,9].includes(level))gate(...plan.trail[1],7,3.5);
         } else {
             path(8, -44, 4, -31, 3);
             path(4, -31, -8, -23, 3);
@@ -1067,10 +1091,31 @@ window.IslandRemodel = (() => {
                     building(bx,bz,.8+level*.025,level>=6&&n%2?2:1);
                     if(placements.length>before){
                         const home=placements[placements.length-1];
-                        path(cx,cz,home.x,home.z-home.d/2-1,2);
+                        path(cx,cz,home.entryX,home.entryZ,2);
                     }
                 }
                 if(!blocked(cx-4,cz-3,2))lamp(cx-4,cz-3,3);
+                // Low, inhabitable garden clearings instead of another monumental centerpiece.
+                const gardenX=cx+7,gardenZ=cz-10;
+                if(!blocked(gardenX,gardenZ,4)&&height(gardenX,gardenZ)>.3
+                    &&!paths.some(pt=>Math.hypot(pt.x-gardenX,pt.z-gardenZ)<pt.width/2+4)
+                    &&!obstacles.some(o=>Math.hypot(o.x-route.x-gardenX,o.z-route.z-gardenZ)<o.radius+4)){
+                    const y=footprint(gardenX,gardenZ,3.4,2.8).high;
+                    block(gardenX,y+.65,gardenZ,2.4,.14,1.15,p.trim);
+                    for(const side of [-1,1]){
+                        block(gardenX+side*.8,y+.3,gardenZ,.16,.6,.9,p.stone);
+                        block(gardenX,y+.34,gardenZ+side*1.2,2.7,.12,.5,p.roof);
+                    }
+                    obstacle(gardenX,gardenZ,2,1.2);
+                    for(let n=0;n<60;n++){
+                        const a=n*2.4,r=3+random()*6,px=gardenX+Math.cos(a)*r,pz=gardenZ+Math.sin(a)*r;
+                        if(blocked(px,pz,1)||height(px,pz)<.3||paths.some(pt=>Math.hypot(pt.x-px,pt.z-pz)<pt.width/2+1)
+                            ||obstacles.some(o=>Math.hypot(o.x-route.x-px,o.z-route.z-pz)<o.radius+1))continue;
+                        const py=height(px,pz),color=[p.flower,0xffe5af,0xf6eee4][n%3];
+                        block(px,py+.17,pz,.09,.34,.09,p.leaf);
+                        block(px,py+.35,pz,.3,.12,.3,color,n);
+                    }
+                }
                 for(let n=0;n<8;n++){
                     const angle=n*2.4,x=cx+Math.cos(angle)*22,z=cz+Math.sin(angle)*22;
                     if(!blocked(x,z,2)&&height(x,z)>.3&&!paths.some(pt=>Math.hypot(pt.x-x,pt.z-z)<3)){
@@ -1082,7 +1127,7 @@ window.IslandRemodel = (() => {
 
         if (level === 8 || level === 9) {
             // Successive harbors gain increasingly elaborate tiled courtyards.
-            const rows = 13 + level * 2, centerZ = -route.rz * .1;
+            const rows = 12, centerZ = -route.rz * .1;
             for (let row = -rows; row <= rows; row++) {
                 for (let col = -rows; col <= rows; col++) {
                     const x = col * .48, z = centerZ + row * .48;
@@ -1146,13 +1191,13 @@ window.IslandRemodel = (() => {
                 }
             }
         } else if (level === 2) {
-            gate(0, backZ - 8, 12, 7);
-            tower(-10, backZ + 5, 8, 4);
-            tower(10, backZ + 5, 8, 4);
+            gate(-5, backZ - 8, 8, 4);
+            tower(-10, backZ + 5, 4.5, 4);
+            for(let n=0;n<18;n++)tree(8+Math.cos(n*2.4)*11,backZ+Math.sin(n*2.4)*9,1.3);
         } else if (level === 3) {
-            tower(-12, backZ, 12 + level, 5);
-            tower(12, backZ, 12 + level, 5);
-            const y = Math.max(height(-12, backZ), height(12, backZ)) + 10;
+            tower(-12, backZ, 5, 5);
+            tower(12, backZ, 4, 4);
+            const y = Math.max(height(-12, backZ), height(12, backZ)) + 3;
             for (let n = 0; n < 30; n++) block(-12 + n * .83, y - Math.sin(n / 29 * Math.PI), backZ, .85, .3, 3, p.trim);
             for (let fall = 0; fall < (level === 5 ? 3 : 2); fall++) {
                 const x = -6 + fall * 6;
@@ -1181,40 +1226,33 @@ window.IslandRemodel = (() => {
                 if(n%2===0)crystal(x+2,z,1.5,p.glow);
             }
         } else if (level === 6) {
-            for (let n = 0; n < 32; n++) crystal(Math.cos(n * 2.4) * (10 + n % 4 * 3), backZ + Math.sin(n * 2.4) * 12, 5 + n % 6 * 2);
-            tower(0, backZ, 20, 7);
+            for (let n = 0; n < 12; n++) crystal(Math.cos(n * 2.4) * (10 + n % 4 * 3), backZ + Math.sin(n * 2.4) * 12, 1.5 + n % 3);
+            tower(-7, backZ, 5, 6);
         } else if (level === 7) {
-            [-18, 18].forEach(x => tower(x, backZ, 26, 6));
-            gate(0, backZ - 5, 20, 15);
-            for (let n = 0; n < 20; n++) block(-9 + n, height(0, backZ) + 23 + Math.sin(n * 1.6) * 1.3, backZ, 1.3, .25, .3, p.glow, 0, true);
+            tower(-14, backZ, 9, 4);
+            for(let n=0;n<18;n++){
+                const x=3+n*.8,z=backZ+Math.sin(n*.17)*3,y=height(x,z);
+                block(x,y+.6,z,.78,1.2,.65,p.stone,.12);
+            }
         } else if (level >= 8) {
-            const tiers = level === 9 ? 9 : 6;
+            const tiers = level === 9 ? 3 : 2;
             for (let n = 0; n < tiers; n++) {
                 const width = 29 - n * 2.2;
                 block(0, height(0, backZ) + n * .7, backZ, width, .72, width * .8, n % 2 ? p.stone : p.trim);
                 for (let jewel = 0; jewel < 12; jewel++) block(-width / 2 + jewel * width / 11, height(0, backZ) + n * .7 + .35, backZ - width * .4 - .03, .25, .22, .12, p.glow, 0, true);
             }
-            tower(0, backZ, level === 9 ? 31 : 21, 8);
+            tower(0, backZ, level === 9 ? 9 : 6, 7);
             for (const x of [-17, 17]) {
-                tower(x, backZ, level === 9 ? 22 : 15, 5);
-                if (level === 9) tower(x, backZ + 15, 27, 5);
+                tower(x, backZ, level === 9 ? 5 : 3.5, 4);
             }
-            gate(0, backZ - 21, 18, 10);
+            gate(0, backZ - 21, 12, 4);
             obstacle(0, backZ, 15);
             if (level === 9) {
-                // Twin block dragons curl above the palace, with horns, fins and luminous eyes.
-                [-1, 1].forEach(side => {
-                    for (let n = 0; n < 46; n++) {
-                        const t = n / 45, x = side * (8 + Math.sin(t * Math.PI) * 14), y = height(0, backZ) + 10 + t * 24, z = backZ - 8 + Math.cos(t * Math.PI * 2) * 6;
-                        block(x, y, z, 2.2, 1.15, 2.2, n % 3 ? p.roof : p.trim, t * 2);
-                        if (n % 3 === 0) block(x + side * 1.3, y + .9, z, .5, 2, 1, p.trim, 0, false, side * .5);
-                        if (n === 45) {
-                            block(x, y, z - 1.5, 3.2, 1.8, 4, p.trim);
-                            [-1, 1].forEach(eye => block(x + eye * 1.5, y + .4, z - 2, .3, .45, .6, p.glow, 0, true));
-                            [-1, 1].forEach(horn => block(x + horn, y + 2, z, .5, 3, .5, p.wall, 0, false, horn * .3));
-                        }
-                    }
-                });
+                // A flowering orchard frames the small sanctuary instead of enormous floating statues.
+                for(let n=0;n<16;n++){
+                    const a=n/16*Math.PI*2,x=Math.cos(a)*25,z=backZ+Math.sin(a)*18;
+                    tree(x,z,1.05+(n%3)*.12);obstacle(x,z,.65,6);
+                }
             }
         }
 
@@ -1237,7 +1275,7 @@ window.IslandRemodel = (() => {
             group.add(mesh);
         }
         bake(solid, false); bake(luminous, true);
-        group.userData = { islandIndex: level, blockCount: solid.length + luminous.length, theme: route.theme, houseCount: placements.length, buildings: placements, treeCount: planted, layout: plan?.name || 'meadow', streets: plan?.trail || [], districts, obstacles };
+        group.userData = { islandIndex: level, blockCount: solid.length + luminous.length, theme: route.theme, houseCount: placements.length, buildings: placements, treeCount: planted, layout: plan?.name || 'meadow', streets: plan?.trail || [], paths, districts, obstacles };
         return group;
     }
     return { build, palettes, layout };
@@ -1313,6 +1351,7 @@ window.IslandRemodel = (() => {
         await window.gameDependenciesReady;
         await window.gameLoading.checkpoint(18, '게임 기본 정보를 준비하는 중…');
         let menuOpen=true,activeSaveSlot=null,pristineGameData=null,capturingBinding=null;
+        let menuViewIsland=0;
         let voyageTransition=null,gameDayOffset=0,lastFrameElapsed=0;
         let playTimeSeconds=0,playTimeTick=performance.now();
         const SETTINGS_KEY='island-settings-v1';
@@ -3457,8 +3496,9 @@ window.IslandRemodel = (() => {
             storeSign.position.set(0, 4.08, -2.92);
             house.add(storeSign);
 
-            const groundY = getVillageFoundationHeight(x, z, yaw, 3.65 * scale, 3.3 * scale);
-            house.position.set(x, groundY - 0.28, z);
+            const groundY = Math.max(getVillageFoundationHeight(x, z, yaw, 3.65 * scale, 4.3 * scale),shopTab==='shore'?getMergedIslandHeight(-8,-5):-Infinity);
+            const baseY=groundY+(shopTab==='shore'?.18:-.28);
+            house.position.set(x, baseY, z);
             house.rotation.y = yaw;
             house.scale.setScalar(scale);
             house.traverse(obj => {
@@ -3466,7 +3506,7 @@ window.IslandRemodel = (() => {
                 obj.castShadow = true; obj.receiveShadow = true;
             });
             villageGroup.add(house);
-            addTerrainFittedHouseBase(x, z, yaw, scale, groundY - 0.28 + 0.58 * scale);
+            addTerrainFittedHouseBase(x, z, yaw, scale, baseY + 0.58 * scale);
             villageObstacleCircles.push({ x, z, radius: 4.15 * scale });
             villageShopPoints.push({
                 x: x - Math.sin(yaw) * 4.6 * scale,
@@ -4087,6 +4127,13 @@ window.IslandRemodel = (() => {
         const menuCamera=new THREE.PerspectiveCamera(52,window.innerWidth/window.innerHeight,.1,6000);
         const MENU_LOOK_TARGET=new THREE.Vector3(10,12,8);
         menuCamera.position.set(165,65,-220);menuCamera.lookAt(MENU_LOOK_TARGET);
+        function getMenuIslandShot(route,time){
+            const radius=Math.max(route.rx,route.rz),remote=route.index!==0;
+            const offset=new THREE.Vector3((remote?radius*1.9:165)+Math.sin(time*.025)*14,remote?Math.max(75,radius*.68):65,remote?-radius*2.7:-220);
+            offset.applyAxisAngle(new THREE.Vector3(0,1,0),route.orientation||0);
+            const targetOffset=new THREE.Vector3(10,remote?Math.max(18,radius*.12):12,8).applyAxisAngle(new THREE.Vector3(0,1,0),route.orientation||0);
+            return {position:offset.add(new THREE.Vector3(route.x,Math.sin(time*.1)*1.2,route.z)),target:targetOffset.add(new THREE.Vector3(route.x,0,route.z))};
+        }
         // Shared low-cost meshes: gulls remain part of the coast during the arrival shot.
         const coastalGulls=new THREE.Group();coastalGulls.name='coastal-gulls';scene.add(coastalGulls);
         const gullWhite=new THREE.MeshStandardMaterial({color:0xf3f2e9,roughness:.9,side:THREE.DoubleSide});
@@ -6043,6 +6090,7 @@ window.IslandRemodel = (() => {
             sound.stopVoyageWhoosh();
             voyageTransition=null;document.getElementById('voyage-fade').style.opacity='0';
             if(!menuOpen){stopCurrentFishingTest();adventure?.exitDive();saveAdventureGame();}
+            menuViewIsland=activeSaveSlot===null?0:currentIslandIndex;
             menuOpen=true;pointerLockFallback=false;isPointerLocked=false;isMapOverview=false;
             Object.keys(keys).forEach(k=>keys[k]=false);
             ['shop-modal','dex-modal','inventory-modal','quest-modal','developer-panel','ending-screen'].forEach(id=>document.getElementById(id).style.display='none');
@@ -6405,7 +6453,57 @@ window.IslandRemodel = (() => {
 
         const clock = new THREE.Clock();
         const rodTipPosWorld = new THREE.Vector3();
+        function canPlayerWalkTo(nextX,nextZ) {
+            const usingExactWorld = Boolean(exactWuhuIsland);
+            const hitHut = !usingExactWorld && hutGroup.visible && Math.abs(nextX - hutGroup.position.x) < 4.5 && Math.abs(nextZ - hutGroup.position.z) < 4.5;
+            const hitNPC = Math.abs(nextX - npcGroup.position.x) < 1 && Math.abs(nextZ - npcGroup.position.z) < 1;
+            const hitNavigator = navigatorPoints.some(point => ISLAND_PROGRESS[point.islandIndex].unlocked && Math.hypot(nextX - point.x, nextZ - point.z) < 0.9);
+            const hitPier = !usingExactWorld && Math.abs(nextX - MAIN_PIER_X) < 2 && nextZ > MAIN_PIER_Z - MAIN_PIER_HALF_LENGTH && nextZ < MAIN_PIER_Z + MAIN_PIER_HALF_LENGTH;
+            const walkableRemotePier = getRemotePierAt(nextX, nextZ);
+            const hitLighthousePier = !usingExactWorld && getLighthouseWalkwayHeight(nextX, nextZ) !== null;
+            const hitLighthouse = !usingExactWorld && Math.hypot(nextX - LIGHTHOUSE_X, nextZ - LIGHTHOUSE_Z) < 2.65;
+            const hitVillageHouse = !usingExactWorld && villageObstacleCircles.some(
+                house => Math.hypot(nextX - house.x, nextZ - house.z) < house.radius
+            );
+            const walkableBridge = usingExactWorld ? null : getWalkableBridge(nextX, nextZ);
+            const hitDecorRock = decorObstacleCircles.some(rock => Math.hypot(nextX - rock.x, nextZ - rock.z) < rock.radius);
+            const hitResortStructure = resortObstacleCircles.some(structure => Math.hypot(nextX - structure.x, nextZ - structure.z) < structure.radius)
+                || remoteObstacleCircles.some(structure => ISLAND_PROGRESS[structure.islandIndex].unlocked && Math.hypot(nextX - structure.x, nextZ - structure.z) < structure.radius);
+            const hitExactWuhuWall = isExactWuhuMovementBlocked(player.position.x, player.position.y, player.position.z, nextX, nextZ) || Boolean(adventure?.blocksMovement(nextX,nextZ));
+            const currentExactHeight = usingExactWorld ? getExactWuhuGroundHeight(player.position.x, player.position.z) : null;
+            const nextExactHeight = usingExactWorld ? getExactWuhuGroundHeight(nextX, nextZ) : null;
+            const nextShallowFloor = usingExactWorld ? null : getShallowWaterFloorHeight(nextX, nextZ);
+            const validExactStep = !usingExactWorld || (
+                currentExactHeight !== null && nextExactHeight !== null
+                && nextExactHeight - currentExactHeight < 1.15
+                && currentExactHeight - nextExactHeight < 2.4
+            );
+            
+            const activityDeck = adventure?.walkHeight(nextX,nextZ) !== null && adventure !== null;
+
+            return (adventure?.diving || activityDeck || isPointOnIsland(nextX, nextZ, usingExactWorld ? 0.48 : 0) || nextShallowFloor !== null || hitPier || walkableRemotePier || hitLighthousePier || walkableBridge) && validExactStep && !hitHut && !hitNPC && !hitNavigator && !hitLighthouse && !hitVillageHouse && !hitDecorRock && !hitResortStructure && !hitExactWuhuWall;
+        }
+        function smoothWalkVelocity(velocity,input,speed,yaw,delta){
+            const target=input.clone();
+            if(target.lengthSq()>0)target.normalize().multiplyScalar(speed).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
+            const rate=target.lengthSq()>0?10:18;
+            const blend=1-Math.exp(-rate*delta);
+            const displacement=target.clone().multiplyScalar(delta).addScaledVector(velocity.clone().sub(target),blend/rate);
+            velocity.lerp(target,blend);
+            if(velocity.lengthSq()<.0001)velocity.set(0,0,0);
+            return displacement;
+        }
+        function slideWalkingStep(position,displacement,allowed){
+            const count=Math.max(1,Math.ceil(displacement.length()/.18)),dx=displacement.x/count,dz=displacement.z/count;
+            for(let step=0;step<count;step++){
+                if(allowed(position.x+dx,position.z+dz)){position.x+=dx;position.z+=dz;continue;}
+                if(Math.abs(dx)>1e-8&&allowed(position.x+dx,position.z))position.x+=dx;
+                if(Math.abs(dz)>1e-8&&allowed(position.x,position.z+dz))position.z+=dz;
+            }
+        }
         const moveDir = new THREE.Vector3();
+        const walkVelocity=new THREE.Vector3(),lastWalkPosition=new THREE.Vector3();
+        let walkFrameBoat=false,walkFrameIsland=0,walkPhase=0;
         let dayTime = 0; let isNight = false;
 
         function animate() {
@@ -6494,13 +6592,21 @@ window.IslandRemodel = (() => {
             else if (sunHeight < 0.2) timeName = "🌅 노을";
             document.getElementById('game-time').innerText = `${timeName} (${areaName})`;
 
+            moveDir.set(0,0,0);
+            if(!isPointerLocked||currentState===STATES.MODAL_OPEN||isSittingOnSofa||isDrivingBoat
+                ||walkFrameBoat!==isOnBoat||walkFrameIsland!==currentIslandIndex||lastWalkPosition.distanceTo(player.position)>3)walkVelocity.set(0,0,0);
+            walkFrameBoat=isOnBoat;walkFrameIsland=currentIslandIndex;
             if (isPointerLocked && currentState !== STATES.MODAL_OPEN) {
-                moveDir.set(0, 0, 0);
                 if (!isSittingOnSofa) {
                     if (keys.w) moveDir.z -= 1; if (keys.s) moveDir.z += 1; if (keys.a) moveDir.x -= 1; if (keys.d) moveDir.x += 1;
                 }
                 
-                if (moveDir.length() > 0) {
+                if(!isDrivingBoat&&!isSittingOnSofa){
+                    const wading=!isOnBoat&&getShallowWaterFloorHeight(player.position.x,player.position.z)!==null;
+                    const speed=(isOnBoat?(keys.shift?4.2:2.8):(keys.shift?10:5.5))*(wading?.58:1);
+                    moveDir.copy(smoothWalkVelocity(walkVelocity,moveDir,speed,yaw-(isOnBoat?boatGroup.rotation.y:0),delta));
+                }
+                if (moveDir.lengthSq() > 0) {
                     if (isDrivingBoat) {
                         const boatSpeed = (28 + boatLevel * 2.5) * delta;
                         if (keys.a) yachtYaw += 1.0 * delta;
@@ -6515,9 +6621,6 @@ window.IslandRemodel = (() => {
                         boatGroup.rotation.y = yachtYaw;
                         
                     } else if (isOnBoat && !isSittingOnSofa) {
-                        const walkSpeed = (keys.shift ? 18 : 8) * delta;
-                        moveDir.normalize().multiplyScalar(walkSpeed);
-                        moveDir.applyEuler(new THREE.Euler(0, yaw - boatGroup.rotation.y, 0)); 
                         
                         const nextX = player.position.x + moveDir.x; 
                         const nextZ = player.position.z + moveDir.z; 
@@ -6526,49 +6629,17 @@ window.IslandRemodel = (() => {
                         const hitsConsole = Math.abs(nextX) < .55 && nextZ > -2.9 && nextZ < -1.9;
                         if (Math.abs(nextX) < deckHalfWidth && nextZ > -3.5 && nextZ < 3.95 && !hitsConsole) {
                             player.position.set(nextX, BOAT_EYE_Y, nextZ);
-                        }
+                        } else moveDir.set(0,0,0);
                     } else if (!isOnBoat) {
-                        const isCurrentlyWading = getShallowWaterFloorHeight(player.position.x, player.position.z) !== null;
-                        const walkSpeed = (keys.shift ? 18 : 8) * delta * (isCurrentlyWading ? 0.58 : 1);
-                        moveDir.normalize().multiplyScalar(walkSpeed);
-                        moveDir.applyEuler(new THREE.Euler(0, yaw, 0)); 
-                        
-                        const nextX = player.position.x + moveDir.x; 
-                        const nextZ = player.position.z + moveDir.z; 
-                        const usingExactWorld = Boolean(exactWuhuIsland);
-                        const hitHut = !usingExactWorld && hutGroup.visible && Math.abs(nextX - hutGroup.position.x) < 4.5 && Math.abs(nextZ - hutGroup.position.z) < 4.5;
-                        const hitNPC = Math.abs(nextX - npcGroup.position.x) < 1 && Math.abs(nextZ - npcGroup.position.z) < 1;
-                        const hitNavigator = navigatorPoints.some(point => ISLAND_PROGRESS[point.islandIndex].unlocked && Math.hypot(nextX - point.x, nextZ - point.z) < 0.9);
-                        const hitPier = !usingExactWorld && Math.abs(nextX - MAIN_PIER_X) < 2 && nextZ > MAIN_PIER_Z - MAIN_PIER_HALF_LENGTH && nextZ < MAIN_PIER_Z + MAIN_PIER_HALF_LENGTH;
-                        const walkableRemotePier = getRemotePierAt(nextX, nextZ);
-                        const hitLighthousePier = !usingExactWorld && getLighthouseWalkwayHeight(nextX, nextZ) !== null;
-                        const hitLighthouse = !usingExactWorld && Math.hypot(nextX - LIGHTHOUSE_X, nextZ - LIGHTHOUSE_Z) < 2.65;
-                        const hitVillageHouse = !usingExactWorld && villageObstacleCircles.some(
-                            house => Math.hypot(nextX - house.x, nextZ - house.z) < house.radius
-                        );
-                        const walkableBridge = usingExactWorld ? null : getWalkableBridge(nextX, nextZ);
-                        const hitDecorRock = decorObstacleCircles.some(rock => Math.hypot(nextX - rock.x, nextZ - rock.z) < rock.radius);
-                        const hitResortStructure = resortObstacleCircles.some(structure => Math.hypot(nextX - structure.x, nextZ - structure.z) < structure.radius)
-                            || remoteObstacleCircles.some(structure => ISLAND_PROGRESS[structure.islandIndex].unlocked && Math.hypot(nextX - structure.x, nextZ - structure.z) < structure.radius);
-                        const hitExactWuhuWall = isExactWuhuMovementBlocked(player.position.x, player.position.y, player.position.z, nextX, nextZ) || Boolean(adventure?.blocksMovement(nextX,nextZ));
-                        const currentExactHeight = usingExactWorld ? getExactWuhuGroundHeight(player.position.x, player.position.z) : null;
-                        const nextExactHeight = usingExactWorld ? getExactWuhuGroundHeight(nextX, nextZ) : null;
-                        const nextShallowFloor = usingExactWorld ? null : getShallowWaterFloorHeight(nextX, nextZ);
-                        const validExactStep = !usingExactWorld || (
-                            currentExactHeight !== null && nextExactHeight !== null
-                            && nextExactHeight - currentExactHeight < 1.15
-                            && currentExactHeight - nextExactHeight < 2.4
-                        );
-                        
-                        const activityDeck = adventure?.walkHeight(nextX,nextZ) !== null && adventure !== null;
-                        if ((adventure?.diving || activityDeck || isPointOnIsland(nextX, nextZ, usingExactWorld ? 0.48 : 0) || nextShallowFloor !== null || hitPier || walkableRemotePier || hitLighthousePier || walkableBridge) && validExactStep && !hitHut && !hitNPC && !hitNavigator && !hitLighthouse && !hitVillageHouse && !hitDecorRock && !hitResortStructure && !hitExactWuhuWall) {
-                            player.position.x = nextX;
-                            player.position.z = nextZ;
-                        }
+                        const beforeMove=player.position.clone();
+                        slideWalkingStep(player.position,moveDir,canPlayerWalkTo);
+                        moveDir.copy(player.position).sub(beforeMove);
+
                     }
                 }
             }
 
+            lastWalkPosition.copy(player.position);
             shoreCollectibles.forEach(item=>updateShoreCrab(item,elapsed));
 
             nearbyShoreItem = null;
@@ -6644,7 +6715,7 @@ window.IslandRemodel = (() => {
                     targetHeight = terrainUnderPlayer;
                 }
                 targetHeight = Math.max(targetHeight, adventure?.walkHeight(player.position.x,player.position.z) ?? -Infinity);
-                player.position.y += (targetHeight + 1.8 - player.position.y) * 0.15;
+                player.position.y += (targetHeight + 1.8 - player.position.y) * (1-Math.exp(-12*delta));
                 
             } else if (isOnBoat && !isDrivingBoat && !isSittingOnSofa && currentState === STATES.IDLE) {
                 const nearbyDock = getNearestDock(renderPos.x, renderPos.z);
@@ -6683,11 +6754,11 @@ window.IslandRemodel = (() => {
             rodGroup.rotation.y += (currentTargetRotY - rodGroup.rotation.y) * rodAnimSpeed * delta;
             rodGroup.rotation.z += (currentTargetRotZ - rodGroup.rotation.z) * rodAnimSpeed * delta;
 
-            if (isPointerLocked && moveDir.lengthSq() > 0.001 && !isDrivingBoat && !isSittingOnSofa) {
-                rodGroup.position.y = baseRodPosY + Math.sin(elapsed * 10) * 0.03; rodGroup.position.x = baseRodPosX + Math.cos(elapsed * 5) * 0.01;
-            } else { 
-                rodGroup.position.y += (baseRodPosY - rodGroup.position.y) * 5 * delta; rodGroup.position.x += (baseRodPosX - rodGroup.position.x) * 5 * delta;
-            }
+            const walking=isPointerLocked&&!isDrivingBoat&&!isSittingOnSofa&&moveDir.lengthSq()>.00001;
+            if(walking)walkPhase+=moveDir.length()*2.8;
+            const bob=walking?Math.min(1,moveDir.length()/Math.max(.001,delta)/5.5):0;
+            rodGroup.position.y+=(baseRodPosY+Math.sin(walkPhase*2)*.022*bob-rodGroup.position.y)*(1-Math.exp(-12*delta));
+            rodGroup.position.x+=(baseRodPosX+Math.cos(walkPhase)*.009*bob-rodGroup.position.x)*(1-Math.exp(-12*delta));
 
             const pos = waterGeo.attributes.position;
             updateRodClearance(delta);
@@ -7037,8 +7108,9 @@ window.IslandRemodel = (() => {
             if(menuOpen){
                 if(voyageTransition)updateVoyageTransition(delta);
                 else{
-                    menuCamera.position.set(165+Math.sin(elapsed*.025)*14,65+Math.sin(elapsed*.1)*1.2,-220);
-                    menuCamera.lookAt(MENU_LOOK_TARGET);menuCamera.fov=52;menuCamera.updateProjectionMatrix();
+                    const shot=getMenuIslandShot(ISLAND_ROUTES[menuViewIsland]||ISLAND_ROUTES[0],elapsed);
+                    menuCamera.position.copy(shot.position);
+                    menuCamera.lookAt(shot.target);menuCamera.fov=52;menuCamera.updateProjectionMatrix();
                     scene.fog.density=.00065;
                 }
                 sunMesh.position.copy(menuCamera.position).addScaledVector(sunDir,1000);
