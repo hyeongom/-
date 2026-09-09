@@ -166,14 +166,14 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
 
-        #reeling-ui { display: none; position: absolute; right: 80px; top: 50%; transform: translateY(-50%); width: 50px; height: 320px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 25px; padding: 6px; flex-direction: column; align-items: center; box-shadow: 0 0 25px rgba(0,0,0,0.5); }
+        #reeling-ui { display: none; position: absolute; left: min(270px, 38vw); right:auto; top:auto; bottom:104px; transform:none; width:40px; height:clamp(160px,27vh,240px); background:rgba(15,23,42,.78); backdrop-filter:blur(8px); border:1px solid #d6c99c88; border-radius:22px; padding:6px; flex-direction:column; align-items:center; box-shadow:0 4px 16px #0005; }
         .reel-track { position: relative; width: 100%; height: 100%; background: #1e293b; border-radius: 20px; overflow: hidden; }
         .reel-target-zone { position: absolute; width: 100%; height: 80px; bottom: 100px; background: rgba(34, 197, 94, 0.45); border-top: 2px solid #22c55e; border-bottom: 2px solid #22c55e; transition: bottom 0.1s linear; }
-        .reel-indicator { position: absolute; width: 100%; height: 24px; bottom: 0px; background: #facc15; border-radius: 12px; box-shadow: 0 0 12px #facc15; }
+        .reel-indicator { position: absolute; width: 100%; height:8%; bottom: 0px; background: #facc15; border-radius: 12px; box-shadow: 0 0 12px #facc15; }
         .progress-container { width: 100%; height: 8px; background: #334155; border-radius: 4px; margin-top: 10px; overflow: hidden; }
         .progress-bar { width: 0%; height: 100%; background: #38bdf8; transition: width 0.1s; }
 
-        .bottom-guide { text-align: center; color: #cbd5e1; font-size: 14px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px); padding: 10px 24px; border-radius: 20px; margin: 0 auto; width: fit-content; line-height: 1.6; border: 1px solid rgba(255,255,255,0.1); }
+        .bottom-guide { display:none; text-align: center; color: #cbd5e1; font-size: 14px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px); padding: 10px 24px; border-radius: 20px; margin: 0 auto; width: fit-content; line-height: 1.6; border: 1px solid rgba(255,255,255,0.1); }
         .bottom-guide kbd { background: #334155; padding: 2px 8px; border-radius: 4px; color: #fff; font-family: monospace; font-size: 13px; }
 
         #dev-badge { display: none; position: absolute; top: 112px; right: 24px; z-index: 85; color: #f5d0fe; background: rgba(88, 28, 135, 0.9); border: 1px solid #d946ef; border-radius: 999px; padding: 7px 12px; font-size: 12px; font-weight: 900; letter-spacing: 1px; box-shadow: 0 0 18px rgba(217, 70, 239, 0.35); }
@@ -221,6 +221,8 @@
         #start-screen button {font:inherit;cursor:pointer;color:#f6f8ed;background:#173d48e6;border:1px solid #8abbab77;border-radius:8px;padding:12px 20px;min-height:46px;}
         #start-screen button:hover,#start-screen button:focus-visible {background:#356359;outline:2px solid #ecda99;outline-offset:3px;}
         #start-screen button:disabled {opacity:.45;cursor:not-allowed;}
+        #start-screen #game-version {cursor:default;}
+        #start-screen #game-version:hover:not(:focus-visible) {background:none;outline:none;box-shadow:none;transform:none;}
         #main-actions {display:flex;flex-direction:column;gap:12px;width:min(320px,88vw);}
         #start-screen #main-actions button {text-align:left;font-size:25px;padding:12px 0;background:none;border:none;border-radius:0;box-shadow:none;width:fit-content;transform-origin:left center;transition:transform .18s ease,color .18s ease,text-shadow .18s ease;text-shadow:0 2px 10px #001c27;}
         #start-screen #main-actions button:hover,#start-screen #main-actions button:focus-visible {background:none;transform:scale(1.08);color:#ffe7a9;text-shadow:0 0 18px #f9dc8666;outline:none;}
@@ -278,7 +280,7 @@
             <label class="setting-row">마우스 감도 <output id="sensitivity-value"></output><input id="setting-sensitivity" type="range" min="0.2" max="3" step="0.1"></label>
             <label class="setting-row">전체 소리 <output id="volume-value"></output><input id="setting-volume" type="range" min="0" max="100" step="1"></label>
             <h3>키 설정</h3><p style="font-size:14px">버튼을 누르고 새 키를 입력하세요. ESC는 메뉴 열기·취소로 고정됩니다.</p>
-            <div id="key-bindings"></div><button id="settings-reset">설정 초기화</button> <button data-menu-back>돌아가기</button>
+            <div id="key-bindings"></div><p style="font-size:14px">같은 키를 여러 동작에 지정할 수 있습니다. Ctrl 조합 단축키 보호는 전체화면에서 지원됩니다.</p><button id="keyboard-protection" type="button">전체화면 · 단축키 보호</button><button id="developer-disable" type="button" hidden>개발자 모드 끄기</button><button id="game-version" type="button" style="display:block;margin:18px 0 8px;padding:4px 0;min-height:28px;background:none;border:none;color:#a5bcb9;font-size:13px">버전 1.0.0</button><button id="settings-reset">설정 초기화</button> <button data-menu-back>돌아가기</button>
         </section>
         <p id="menu-message" role="status"></p>
         <p id="menu-footer">처음 만나는 바다, 당신만의 항해.<br>ESC · 메뉴 열기 / 진행은 선택한 슬롯에 자동 저장됩니다.<br>저장 데이터는 이 브라우저에만 보관됩니다.</p>
@@ -1385,6 +1387,7 @@ window.IslandRemodel = (() => {
         await window.gameLoading.checkpoint(18, '게임 기본 정보를 준비하는 중…');
         let menuOpen=true,activeSaveSlot=null,pristineGameData=null,capturingBinding=null;
         let menuViewIsland=0;
+        let developerModeEnabled=false,developerUnlockClicks=0,developerUnlockTime=0;
         let tutorialSeen=false,tutorialActive=false,tutorialStep=0;
         let voyageTransition=null,gameDayOffset=0,lastFrameElapsed=0;
         let playTimeSeconds=0,playTimeTick=performance.now();
@@ -1397,7 +1400,7 @@ window.IslandRemodel = (() => {
                 if(Number.isFinite(stored.sensitivity))gameSettings.sensitivity=Math.max(.2,Math.min(3,stored.sensitivity));
                 if(Number.isFinite(stored.volume))gameSettings.volume=Math.max(0,Math.min(1,stored.volume));
                 const proposed=Object.fromEntries(Object.keys(DEFAULT_BINDINGS).map(k=>[k,stored.bindings?.[k]||DEFAULT_BINDINGS[k]]));
-                if(Object.values(proposed).every(c=>/^(Key[A-Z]|Digit[0-9]|Arrow(Up|Down|Left|Right)|Space|Tab|ShiftLeft|ControlLeft|F10)$/.test(c))&&new Set(Object.values(proposed)).size===Object.keys(proposed).length)gameSettings.bindings=proposed;
+                if(Object.values(proposed).every(c=>/^(Key[A-Z]|Digit[0-9]|Arrow(Up|Down|Left|Right)|Space|Tab|ShiftLeft|ControlLeft|F10)$/.test(c)))gameSettings.bindings=proposed;
             }
         }catch{}
         // 오디오 엔진
@@ -5017,7 +5020,7 @@ window.IslandRemodel = (() => {
         };
 
         function updateDeveloperPanel() {
-            document.getElementById('dev-badge').style.display = developerMode.used ? 'block' : 'none';
+            document.getElementById('dev-badge').style.display = developerModeEnabled ? 'block' : 'none';
             document.querySelectorAll('[data-dev-toggle]').forEach(button => {
                 const active = Boolean(developerMode[button.dataset.devToggle]);
                 button.classList.toggle('active', active);
@@ -5045,6 +5048,7 @@ window.IslandRemodel = (() => {
         }
 
         function openDeveloperPanel() {
+            if(!developerModeEnabled||menuOpen)return;
             if (currentState !== STATES.IDLE && currentState !== STATES.MODAL_OPEN) stopCurrentFishingTest();
             document.getElementById('shop-modal').style.display = 'none';
             document.getElementById('dex-modal').style.display = 'none';
@@ -5206,8 +5210,11 @@ window.IslandRemodel = (() => {
         });
 
         function getGameKey(e) {
+            return getGameKeys(e)[0]||'';
+        }
+        function getGameKeys(e){
             const code=e.code==='ShiftRight'?'ShiftLeft':e.code==='ControlRight'?'ControlLeft':e.code;
-            return Object.keys(gameSettings.bindings).find(action=>gameSettings.bindings[action]===code)||'';
+            return Object.keys(gameSettings.bindings).filter(action=>gameSettings.bindings[action]===code);
         }
 
         window.addEventListener('keydown', (e) => {
@@ -5223,8 +5230,20 @@ window.IslandRemodel = (() => {
                 if(e.key==='Tab'){e.preventDefault();document.getElementById(document.activeElement?.id==='ending-next'?'ending-return':'ending-next').focus();}
                 return;
             }
-            const k = getGameKey(e);
+            const actions=getGameKeys(e);
+            actions.forEach(k=>{if(Object.prototype.hasOwnProperty.call(keys,k))keys[k]=true;});
+            const handled=new Set();
+            for(const k of actions){
+                const kind=k==='g'?'e':k;
+                if(handled.has(kind))continue;handled.add(kind);
+                const before=currentState,boatBefore=isOnBoat,driveBefore=isDrivingBoat;
+                handleGameAction(k,e);
+                if(currentState!==before||isOnBoat!==boatBefore||isDrivingBoat!==driveBefore)break;
+            }
+        });
+        function handleGameAction(k,e){
             if (k === 'f10') {
+                if(!developerModeEnabled)return;
                 e.preventDefault();
                 if (e.repeat) return;
                 if (document.getElementById('developer-panel').style.display === 'block') closeDeveloperPanel();
@@ -5329,11 +5348,20 @@ window.IslandRemodel = (() => {
                 currentBait = parseInt(k) - 1;
                 updateBaitUI();
             }
+        }
+        window.addEventListener('keyup',e=>{
+            getGameKeys(e).forEach(k=>{if(Object.prototype.hasOwnProperty.call(keys,k))keys[k]=false;});
         });
-        window.addEventListener('keyup', (e) => { 
-            const k = getGameKey(e);
-            if (keys.hasOwnProperty(k)) keys[k] = false; 
+        window.addEventListener('blur',()=>Object.keys(keys).forEach(k=>keys[k]=false));
+        window.addEventListener('keydown',e=>{
+            if(menuOpen||e.target?.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(e.target?.tagName))return;
+            if(e.ctrlKey||e.metaKey||e.altKey||getGameKeys(e).length)e.preventDefault();
+        },{capture:true});
+        window.addEventListener('beforeunload',e=>{
+            if(menuOpen||activeSaveSlot===null)return;
+            saveAdventureGame();e.preventDefault();e.returnValue='';
         });
+
 
         let dexPortraitRenderer = null;
         const dexPortraitCache = new Map();
@@ -6305,7 +6333,8 @@ window.IslandRemodel = (() => {
             document.getElementById('volume-value').textContent=Math.round(gameSettings.volume*100)+'%';
             const labels={w:'앞으로',a:'왼쪽',s:'뒤로',d:'오른쪽',shift:'달리기',e:'상호작용',g:'활동',f:'배 승하차',r:'배 조종 / 앉기',i:'장비',m:'지도',tab:'도감',v:'잠수 귀환',' ':'잠수 상승',control:'잠수 하강','1':'미끼 1','2':'미끼 2','3':'미끼 3','4':'미끼 4','5':'미끼 5',f10:'개발자 모드'};
             const list=document.getElementById('key-bindings');list.replaceChildren();
-            Object.entries(labels).forEach(([key,label])=>{
+            document.getElementById('developer-disable').hidden=!developerModeEnabled;
+            Object.entries(labels).filter(([key])=>key!=='f10'||developerModeEnabled).forEach(([key,label])=>{
                 const row=document.createElement('div'),button=document.createElement('button');row.className='setting-row';row.textContent=label;
                 button.textContent=gameSettings.bindings[key].replace('Key','').replace('Digit','');
                 button.addEventListener('click',()=>{capturingBinding=key;button.textContent='키 입력…';menuMessage(label+'에 사용할 키를 누르세요. ESC로 취소합니다.');});
@@ -6319,12 +6348,38 @@ window.IslandRemodel = (() => {
                 if(e.key==='Escape'){capturingBinding=null;renderSettings();menuMessage('키 변경을 취소했습니다.');return;}
                 const code=e.code==='ShiftRight'?'ShiftLeft':e.code==='ControlRight'?'ControlLeft':e.code;
                 if(!/^(Key[A-Z]|Digit[0-9]|Arrow(Up|Down|Left|Right)|Space|Tab|ShiftLeft|ControlLeft|F10)$/.test(code)){menuMessage('문자·숫자·방향키·Shift·Ctrl·Space·Tab·F10 중에서 선택하세요.');return;}
-                if(Object.entries(gameSettings.bindings).some(([k,v])=>k!==capturingBinding&&v===code)){menuMessage('이미 사용 중인 키입니다. 다른 키를 선택하세요.');return;}
                 gameSettings.bindings[capturingBinding]=code;capturingBinding=null;renderSettings();saveSettings();return;
             }
             if(e.key==='Escape'){e.preventDefault();menuPage();}
         }
         function initializeMainMenu(){
+            document.getElementById('game-version').addEventListener('click',()=>{
+                const now=performance.now();
+                developerUnlockClicks=now-developerUnlockTime>4000?1:developerUnlockClicks+1;developerUnlockTime=now;
+                if(developerUnlockClicks<7)return;
+                developerUnlockClicks=0;developerModeEnabled=true;updateDeveloperPanel();renderSettings();
+                menuMessage('개발자 모드 활성화 · 게임에서 '+keyLabel('f10')+'으로 패널을 여세요.');
+            });
+            document.getElementById('developer-disable').addEventListener('click',()=>{
+                developerModeEnabled=false;Object.keys(developerMode).forEach(k=>developerMode[k]=false);
+                document.getElementById('developer-panel').style.display='none';
+                updateDeveloperPanel();renderSettings();menuMessage('개발자 모드를 껐습니다.');
+            });
+            document.getElementById('keyboard-protection').addEventListener('click',async()=>{
+                try{
+                    if(!document.fullscreenElement){
+                        await document.documentElement.requestFullscreen();
+                        document.getElementById('keyboard-protection').textContent='단축키 보호 켜기';
+                        menuMessage('전체화면으로 전환했습니다. 단축키 보호 켜기를 한 번 더 눌러 주세요.');return;
+                    }
+                    if(!navigator.keyboard?.lock){menuMessage('전체화면입니다. 이 브라우저는 단축키 잠금을 지원하지 않습니다. Ctrl+W 등은 피하세요.');return;}
+                    await navigator.keyboard.lock([...new Set([...Object.values(gameSettings.bindings),'KeyW','KeyR','KeyT','KeyN','KeyL','KeyQ','F4','F5'])]);
+                    menuMessage('단축키 보호가 켜졌습니다. ESC로 메뉴, F11로 전체화면을 종료할 수 있습니다.');
+                }catch{menuMessage('단축키 보호를 켜지 못했습니다. 브라우저 권한을 확인하거나 Ctrl 대신 다른 키를 지정하세요.');}
+            });
+            document.addEventListener('fullscreenchange',()=>{
+                if(!document.fullscreenElement){navigator.keyboard?.unlock?.();document.getElementById('keyboard-protection').textContent='전체화면 · 단축키 보호';}
+            });
             const menuSelect=()=>{try{sound.init();sound.playMenuSelect();}catch{}};
             document.querySelectorAll('#main-actions button').forEach(button=>{
                 button.addEventListener('pointerenter',menuSelect);
