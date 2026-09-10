@@ -168,11 +168,31 @@
 
         #reeling-ui { display: none; position: absolute; left: min(270px, 38vw); right:auto; top:auto; bottom:104px; transform:none; width:40px; height:clamp(160px,27vh,240px); background:rgba(15,23,42,.78); backdrop-filter:blur(8px); border:1px solid #d6c99c88; border-radius:22px; padding:6px; flex-direction:column; align-items:center; box-shadow:0 4px 16px #0005; }
         .reel-track { position: relative; width: 100%; height: 100%; background: #1e293b; border-radius: 20px; overflow: hidden; }
-        .reel-target-zone { position: absolute; width: 100%; height: 80px; bottom: 100px; background: rgba(34, 197, 94, 0.45); border-top: 2px solid #22c55e; border-bottom: 2px solid #22c55e; transition: bottom 0.1s linear; }
+        .reel-target-zone { box-sizing:border-box; position: absolute; width: 100%; height: 80px; bottom: 100px; background: rgba(34, 197, 94, 0.45); border-top: 2px solid #22c55e; border-bottom: 2px solid #22c55e; transition:none; }
         .reel-indicator { position: absolute; width: 100%; height:8%; bottom: 0px; background: #facc15; border-radius: 12px; box-shadow: 0 0 12px #facc15; }
         .progress-container { width: 100%; height: 8px; background: #334155; border-radius: 4px; margin-top: 10px; overflow: hidden; }
         .progress-bar { width: 0%; height: 100%; background: #38bdf8; transition: width 0.1s; }
 
+        #reeling-ui {left:calc(50% - 132px);top:50%;bottom:auto;transform:translateY(-50%);width:52px;height:clamp(180px,32vh,300px);flex-direction:row;gap:6px;}
+        #reeling-ui .reel-track {flex:1;}
+        #reeling-ui .progress-container {position:relative;width:8px;height:100%;margin:0;}
+        #reeling-ui .progress-bar {position:absolute;bottom:0;width:100%;height:25%;transition:none;}
+        #dex-modal {width:min(1100px,94vw);color:#3d3021;background:linear-gradient(90deg,#e4d2aa,#fff2d2 48%,#cbb486 50%,#f6e7c5 52%,#ead6ad);border:5px solid #65472e;border-radius:10px;animation:book-open .3s ease-out;}
+        #dex-modal h2 {color:#593d27;}
+        .book-pages {display:grid;grid-template-columns:minmax(220px,.8fr) minmax(0,1.2fr);gap:36px;text-align:left;}
+        #book-notes {white-space:pre-line;line-height:1.65;max-height:65vh;overflow:auto;padding:12px;}
+        #book-notes h3 {margin:10px 0;}
+        #book-records {color:#47351e;font-weight:bold;}
+        #dex-modal #dex-list {max-height:28vh;}
+        #radar {display:none;position:fixed;right:24px;bottom:24px;width:220px;height:220px;z-index:70;pointer-events:none;border-radius:50%;border:2px solid #6fe9a4;background:#06201ee8;}
+        body.menu-open #radar {display:none!important;}
+        .graphics-row {display:flex;justify-content:space-between;gap:20px;margin:12px 0;}
+        .graphics-row select {background:#1b3935;color:#fff;padding:7px;border:1px solid #72988c;border-radius:5px;}
+        #patch-panel {max-height:65vh;overflow:auto;}
+        #patch-panel li {margin:8px 0;line-height:1.55;}
+        @keyframes book-open {from {opacity:0;transform:translate(-50%,-50%) perspective(1000px) rotateY(-15deg) scale(.92);}to {opacity:1;transform:translate(-50%,-50%) perspective(1000px) rotateY(0) scale(1);}}
+        @media(max-width:700px){.book-pages{grid-template-columns:1fr;gap:14px;}#book-notes{max-height:25vh;}#radar{width:160px;height:160px;right:12px;bottom:12px;}#reeling-ui{left:calc(50% - 100px);}}
+        @media(prefers-reduced-motion:reduce){#dex-modal{animation:none;}}
         .bottom-guide { display:none; text-align: center; color: #cbd5e1; font-size: 14px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px); padding: 10px 24px; border-radius: 20px; margin: 0 auto; width: fit-content; line-height: 1.6; border: 1px solid rgba(255,255,255,0.1); }
         .bottom-guide kbd { background: #334155; padding: 2px 8px; border-radius: 4px; color: #fff; font-family: monospace; font-size: 13px; }
 
@@ -273,14 +293,16 @@
         <nav id="main-actions" aria-label="메인 메뉴">
             <button id="menu-resume" hidden>계속 항해하기</button><button id="menu-new">새 게임</button>
             <button id="menu-load">불러오기</button><button id="menu-settings">설정</button>
-            <button id="menu-ending" hidden>엔딩 다시 보기</button>
+            <button id="menu-patch">패치노트</button><button id="menu-ending" hidden>엔딩 다시 보기</button>
         </nav>
         <section id="slots-panel" class="menu-panel" hidden><h2 id="slots-title">불러오기</h2><div id="save-slots"></div><button data-menu-back>돌아가기</button></section>
+        <section id="patch-panel" class="menu-panel" hidden><h2>업데이트 기록</h2><div id="patch-entries"></div><button data-menu-back>돌아가기</button></section>
         <section id="settings-panel" class="menu-panel" hidden><h2>설정</h2>
             <label class="setting-row">마우스 감도 <output id="sensitivity-value"></output><input id="setting-sensitivity" type="range" min="0.2" max="3" step="0.1"></label>
             <label class="setting-row">전체 소리 <output id="volume-value"></output><input id="setting-volume" type="range" min="0" max="100" step="1"></label>
+            <h3>화면과 성능</h3><div id="graphics-settings"></div><p id="graphics-status"></p>
             <h3>키 설정</h3><p style="font-size:14px">버튼을 누르고 새 키를 입력하세요. ESC는 메뉴 열기·취소로 고정됩니다.</p>
-            <div id="key-bindings"></div><p style="font-size:14px">같은 키를 여러 동작에 지정할 수 있습니다. Ctrl 조합 단축키 보호는 전체화면에서 지원됩니다.</p><button id="keyboard-protection" type="button">전체화면 · 단축키 보호</button><button id="developer-disable" type="button" hidden>개발자 모드 끄기</button><button id="game-version" type="button" style="display:block;margin:18px 0 8px;padding:4px 0;min-height:28px;background:none;border:none;color:#a5bcb9;font-size:13px">버전 1.0.0</button><button id="settings-reset">설정 초기화</button> <button data-menu-back>돌아가기</button>
+            <div id="key-bindings"></div><p style="font-size:14px">같은 키를 여러 동작에 지정할 수 있습니다. Ctrl 조합 단축키 보호는 전체화면에서 지원됩니다.</p><button id="keyboard-protection" type="button">전체화면 · 단축키 보호</button><button id="developer-disable" type="button" hidden>개발자 모드 끄기</button><button id="game-version" type="button" style="display:block;margin:18px 0 8px;padding:4px 0;min-height:28px;background:none;border:none;color:#a5bcb9;font-size:13px">버전 1.1.0</button><button id="settings-reset">설정 초기화</button> <button data-menu-back>돌아가기</button>
         </section>
         <p id="menu-message" role="status"></p>
         <p id="menu-footer">처음 만나는 바다, 당신만의 항해.<br>ESC · 메뉴 열기 / 진행은 선택한 슬롯에 자동 저장됩니다.<br>저장 데이터는 이 브라우저에만 보관됩니다.</p>
@@ -631,10 +653,10 @@ window.IslandAdventures = (() => {
         }
         function tick(delta,context) {
             time+=delta;near=null;
-            api.routes.forEach(route=>{if(api.unlocked(route.index))ensure(route.index);});
+            api.routes.forEach(route=>{if(api.unlocked(route.index)&&(!api.renderIsland||api.renderIsland(route.index)))ensure(route.index);});
             let closest=Infinity;
             for(const [i,world] of worlds){
-                world.group.visible=api.unlocked(i);
+                world.group.visible=api.unlocked(i)&&(!api.renderIsland||api.renderIsland(i));
                 if(!world.group.visible)continue;
                 const s=states[i];
                 for(const n of world.nodes){
@@ -735,14 +757,16 @@ window.IslandAdventures = (() => {
         <button class="modal-close-btn" id="btn-quest-close">대화 끝내기</button>
     </div>
 
-    <div id="dex-modal">
-        <h2>📖 물고기 도감 (Fish Dex)</h2>
+    <canvas id="radar" width="440" height="440" aria-label="발견한 섬 레이더"></canvas>
+    <div id="dex-modal" role="dialog" aria-label="탐험 수첩">
+        <h2>📖 항해자의 탐험 수첩</h2>
+        <div class="book-pages"><section id="book-notes"><div id="book-records"></div><h3>현재 의뢰</h3><div id="book-quest"></div><h3>조작법</h3><div id="book-controls"></div></section><section><h3 id="book-discovery">물고기 도감</h3>
         <div id="dex-preview">
             <img id="dex-portrait" alt="선택한 물고기의 3D 모델">
             <div><div id="dex-detail">물고기를 잡으면 이곳에서 실제 모습을 볼 수 있어요.</div><button class="dex-turn" id="dex-turn-left" type="button" aria-label="물고기 왼쪽으로 회전">↶ 회전</button><button class="dex-turn" id="dex-turn-right" type="button" aria-label="물고기 오른쪽으로 회전">회전 ↷</button></div>
         </div>
         <div id="dex-list"></div>
-        <button class="modal-close-btn" id="btn-dex-close">도감 닫기 (Tab)</button>
+        </section></div><button class="modal-close-btn" id="btn-dex-close">수첩 닫기 (Tab / Esc)</button>
     </div>
 
     <div id="inventory-modal">
@@ -1259,8 +1283,19 @@ window.IslandRemodel = (() => {
         function bake(list, glowing) {
             if (!list.length) return;
             const material = glowing ? new THREE.MeshBasicMaterial({ color: 0xffffff }) : new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .88 });
-            const mesh = new THREE.InstancedMesh(cube, material, list.length);
-            list.forEach((item, index) => {
+            const cells = new Map();
+            list.forEach(item => {
+                const key = Math.floor(item.x / 64) + ':' + Math.floor(item.z / 64);
+                if (!cells.has(key)) cells.set(key, []);
+                cells.get(key).push(item);
+            });
+            for (const items of cells.values()) {
+            const mesh = new THREE.InstancedMesh(cube, material, items.length);
+            const bounds = new THREE.Box3();
+            items.forEach((item, index) => {
+                const padding = Math.max(item.w, item.h, item.d);
+                bounds.expandByPoint(new THREE.Vector3(item.x-padding,item.y-padding,item.z-padding));
+                bounds.expandByPoint(new THREE.Vector3(item.x+padding,item.y+padding,item.z+padding));
                 transform.position.set(item.x, item.y, item.z);
                 transform.rotation.set(0, item.yaw, item.tilt);
                 transform.scale.set(item.w, item.h, item.d); transform.updateMatrix();
@@ -1270,7 +1305,11 @@ window.IslandRemodel = (() => {
             mesh.castShadow = !glowing; mesh.receiveShadow = !glowing;
             // r128 cannot calculate a reliable aggregate bound for distant instances.
             mesh.frustumCulled = false;
+            const sphere = bounds.getBoundingSphere(new THREE.Sphere());
+            mesh.userData.cullCenter = sphere.center;
+            mesh.userData.cullRadius = sphere.radius;
             group.add(mesh);
+            }
         }
         bake(solid, false); bake(luminous, true);
         group.userData = { islandIndex: level, blockCount: solid.length + luminous.length, theme: route.theme, houseCount: placements.length, buildings: placements, treeCount: planted, layout: plan?.name || 'meadow', streets: plan?.trail || [], paths, districts, obstacles };
@@ -1840,14 +1879,7 @@ window.IslandRemodel = (() => {
         }
 
         function syncIslandVisibility() {
-            // Locked islands allocate no terrain, buildings, NPCs or block instances.
-            ISLAND_ROUTES.slice(1).forEach(route => {
-                if (!ISLAND_PROGRESS[route.index].unlocked || islandWorldGroups.has(route.index)) return;
-                buildIslandPart(route, createRemoteIslandTerrain);
-                buildIslandPart(route, createRemoteOutpost);
-                buildIslandPart(route, createRemodeledIsland);
-            });
-            islandWorldGroups.forEach((group, index) => { group.visible = ISLAND_PROGRESS[index].unlocked; });
+            islandWorldGroups.forEach((group,index)=>{group.visible=ISLAND_PROGRESS[index].unlocked;});
         }
         let currentIslandIndex = 0;
         let compassTargetIslandIndex = null;
@@ -5070,7 +5102,7 @@ window.IslandRemodel = (() => {
         function teleportDeveloperIsland(index) {
             if (!ISLAND_PROGRESS[index]?.unlocked) return;
             stopCurrentFishingTest();
-            syncIslandVisibility();
+            syncIslandVisibility();ensureIslandReady(index);
             const dock = islandDockPoints.find(point => point.islandIndex === index);
             if (!dock) return;
             scene.add(player);
@@ -5224,6 +5256,7 @@ window.IslandRemodel = (() => {
                 else if(e.key==='Backspace'){e.preventDefault();finishTutorial();}
                 return;
             }
+            if(e.key==='Escape'&&document.getElementById('dex-modal').style.display==='block'){e.preventDefault();closeModals();return;}
             if(e.key==='Escape'&&document.getElementById('ending-screen').style.display!=='block'){e.preventDefault();openMainMenu();return;}
             if(document.getElementById('ending-screen').style.display==='block'){
                 if(e.key==='Escape'){e.preventDefault();closeVoyageEnding();}
@@ -5257,8 +5290,7 @@ window.IslandRemodel = (() => {
             }
             if (k === 'v' && !e.repeat && adventure?.diving) {adventure.exitDive();return;}
             if (k === 'm' && !e.repeat && currentState !== STATES.MODAL_OPEN) {
-                isMapOverview = !isMapOverview;
-                setStatus(isMapOverview ? "10개 섬 항해 지도 · M 키로 돌아가기" : "탐험 시점으로 돌아왔습니다.", "#38bdf8");
+                radarVisible=!radarVisible;
             }
             
             if (isSittingOnSofa && (k==='w'||k==='a'||k==='s'||k==='d')) {
@@ -5333,9 +5365,9 @@ window.IslandRemodel = (() => {
             }
 
             if (k === 'tab') {
-                e.preventDefault();
+                e.preventDefault();if(e.repeat)return;
                 if (currentState === STATES.MODAL_OPEN && document.getElementById('dex-modal').style.display === 'block') closeModals();
-                else if (isPointerLocked && currentState === STATES.IDLE) openDex();
+                else if (isPointerLocked && currentState !== STATES.MODAL_OPEN) openDex();
             }
 
             if (k === 'i') {
@@ -5417,6 +5449,11 @@ window.IslandRemodel = (() => {
         document.getElementById('dex-turn-left').addEventListener('click', () => { if(dexSelectedIndex !== null) selectDexFish(dexSelectedIndex, dexViewAngle - Math.PI / 4); });
         document.getElementById('dex-turn-right').addEventListener('click', () => { if(dexSelectedIndex !== null) selectDexFish(dexSelectedIndex, dexViewAngle + Math.PI / 4); });
         function openDex() {
+            bookResume={state:currentState,remaining:Math.max(1,biteDeadline-performance.now())};
+            clearTimeout(biteTimer);clearTimeout(biteEscapeTimer);sound.stopReel();
+            uiReel.style.display='none';uiBite.style.display='none';
+            Object.keys(keys).forEach(k=>keys[k]=false);isMouseDown=false;
+            renderExplorerBook();
             currentState = STATES.MODAL_OPEN; document.exitPointerLock(); startScreen.style.display = 'none';
             const dexList = document.getElementById('dex-list');
             const generation = ++dexRenderGeneration;
@@ -5821,11 +5858,21 @@ window.IslandRemodel = (() => {
         }));
 
         function closeModals() {
+            const resume=document.getElementById('dex-modal').style.display==='block'?bookResume:null;
+            bookResume=null;
             document.getElementById('shop-modal').style.display = 'none';
             document.getElementById('dex-modal').style.display = 'none';
             document.getElementById('inventory-modal').style.display = 'none';
             document.getElementById('quest-modal').style.display = 'none';
-            currentState = STATES.IDLE; requestGameControls(); 
+            currentState = resume?resume.state:STATES.IDLE;
+            if(resume){
+                biteDeadline=performance.now()+resume.remaining;
+                if(currentState===STATES.WAITING)biteTimer=setTimeout(()=>{if(currentState===STATES.WAITING)startBite();},resume.remaining);
+                if(currentState===STATES.BITING){uiBite.style.display='block';biteEscapeTimer=setTimeout(()=>{if(currentState===STATES.BITING)missFish('앗! 물고기가 도망쳤습니다.');},resume.remaining);}
+                if(currentState===STATES.REELING)uiReel.style.display='flex';
+                if(currentState===STATES.PREPARING_CAST)currentState=STATES.IDLE;
+            }
+            requestGameControls();
         }
 
         document.getElementById('btn-shop-close').addEventListener('click', closeModals);
@@ -5925,6 +5972,7 @@ window.IslandRemodel = (() => {
             let waitTime = developerMode.instantBite
                 ? 220
                 : (2500 + Math.random() * 4000) * BAITS[currentBait].waitMulti * BOBBERS[currentBobber].waitMulti * (adventure?.biteMultiplier(RODS[currentRod].fishTier) ?? 1);
+            biteDeadline=performance.now()+waitTime;
             biteTimer = setTimeout(() => { if (currentState === STATES.WAITING) startBite(); }, waitTime);
         }
 
@@ -5932,6 +5980,7 @@ window.IslandRemodel = (() => {
             currentState = STATES.BITING; sound.playBite(); createSplashParticles(bobberGroup.position); 
             uiBite.style.display = 'block'; setStatus("지금입니다! 빠르게 클릭해 챔질하세요!", "#ef4444");
             const hookTime = developerMode.easyFishing ? 6000 : 1400 * BOBBERS[currentBobber].hookWindow;
+            biteDeadline=performance.now()+hookTime;
             biteEscapeTimer = setTimeout(() => { if (currentState === STATES.BITING) missFish("앗! 물고기가 도망쳤습니다."); }, hookTime);
         }
 
@@ -6012,6 +6061,7 @@ window.IslandRemodel = (() => {
             const reelBalance = getActiveReelBalance();
             Object.assign(reelTargetMotion, createReelMotion());
             reelProgress = 25; reelIndicatorPos = 50; reelTargetPos = 50; uiReel.style.display = 'flex';
+            reelFeedbackInside=false;uiReelProgressBar.style.height='25%';uiReelIndicator.style.bottom='46%';uiReelTarget.style.bottom=(50-reelBalance.zone)+'%';
             uiReelTarget.style.height = `${reelBalance.zone * 2}%`;
             setStatus(`[${species.difficulty}] ${species.name} · 노란 바를 초록 구역 안에 유지하세요!`, "#38bdf8");
         }
@@ -6188,6 +6238,7 @@ window.IslandRemodel = (() => {
             document.getElementById('main-actions').style.display=page==='main'?'flex':'none';
             document.getElementById('slots-panel').hidden=page!=='slots';
             document.getElementById('settings-panel').hidden=page!=='settings';
+            document.getElementById('patch-panel').hidden=page!=='patch';
             document.getElementById('menu-resume').hidden=activeSaveSlot===null;
             document.getElementById('menu-ending').hidden=activeSaveSlot===null||!ISLAND_PROGRESS[9].completed;
             menuMessage('');
@@ -6284,6 +6335,7 @@ window.IslandRemodel = (() => {
             activeSaveSlot=index;adventureSaveWarning=false;adventureSaveClock=0;
             syncIslandVisibility();
             currentIslandIndex=Number.isInteger(data.islandIndex)&&data.islandIndex>=0&&data.islandIndex<10&&canAccessIslandActivities(data.islandIndex)?data.islandIndex:0;
+            ensureIslandReady(currentIslandIndex);
             const dock=islandDockPoints.find(d=>d.islandIndex===currentIslandIndex)||islandDockPoints[0];
             player.position.set(dock.exitX,getMergedIslandHeight(dock.exitX,dock.exitZ)+1.8,dock.exitZ);
             yaw=Math.PI+(dock.orientation||0);pitch=0;player.rotation.set(0,yaw,0);camera.rotation.set(0,0,0);positionBoatAtDock(currentIslandIndex);
@@ -6327,11 +6379,12 @@ window.IslandRemodel = (() => {
             });
         }
         function renderSettings(){
+            renderGraphicsSettings();
             document.getElementById('setting-sensitivity').value=gameSettings.sensitivity;
             document.getElementById('sensitivity-value').textContent=gameSettings.sensitivity.toFixed(1)+'×';
             document.getElementById('setting-volume').value=Math.round(gameSettings.volume*100);
             document.getElementById('volume-value').textContent=Math.round(gameSettings.volume*100)+'%';
-            const labels={w:'앞으로',a:'왼쪽',s:'뒤로',d:'오른쪽',shift:'달리기',e:'상호작용',g:'활동',f:'배 승하차',r:'배 조종 / 앉기',i:'장비',m:'지도',tab:'도감',v:'잠수 귀환',' ':'잠수 상승',control:'잠수 하강','1':'미끼 1','2':'미끼 2','3':'미끼 3','4':'미끼 4','5':'미끼 5',f10:'개발자 모드'};
+            const labels={w:'앞으로',a:'왼쪽',s:'뒤로',d:'오른쪽',shift:'달리기',e:'상호작용',g:'활동',f:'배 승하차',r:'배 조종 / 앉기',i:'장비',m:'레이더',tab:'탐험 수첩',v:'잠수 귀환',' ':'잠수 상승',control:'잠수 하강','1':'미끼 1','2':'미끼 2','3':'미끼 3','4':'미끼 4','5':'미끼 5',f10:'개발자 모드'};
             const list=document.getElementById('key-bindings');list.replaceChildren();
             document.getElementById('developer-disable').hidden=!developerModeEnabled;
             Object.entries(labels).filter(([key])=>key!=='f10'||developerModeEnabled).forEach(([key,label])=>{
@@ -6353,6 +6406,7 @@ window.IslandRemodel = (() => {
             if(e.key==='Escape'){e.preventDefault();menuPage();}
         }
         function initializeMainMenu(){
+            initializeVoyageUpdate();
             document.getElementById('game-version').addEventListener('click',()=>{
                 const now=performance.now();
                 developerUnlockClicks=now-developerUnlockTime>4000?1:developerUnlockClicks+1;developerUnlockTime=now;
@@ -6465,6 +6519,7 @@ window.IslandRemodel = (() => {
                     const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:material.map,transparent:true,depthTest:true}));
                     sprite.scale.set(4.2,1.2,1);material.dispose();return sprite;
                 },
+                renderIsland:i=>islandInRenderRange(i),
                 unlocked:i=>ISLAND_PROGRESS[i].unlocked,canVisit:i=>canAccessIslandActivities(i),ground:getMergedIslandHeight,
                 blocked:(x,z,r)=>villageObstacleCircles.some(p=>Math.hypot(x-p.x,z-p.z)<p.radius+r)||remoteObstacleCircles.some(p=>ISLAND_PROGRESS[p.islandIndex].unlocked&&Math.hypot(x-p.x,z-p.z)<p.radius+r),
                 message:text=>setStatus(text,'#9fe5c6'),changed:saveAdventureGame,
@@ -6575,44 +6630,62 @@ window.IslandRemodel = (() => {
         }
         const weatherState = {rain:0,snow:0,cloud:0,haze:.0055,sea:new THREE.Color(REGION_WEATHER[0].sea),sky:new THREE.Color(REGION_WEATHER[0].sky)};
         const weatherSeaTarget = new THREE.Color(), weatherSkyTarget = new THREE.Color();
-        const rainPositions=new Float32Array(360*6),snowPositions=new Float32Array(220*3);
-        for(let i=0;i<360;i++){
-            rainPositions[i*6]=(Math.random()-.5)*55;rainPositions[i*6+1]=Math.random()*32-4;rainPositions[i*6+2]=(Math.random()-.5)*55;
+        // Fixed island cells. Camera position only selects cells to draw; it never seeds drops.
+        const precipitationFields=new Map();
+        function weatherSeed(a,b,c){
+            const n=Math.sin(a*127.1+b*311.7+c*74.7)*43758.5453;return n-Math.floor(n);
         }
-        for(let i=0;i<220;i++){
-            snowPositions[i*3]=(Math.random()-.5)*55;snowPositions[i*3+1]=Math.random()*32-4;snowPositions[i*3+2]=(Math.random()-.5)*55;
+        function weatherParticleAt(route,cellX,cellZ,index,elapsed,rain){
+            const seed=route.index*101+index,baseX=cellX*64,baseZ=cellZ*64;
+            const period=rain?3.6:32,age=(elapsed+weatherSeed(cellX,cellZ,seed)*period)%period;
+            const x=baseX+weatherSeed(cellX,cellZ,seed+19)*58+age*(rain?1.6:.25);
+            const z=baseZ+weatherSeed(cellX,cellZ,seed+37)*64;
+            return {x,z,age,period};
         }
-        const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPositions,3));
-        const snowGeo=new THREE.BufferGeometry();snowGeo.setAttribute('position',new THREE.BufferAttribute(snowPositions,3));
-        const weatherObserver=new THREE.Vector3();
-        const rainFloors=new Float32Array(360).fill(NaN),snowFloors=new Float32Array(220).fill(NaN);
-        const rainEffect=new THREE.LineSegments(rainGeo,new THREE.ShaderMaterial({
-            uniforms:{opacity:{value:0},observer:{value:weatherObserver}},transparent:true,depthWrite:false,
-            vertexShader:'uniform vec3 observer;varying float edgeFade;void main(){edgeFade=1.0-smoothstep(34.0,50.0,length(position.xz-observer.xz));gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-            fragmentShader:'uniform float opacity;varying float edgeFade;void main(){gl_FragColor=vec4(0.76,0.86,0.91,opacity*edgeFade);}'
-        }));
-        const snowEffect=new THREE.Points(snowGeo,new THREE.ShaderMaterial({
-            uniforms:{opacity:{value:0},observer:{value:weatherObserver}},transparent:true,depthWrite:false,
-            vertexShader:'uniform vec3 observer;varying float edgeFade;void main(){edgeFade=1.0-smoothstep(34.0,50.0,length(position.xz-observer.xz));vec4 p=modelViewMatrix*vec4(position,1.0);gl_Position=projectionMatrix*p;gl_PointSize=clamp(55.0/max(1.0,-p.z),1.0,7.0);}',
-            fragmentShader:'uniform float opacity;varying float edgeFade;void main(){float a=1.0-smoothstep(0.12,0.5,length(gl_PointCoord-0.5));gl_FragColor=vec4(0.94,0.98,1.0,a*opacity*edgeFade);}'
-        }));
-        rainEffect.frustumCulled=false;snowEffect.frustumCulled=false;
-        scene.add(rainEffect,snowEffect);
-        function stepWeatherParticles(data,stride,floors,delta,elapsed,observer,rain){
-            for(let i=0;i<floors.length;i++){
-                const j=i*stride;
-                const outside=Math.hypot(data[j]-observer.x,data[j+2]-observer.z)>55;
-                if(!Number.isFinite(floors[i])||outside||data[j+1]<=floors[i]||data[j+1]<observer.y-45){
-                    const initialize=!Number.isFinite(floors[i])||outside;
-                    data[j]=observer.x+(Math.random()-.5)*96;data[j+2]=observer.z+(Math.random()-.5)*96;
-                    floors[i]=Math.max(0,getMergedIslandHeight(data[j],data[j+2]));
-                    const ceiling=Math.max(observer.y+42,floors[i]+28);
-                    data[j+1]=initialize?floors[i]+Math.random()*(ceiling-floors[i]):ceiling;
+        function createPrecipitationField(route,rain){
+            const cells=[];
+            const spanX=route.rx*1.5+64,spanZ=route.rz*1.5+64;
+            for(let x=Math.floor((route.x-spanX)/64);x<=Math.floor((route.x+spanX)/64);x++)
+                for(let z=Math.floor((route.z-spanZ)/64);z<=Math.floor((route.z+spanZ)/64);z++)
+                    cells.push({x,z,center:new THREE.Vector3(x*64+32,40,z*64+32),floors:null});
+            const stride=rain?6:3,count=rain?56:38,data=new Float32Array(cells.length*count*stride);
+            const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(data,3));geo.setDrawRange(0,0);
+            const material=new THREE.ShaderMaterial({
+                uniforms:{opacity:{value:0},eye:{value:performanceObserver}},transparent:true,depthWrite:false,
+                vertexShader:'uniform vec3 eye;varying float fade;void main(){vec4 p=modelViewMatrix*vec4(position,1.0);gl_Position=projectionMatrix*p;fade=1.0-smoothstep(180.0,280.0,length(position.xz-eye.xz));gl_PointSize=clamp(65.0/max(1.0,-p.z),1.0,6.0);}',
+                fragmentShader:rain?'uniform float opacity;varying float fade;void main(){gl_FragColor=vec4(.76,.86,.91,opacity*fade);}':'uniform float opacity;varying float fade;void main(){float a=1.0-smoothstep(.12,.5,length(gl_PointCoord-.5));gl_FragColor=vec4(.94,.98,1.0,a*opacity*fade);}'
+            });
+            const mesh=rain?new THREE.LineSegments(geo,material):new THREE.Points(geo,material);
+            mesh.frustumCulled=false;scene.add(mesh);
+            return {route,rain,cells,stride,count,data,geo,mesh};
+        }
+        function updateIslandPrecipitation(elapsed){
+            const density=[.4,.7,1][Math.min(graphics.effects,effectiveQuality())];
+            for(const route of ISLAND_ROUTES){
+                const profile=REGION_WEATHER[route.index],rain=profile.rain>0;
+                if(!rain&&!profile.snow)continue;
+                const show=islandInRenderRange(route.index)&&islandEdgeDistance(route,performanceObserver)<300;
+                let field=precipitationFields.get(route.index);
+                if(!show){if(field)field.mesh.visible=false;continue;}
+                if(!field){field=createPrecipitationField(route,rain);precipitationFields.set(route.index,field);}
+                field.mesh.visible=true;field.mesh.material.uniforms.opacity.value=(rain?profile.rain*.55:profile.snow*.8);
+                let used=0;const count=Math.max(1,Math.floor(field.count*density));
+                for(const cell of field.cells){
+                    if(Math.hypot(cell.center.x-performanceObserver.x,cell.center.z-performanceObserver.z)>320||!effectIsVisible(cell.center,90))continue;
+                    if(!cell.floors){
+                        cell.floors=new Float32Array(field.count);
+                        for(let i=0;i<field.count;i++){const pos=weatherParticleAt(route,cell.x,cell.z,i,0,rain);cell.floors[i]=Math.max(0,getMergedIslandHeight(pos.x,pos.z));}
+                        cell.center.y=Math.max(...cell.floors)+35;
+                    }
+                    for(let i=0;i<count;i++){
+                        const pos=weatherParticleAt(route,cell.x,cell.z,i,elapsed,rain),j=used*field.stride;
+                        const y=cell.floors[i]+(1-pos.age/pos.period)*(rain?90:64);
+                        field.data[j]=pos.x;field.data[j+1]=y;field.data[j+2]=pos.z;
+                        if(rain){field.data[j+3]=pos.x-.07;field.data[j+4]=y+1.1;field.data[j+5]=pos.z;}
+                        used++;
+                    }
                 }
-                // These are fixed world coordinates. Walking changes neither the particle origin nor its velocity.
-                data[j]+=delta*(rain?1.6:Math.sin(elapsed*.6+i)*.5+.25);
-                data[j+1]-=delta*(rain?19+weatherState.rain*9:1.1+(i%5)*.15);
-                if(rain){data[j+3]=data[j]-.08;data[j+4]=data[j+1]+1.3;data[j+5]=data[j+2];}
+                field.geo.setDrawRange(0,used*(rain?2:1));field.geo.attributes.position.needsUpdate=true;
             }
         }
         function updateRegionWeather(delta,elapsed,position) {
@@ -6628,14 +6701,176 @@ window.IslandRemodel = (() => {
             currentColor.lerp(weatherState.sky,.55*daylight);
             sunLight.intensity*=1-weatherState.cloud*.65;
             starsMat.opacity*=1-weatherState.cloud;
-            weatherObserver.copy(position);
-            rainEffect.visible=!isMapOverview&&weatherState.rain>.01;
-            snowEffect.visible=!isMapOverview&&weatherState.snow>.01;
-            rainEffect.material.uniforms.opacity.value=weatherState.rain*.55;
-            snowEffect.material.uniforms.opacity.value=weatherState.snow*.8;
-            if(rainEffect.visible)stepWeatherParticles(rainPositions,6,rainFloors,delta,elapsed,position,true);
-            if(snowEffect.visible)stepWeatherParticles(snowPositions,3,snowFloors,delta,elapsed,position,false);
-            rainGeo.attributes.position.needsUpdate=rainEffect.visible;snowGeo.attributes.position.needsUpdate=snowEffect.visible;
+            updateIslandPrecipitation(elapsed);
+        }
+
+
+        // Voyage 1.1: bounded world rendering and adaptive quality.
+        const GRAPHICS_DEFAULTS={auto:true,fps:60,quality:2,shadows:2,distance:1,effects:1};
+        let graphics={...GRAPHICS_DEFAULTS};
+        try{const saved=JSON.parse(localStorage.getItem('island-graphics-v1')||'null');if(saved){
+            for(const [key,values] of Object.entries({auto:[true,false],fps:[0,30,60,120],quality:[0,1,2],shadows:[0,1,2],distance:[0,1,2],effects:[0,1,2]}))
+                if(values.includes(saved[key]))graphics[key]=saved[key];
+        }}catch{}
+        const adaptive={level:graphics.quality,last:0,draw:0,slow:0,fast:0,smoothed:16.7,applied:''};
+        let radarVisible=false,reelFeedbackInside=false,reelFeedbackTime=-1,worldTick=0,bookResume=null,biteDeadline=0;
+        const performanceObserver=new THREE.Vector3(),effectPoint=new THREE.Vector3();
+        const effectFrustum=new THREE.Frustum(),effectMatrix=new THREE.Matrix4(),effectSphere=new THREE.Sphere();
+        const pendingIslandStages=new Map();
+        function getReelBounds(indicator,target,zone){
+            return {indicatorLow:Math.max(0,indicator-4),indicatorHigh:Math.min(100,indicator+4),
+                low:Math.max(0,target-zone),high:Math.min(100,target+zone)};
+        }
+        function getReelCoverage(from,to,targetFrom,targetTo,zone){
+            // Integrate the overlapping time within this frame, not an all-or-nothing swept hit.
+            const a=from-targetFrom,b=to-targetTo,extent=zone+4+.35;
+            if(Math.abs(b-a)<1e-8)return Math.abs(b)<=extent?1:0;
+            const x=(-extent-a)/(b-a),y=(extent-a)/(b-a);
+            return Math.max(0,Math.min(1,Math.max(x,y))-Math.max(0,Math.min(x,y)));
+        }
+        function shouldDrawFrame(now){
+            if(document.hidden){adaptive.last=0;adaptive.draw=0;adaptive.slow=0;adaptive.fast=0;return false;}
+            const interval=graphics.fps?1000/graphics.fps:0;
+            if(adaptive.draw&&now-adaptive.draw<interval-.5)return false;
+            const frame=adaptive.last?now-adaptive.last:16.7;adaptive.last=now;
+            adaptive.draw=interval&&adaptive.draw?now-((now-adaptive.draw)%interval):now;
+            if(frame<250){
+                adaptive.smoothed+=(frame-adaptive.smoothed)*.05;
+                if(graphics.auto){
+                    const target=1000/(graphics.fps||60);
+                    adaptive.slow=adaptive.smoothed>target*1.3?adaptive.slow+frame:Math.max(0,adaptive.slow-frame);
+                    adaptive.fast=adaptive.smoothed<target*1.08?adaptive.fast+frame:0;
+                    if(adaptive.slow>2500&&adaptive.level>0){adaptive.level--;adaptive.slow=0;adaptive.fast=0;}
+                    if(adaptive.fast>15000&&adaptive.level<graphics.quality){adaptive.level++;adaptive.fast=0;adaptive.slow=0;}
+                }
+            }
+            return true;
+        }
+        function renderExplorerBook(){
+            document.getElementById('book-records').textContent=ISLAND_ROUTES[currentIslandIndex].name+'\n소지금 '+playerMoney.toLocaleString()+' G\n플레이 시간 '+formatPlayTime(playTimeSeconds);
+            const quest=getTrackedQuest();
+            document.getElementById('book-quest').textContent=quest?[quest.title,quest.island,...quest.rows.map(row=>row.text)].join('\n'):'진행 중인 의뢰가 없습니다. 의뢰 NPC에게 말을 걸어 보세요.';
+            const controls=[['w','앞으로'],['a','왼쪽'],['s','뒤로'],['d','오른쪽'],['shift','달리기'],['e','대화 / 상호작용'],['f','배 승하차'],['r','조종 / 앉기'],['i','장비'],['m','레이더'],['tab','수첩'],['v','잠수 귀환'],[' ','잠수 상승'],['control','잠수 하강']];
+            document.getElementById('book-controls').textContent=controls.map(([key,label])=>keyLabel(key)+' · '+label).join('\n')+'\n'+['1','2','3','4','5'].map(keyLabel).join(' / ')+' · 미끼 선택\n마우스 움직이기 · 시점\n좌클릭 유지 → 떼기 · 던지기\n입질 때 좌클릭 · 챔질\n낚는 중 누르면 상승, 떼면 하강\nEsc · 메뉴 / 수첩 닫기';
+            document.getElementById('book-discovery').textContent='물고기 도감 · '+Object.values(fishDex).filter(f=>f.caught>0).length+' / 50종';
+        }
+        function radarPoints(position,range){
+            return ISLAND_ROUTES.filter(r=>ISLAND_PROGRESS[r.index].unlocked).map(r=>({
+                index:r.index,name:r.name,x:(r.x-position.x)/range,z:(r.z-position.z)/range,
+                distance:Math.hypot(r.x-position.x,r.z-position.z)
+            }));
+        }
+        function updateRadar(position){
+            const canvas=document.getElementById('radar');
+            const visible=radarVisible&&!menuOpen&&currentState!==STATES.MODAL_OPEN&&!tutorialActive;
+            canvas.style.display=visible?'block':'none';if(!visible)return;
+            const c=canvas.getContext('2d'),radius=190,range=1800;c.clearRect(0,0,440,440);c.save();c.translate(220,220);
+            c.strokeStyle='#428765';c.lineWidth=1.5;
+            for(const r of [radius/2,radius]){c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.stroke();}
+            c.beginPath();c.moveTo(-radius,0);c.lineTo(radius,0);c.moveTo(0,-radius);c.lineTo(0,radius);c.stroke();
+            c.font='18px sans-serif';c.textAlign='center';c.fillStyle='#b5e5ce';c.fillText('N',0,-200);
+            c.font='14px sans-serif';c.fillText('북쪽 고정 · 반경 1.8km',0,211);
+            for(const point of radarPoints(position,range)){
+                if(point.distance>range)continue;
+                const x=point.x*radius,z=point.z*radius;
+                c.fillStyle='#58f18b';c.beginPath();c.arc(x,z,point.index===currentIslandIndex?8:5,0,Math.PI*2);c.fill();
+                if(point.index===currentIslandIndex||point.index===compassTargetIslandIndex){c.fillStyle='#d5f8df';c.fillText(point.name,Math.max(-130,Math.min(130,x)),Math.max(-160,Math.min(170,z+23)));}
+            }
+            c.rotate(-yaw);c.fillStyle='#fff2b1';c.beginPath();c.moveTo(0,-12);c.lineTo(-7,7);c.lineTo(7,7);c.closePath();c.fill();c.restore();
+        }
+        function renderGraphicsSettings(){
+            const list=document.getElementById('graphics-settings');list.replaceChildren();
+            const fields=[
+                ['auto','자동 최적화',[[true,'켜기'],[false,'끄기']]],
+                ['fps','프레임 제한',[[30,'30 FPS'],[60,'60 FPS'],[120,'120 FPS'],[0,'제한 없음']]],
+                ['quality','최대 그래픽 품질',[[0,'낮음'],[1,'보통'],[2,'높음']]],
+                ['shadows','그림자',[[0,'끔'],[1,'낮음'],[2,'높음']]],
+                ['distance','렌더 거리',[[0,'가까움'],[1,'보통'],[2,'멀리']]],
+                ['effects','날씨 · 파도 밀도',[[0,'낮음'],[1,'보통'],[2,'높음']]]
+            ];
+            for(const [key,label,options] of fields){
+                const row=document.createElement('label'),select=document.createElement('select');row.className='graphics-row';row.textContent=label;
+                options.forEach(([value,text])=>{const option=document.createElement('option');option.value=String(value);option.textContent=text;select.append(option);});
+                select.value=String(graphics[key]);select.addEventListener('change',()=>{
+                    graphics[key]=key==='auto'?select.value==='true':Number(select.value);adaptive.level=graphics.quality;adaptive.slow=adaptive.fast=0;adaptive.last=adaptive.draw=0;
+                    try{localStorage.setItem('island-graphics-v1',JSON.stringify(graphics));}catch{menuMessage('그래픽 설정을 저장하지 못했습니다.');}
+                    applyGraphicsQuality();renderGraphicsSettings();
+                });row.append(select);list.append(row);
+            }
+            document.getElementById('graphics-status').textContent='현재 품질: '+['낮음','보통','높음'][effectiveQuality()]+' · 성능이 부족하면 낮추고, 안정되면 천천히 복구합니다.';
+        }
+        function effectiveQuality(){return graphics.auto?Math.min(graphics.quality,adaptive.level):graphics.quality;}
+        function visualRange(){return [420,560,700][graphics.distance]*[.85,.95,1][effectiveQuality()];}
+        function applyGraphicsQuality(){
+            const level=effectiveQuality(),shadow=Math.min(graphics.shadows,level),ratio=Math.min(window.devicePixelRatio||1,[.8,1.2,1.6][level]);
+            const signature=[level,shadow,ratio,graphics.distance].join(':');if(adaptive.applied===signature)return;adaptive.applied=signature;
+            renderer.setPixelRatio(ratio);renderer.shadowMap.enabled=shadow>0;
+            const size=shadow===2?2048:1024;
+            if(sunLight.shadow.mapSize.x!==size){sunLight.shadow.map?.dispose();sunLight.shadow.map=null;sunLight.shadow.mapSize.set(size,size);}
+            for(const cam of [camera,menuCamera]){cam.far=visualRange()+550;cam.updateProjectionMatrix();}
+        }
+        function islandEdgeDistance(route,position){
+            return Math.hypot(position.x-route.x,position.z-route.z)-Math.max(route.rx,route.rz)*1.45;
+        }
+        function islandInRenderRange(index){
+            return ISLAND_PROGRESS[index].unlocked&&islandEdgeDistance(ISLAND_ROUTES[index],performanceObserver)<visualRange();
+        }
+        function effectIsVisible(position,radius=8){
+            effectSphere.center.copy(position);effectSphere.radius=radius;
+            return position.distanceToSquared(performanceObserver)<Math.pow(visualRange()+radius,2)&&effectFrustum.intersectsSphere(effectSphere);
+        }
+        function ensureIslandReady(index){
+            if(index===0||!ISLAND_PROGRESS[index]?.unlocked)return;
+            const route=ISLAND_ROUTES[index],stage=pendingIslandStages.get(index)||0;
+            if(stage<1&&!islandWorldGroups.has(index))buildIslandPart(route,createRemoteIslandTerrain);
+            if(stage<2)buildIslandPart(route,createRemoteOutpost);
+            if(stage<3)buildIslandPart(route,createRemodeledIsland);
+            pendingIslandStages.set(index,3);
+        }
+        function updatePerformanceWorld(delta,elapsed){
+            applyGraphicsQuality();
+            const view=menuOpen?menuCamera:camera;view.updateMatrixWorld(true);view.getWorldPosition(performanceObserver);
+            // A slightly wider frustum keeps effects ready just outside the screen.
+            effectMatrix.copy(view.projectionMatrix);effectMatrix.elements[0]*=.85;effectMatrix.elements[5]*=.85;
+            effectMatrix.multiply(view.matrixWorldInverse);effectFrustum.setFromProjectionMatrix(effectMatrix);
+            worldTick+=delta;
+            if(worldTick>.12){
+                worldTick=0;
+                const nearest=ISLAND_ROUTES.slice(1).filter(r=>ISLAND_PROGRESS[r.index].unlocked&&(pendingIslandStages.get(r.index)||0)<3&&islandEdgeDistance(r,performanceObserver)<1000)
+                    .sort((a,b)=>islandEdgeDistance(a,performanceObserver)-islandEdgeDistance(b,performanceObserver))[0];
+                if(nearest){
+                    const stage=pendingIslandStages.get(nearest.index)||0;
+                    buildIslandPart(nearest,[createRemoteIslandTerrain,createRemoteOutpost,createRemodeledIsland][stage]);
+                    pendingIslandStages.set(nearest.index,stage+1);
+                }
+            }
+            islandWorldGroups.forEach((group,index)=>{
+                group.visible=islandInRenderRange(index);
+                const details=islandEdgeDistance(ISLAND_ROUTES[index],performanceObserver)<visualRange()*.65;
+                group.children.forEach(child=>{child.visible=child===remoteIslandMeshes.find(m=>m.userData.islandIndex===index)||details;});
+            });
+            island.visible=islandInRenderRange(0);
+            remodeledScenery.forEach(group=>{
+                const index=group.userData.islandIndex;
+                group.visible=islandInRenderRange(index)&&islandEdgeDistance(ISLAND_ROUTES[index],performanceObserver)<visualRange()*.65;
+                group.children.forEach(chunk=>{
+                    if(!chunk.userData.cullCenter)return;
+                    effectPoint.copy(chunk.userData.cullCenter);chunk.localToWorld(effectPoint);
+                    chunk.visible=effectIsVisible(effectPoint,chunk.userData.cullRadius);
+                });
+            });
+        }
+        function initializeVoyageUpdate(){
+            document.getElementById('menu-patch').addEventListener('click',()=>menuPage('patch'));
+            const entries=[{version:'1.1.0',date:'2026-09-10',groups:{
+                '추가':['탐험 수첩: 조작법, 현재 의뢰, 도감, 소지금과 플레이 시간','발견한 섬을 초록색 점으로 표시하는 레이더','프레임 제한, 그래픽 설정과 자동 최적화'],
+                '개선':['너무 먼 섬 숨김과 거리별 세부 표시','섬 접근 시 지형·상점·장식을 단계적으로 준비','장식의 구역별 렌더링과 화면 밖 시각 효과 계산 절약'],
+                '수정':['비·눈을 섬에 고정된 강수 영역으로 변경','낚시 게이지를 중앙 옆으로 이동하고 포획 진행도를 세로로 표시','초록 구역과 실제 판정 일치, 프레임 사이 겹친 시간 반영'],
+                '알려진 제한':['프레임은 기기 성능과 모니터 주사율에 따라 달라집니다.']}}];
+            const root=document.getElementById('patch-entries');root.replaceChildren();
+            entries.forEach(entry=>{const title=document.createElement('h3');title.textContent='v'+entry.version+' · '+entry.date;root.append(title);
+                Object.entries(entry.groups).forEach(([name,items])=>{const heading=document.createElement('h4'),list=document.createElement('ul');heading.textContent=name;items.forEach(text=>{const li=document.createElement('li');li.textContent=text;list.append(li);});root.append(heading,list);});});
+            document.getElementById('settings-reset').addEventListener('click',()=>{graphics={...GRAPHICS_DEFAULTS};adaptive.level=2;adaptive.applied='';try{localStorage.removeItem('island-graphics-v1');}catch{}renderGraphicsSettings();});
         }
 
         const clock = new THREE.Clock();
@@ -6693,15 +6928,18 @@ window.IslandRemodel = (() => {
         let walkFrameBoat=false,walkFrameIsland=0,walkPhase=0;
         let dayTime = 0; let isNight = false;
 
-        function animate() {
+        function animate(timestamp=performance.now()) {
             requestAnimationFrame(animate);
+            if(!shouldDrawFrame(timestamp))return;
             const delta = Math.min(clock.getDelta(), 0.1);
             const elapsed = clock.getElapsedTime();
             lastFrameElapsed=elapsed;
             updatePlayTime();
+            updatePerformanceWorld(delta,elapsed);
             updateCoastalGulls(elapsed);
             npcActors.forEach((person, index) => {
-                if (!person.visible) return;
+                person.getWorldPosition(effectPoint);
+                if (!person.visible||!effectIsVisible(effectPoint,4)) return;
                 const body = person.getObjectByName('npc-upper-body');
                 const arm = person.getObjectByName('npc-gesture-arm');
                 if (body) body.position.y = Math.sin(elapsed * 1.6 + index * 1.7) * .014;
@@ -6828,7 +7066,7 @@ window.IslandRemodel = (() => {
             }
 
             lastWalkPosition.copy(player.position);
-            shoreCollectibles.forEach(item=>updateShoreCrab(item,elapsed));
+            shoreCollectibles.forEach(item=>{if(effectIsVisible(item.position,3))updateShoreCrab(item,elapsed);});
 
             nearbyShoreItem = null;
             let nearestShoreDistance = 2.8;
@@ -6975,7 +7213,12 @@ window.IslandRemodel = (() => {
             shoreWaterPosition.needsUpdate = true;
             if (shoreWaterNormalFrame++ % 2 === 0) shoreWaterGeometry.computeVertexNormals();
 
-            shoreFoamPatches.forEach(patch => {
+            shoreFoamPatches.forEach((patch,patchIndex) => {
+                const density=[.4,.7,1][Math.min(graphics.effects,effectiveQuality())];
+                const shown=effectIsVisible(patch.position,35)&&(patchIndex%10)<density*10;
+                patch.visible=shown;
+                if(patch.userData.sheet)patch.userData.sheet.visible=shown;
+                if(!shown)return;
                 const cycle = (elapsed * shoreWaveSpeed + patch.userData.phase) % 1;
                 const approachProgress = smoothWaveStep(cycle / shoreWaveBreakEnd);
                 const breakProgress = smoothWaveStep(
@@ -7147,14 +7390,21 @@ window.IslandRemodel = (() => {
             else if (currentState === STATES.BITING) bobberGroup.position.y = -0.25 + Math.sin(elapsed * 25) * 0.1;
             else if (currentState === STATES.REELING) {
                 const reelBalance = getActiveReelBalance();
-                reelIndicatorPos = isMouseDown ? Math.min(100, reelIndicatorPos + 80 * delta) : Math.max(0, reelIndicatorPos - 65 * delta);
-                uiReelIndicator.style.bottom = `${reelIndicatorPos}%`;
+                const previousIndicator=reelIndicatorPos,previousTarget=reelTargetPos;
+                reelIndicatorPos = isMouseDown ? Math.min(96, reelIndicatorPos + 80 * delta) : Math.max(4, reelIndicatorPos - 65 * delta);
                 reelTargetPos = getReelTarget(delta, reelBalance);
-                uiReelTarget.style.bottom = `${reelTargetPos - reelBalance.zone}%`;
-
-                if (Math.abs(reelIndicatorPos - reelTargetPos) < reelBalance.zone) { reelProgress += reelBalance.gain * delta; uiReelProgressBar.style.background = '#22c55e'; } 
-                else { reelProgress -= reelBalance.loss * delta; uiReelProgressBar.style.background = '#ef4444'; }
-                uiReelProgressBar.style.width = `${Math.max(0, Math.min(100, reelProgress))}%`;
+                const bounds=getReelBounds(reelIndicatorPos,reelTargetPos,reelBalance.zone);
+                uiReelIndicator.style.bottom=bounds.indicatorLow+'%';
+                uiReelIndicator.style.height=(bounds.indicatorHigh-bounds.indicatorLow)+'%';
+                uiReelTarget.style.bottom=bounds.low+'%';uiReelTarget.style.height=(bounds.high-bounds.low)+'%';
+                const coverage=getReelCoverage(previousIndicator,reelIndicatorPos,previousTarget,reelTargetPos,reelBalance.zone);
+                reelProgress+=(reelBalance.gain*coverage-reelBalance.loss*(1-coverage))*delta;
+                const hit=bounds.indicatorHigh>=bounds.low&&bounds.indicatorLow<=bounds.high;
+                uiReelProgressBar.style.background=hit?'#22c55e':'#ef4444';
+                uiReelIndicator.style.background=hit?'#c7ff92':'#facc15';
+                if(hit&&!reelFeedbackInside&&elapsed-reelFeedbackTime>.4){sound.playMenuSelect();reelFeedbackTime=elapsed;}
+                reelFeedbackInside=hit;
+                uiReelProgressBar.style.height=Math.max(0,Math.min(100,reelProgress))+'%';
 
                 if (reelProgress >= 100) completeCatch();
                 else if (reelProgress <= 0) missFish("낚싯줄 텐션이 풀려 물고기가 도망쳤습니다!");
@@ -7235,6 +7485,8 @@ window.IslandRemodel = (() => {
             }
 
             fishSchools.forEach((school, index) => {
+                school.active=effectIsVisible(school.center,30);
+                if(!school.active)return;
                 const previousX = school.center.x, previousY = school.center.y, previousZ = school.center.z;
                 school.angle += school.angularSpeed * delta;
                 const radiusPulse = Math.sin(elapsed * 0.18 + index) * 2.2;
@@ -7256,6 +7508,7 @@ window.IslandRemodel = (() => {
 
             fishPool.forEach((fish, fishIndex) => {
                 const school = fish.userData.school;
+                fish.visible=school.active;if(!school.active)return;
                 const heading = Math.atan2(school.velocity.x, school.velocity.z);
                 const offset = fish.userData.motionOffset.copy(fish.userData.formationOffset).applyAxisAngle(fishUpAxis, heading);
                 const desired = fish.userData.desiredPosition.copy(school.center).add(offset);
@@ -7305,6 +7558,7 @@ window.IslandRemodel = (() => {
             }
             sunMesh.visible=!isMapOverview&&sunMesh.position.y+40>0;
             moonMesh.visible=!isMapOverview&&moonMesh.position.y+30>0;
+            updateRadar(renderPos);
             renderer.render(scene, menuOpen ? menuCamera : isMapOverview ? mapCamera : camera);
         }
 
