@@ -302,7 +302,7 @@
             <label class="setting-row">전체 소리 <output id="volume-value"></output><input id="setting-volume" type="range" min="0" max="100" step="1"></label>
             <h3>화면과 성능</h3><div id="graphics-settings"></div><p id="graphics-status"></p>
             <h3>키 설정</h3><p style="font-size:14px">버튼을 누르고 새 키를 입력하세요. ESC는 메뉴 열기·취소로 고정됩니다.</p>
-            <div id="key-bindings"></div><p style="font-size:14px">같은 키를 여러 동작에 지정할 수 있습니다. Ctrl 조합 단축키 보호는 전체화면에서 지원됩니다.</p><button id="keyboard-protection" type="button">전체화면 · 단축키 보호</button><button id="developer-disable" type="button" hidden>개발자 모드 끄기</button><button id="game-version" type="button" style="display:block;margin:18px 0 8px;padding:4px 0;min-height:28px;background:none;border:none;color:#a5bcb9;font-size:13px">버전 1.1.0</button><button id="settings-reset">설정 초기화</button> <button data-menu-back>돌아가기</button>
+            <div id="key-bindings"></div><p style="font-size:14px">같은 키를 여러 동작에 지정할 수 있습니다. Ctrl 조합 단축키 보호는 전체화면에서 지원됩니다.</p><button id="keyboard-protection" type="button">전체화면 · 단축키 보호</button><button id="developer-disable" type="button" hidden>개발자 모드 끄기</button><button id="game-version" type="button" style="display:block;margin:18px 0 8px;padding:4px 0;min-height:28px;background:none;border:none;color:#a5bcb9;font-size:13px">버전 1.2.0</button><button id="settings-reset">설정 초기화</button> <button data-menu-back>돌아가기</button>
         </section>
         <p id="menu-message" role="status"></p>
         <p id="menu-footer">처음 만나는 바다, 당신만의 항해.<br>ESC · 메뉴 열기 / 진행은 선택한 슬롯에 자동 저장됩니다.<br>저장 데이터는 이 브라우저에만 보관됩니다.</p>
@@ -354,7 +354,6 @@
 
         <div class="crosshair"></div>
         <div id="interact-prompt">[E] 키를 눌러 상점 열기</div>
-        <div id="compass-ui"><div id="compass-arrow">▲</div><div><strong id="compass-title">다음 섬 좌표</strong><span id="compass-meta">방향 계산 중</span></div></div>
 
         <div class="bite-alert-container"><div id="bite-alert" class="bite-alert">! BITE !</div></div>
         <div class="status-container"><div id="status-badge" class="status-badge">바다를 바라보고 마우스를 꾹 눌러 게이지를 채우세요</div></div>
@@ -735,6 +734,7 @@ window.IslandAdventures = (() => {
     }
     return {campaigns,create};
 })();
+
 </script>
     <section id="ending-screen" role="dialog" aria-modal="true" aria-labelledby="ending-title">
         <div class="ending-card"><div id="ending-act"></div><h1 id="ending-title"></h1><p id="ending-story"></p>
@@ -757,16 +757,50 @@ window.IslandAdventures = (() => {
         <button class="modal-close-btn" id="btn-quest-close">대화 끝내기</button>
     </div>
 
+    <style>
+        #radar{display:none!important}
+        #dex-modal{position:fixed;inset:auto;padding:0;border:0;background:none;backdrop-filter:none;box-shadow:none;border-radius:0;transform:none;animation:none;min-width:0;max-height:none;overflow:visible;color:#37271c;opacity:0;z-index:105;transition:opacity .14s}
+        .journal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;height:16%;border-bottom:1px solid #a58b643f}
+        #dex-modal h2{font-size:clamp(17px,1.6vw,27px);margin:0;color:#503822}
+        #book-records{text-align:right;font-size:clamp(12px,.9vw,15px);line-height:1.6;white-space:pre-line}
+        .journal-tabs{position:absolute;left:calc(100% + 12px);top:17%;display:flex;flex-direction:column;gap:10px}
+        .journal-tabs button{width:86px;padding:12px 6px;border:0;border-radius:0 5px 5px 0;background:#466954;color:#fff7dc;box-shadow:2px 3px 4px #0003;cursor:pointer;font-size:14px;transition:width .2s,filter .2s}
+        .journal-tabs button:nth-child(2){background:#a4583f}.journal-tabs button:nth-child(3){background:#3b6678}.journal-tabs button:nth-child(4){background:#826044}
+        .journal-tabs button[aria-selected=true]{width:101px;filter:brightness(1.2)}
+        .book-pages{display:block;height:74%;position:relative;padding-top:8px}
+        .journal-page{height:100%;overflow:auto;text-align:left;scrollbar-width:thin;scrollbar-color:#92744f transparent}
+        .journal-page[hidden]{display:none!important}
+        .journal-page h3{margin:4px 0 15px;font-size:18px;color:#61452b}
+        #book-controls{white-space:pre-line;column-count:2;column-gap:12%;font-size:clamp(13px,1vw,17px);line-height:1.9}
+        #book-quest{white-space:pre-line;font-size:16px;line-height:1.8;padding-right:12px}
+        .journal-footer{display:flex;justify-content:space-between;align-items:center;height:10%;font-size:13px;color:#876d4d}
+        #dex-modal .modal-close-btn{background:none;color:#654a32;padding:5px 8px;margin:0;border:0;width:auto;box-shadow:none;font-size:14px}
+        #dex-modal #dex-list{max-height:none;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+        #dex-modal .dex-card{background:#d6c39b35;border:1px solid #9c805c50;color:#413021;min-width:0;font-size:12px}
+        #dex-modal #dex-preview{background:#b29c7120;max-height:160px;min-height:0;padding:6px;border:0;color:#40331f}
+        #dex-modal #dex-portrait{max-height:135px;width:42%;object-fit:contain}
+        #dex-modal #dex-detail{font-size:13px;color:#4d3b28}
+        #book-achievements{display:grid;grid-template-columns:1fr 1fr;gap:12px 9%}
+        .journal-achievement{padding:10px 0;border-bottom:1px solid #9c805c55;font-size:13px;line-height:1.65}
+        .journal-achievement strong{display:block;font-size:15px;color:#614c30}
+        .journal-achievement progress{width:100%;height:5px;accent-color:#668557;display:block;margin:8px 0}
+        .journal-achievement.complete strong{color:#476d39}
+        #dex-modal.page-turn .book-pages{animation:journal-turn .42s ease-in-out}
+        @keyframes journal-turn{0%{opacity:1;transform:perspective(900px) rotateY(0)}45%{opacity:.1;transform:perspective(900px) rotateY(-12deg)}100%{opacity:1;transform:perspective(900px) rotateY(0)}}
+        @media(max-width:700px){.journal-tabs{left:calc(100% + 3px);gap:7px}.journal-tabs button{width:53px;font-size:12px;padding:10px 2px}.journal-tabs button[aria-selected=true]{width:59px}#book-controls{column-count:1}#book-achievements{grid-template-columns:1fr}#dex-modal #dex-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+        @media(prefers-reduced-motion:reduce){#dex-modal.page-turn .book-pages{animation:none}}
+    </style>
     <canvas id="radar" width="440" height="440" aria-label="발견한 섬 레이더"></canvas>
     <div id="dex-modal" role="dialog" aria-label="탐험 수첩">
-        <h2>📖 항해자의 탐험 수첩</h2>
-        <div class="book-pages"><section id="book-notes"><div id="book-records"></div><h3>현재 의뢰</h3><div id="book-quest"></div><h3>조작법</h3><div id="book-controls"></div></section><section><h3 id="book-discovery">물고기 도감</h3>
+        <header class="journal-header"><h2>항해 일지</h2><div id="book-records"></div></header>
+        <nav class="journal-tabs" role="tablist" aria-label="책 북마커"><button role="tab" data-book-page="controls">조작법</button><button role="tab" data-book-page="quest">의뢰</button><button role="tab" data-book-page="dex">도감</button><button role="tab" data-book-page="achievements">도전과제</button></nav>
+        <div class="book-pages"><section class="journal-page" data-journal-page="controls"><h3>항해의 첫걸음</h3><div id="book-controls"></div></section><section class="journal-page" data-journal-page="quest" hidden><h3>진행 중인 의뢰</h3><div id="book-quest"></div></section><section class="journal-page" data-journal-page="achievements" hidden><h3>항해자의 발자취</h3><div id="book-achievements"></div></section><section class="journal-page" data-journal-page="dex" hidden><h3 id="book-discovery">물고기 도감</h3>
         <div id="dex-preview">
             <img id="dex-portrait" alt="선택한 물고기의 3D 모델">
             <div><div id="dex-detail">물고기를 잡으면 이곳에서 실제 모습을 볼 수 있어요.</div><button class="dex-turn" id="dex-turn-left" type="button" aria-label="물고기 왼쪽으로 회전">↶ 회전</button><button class="dex-turn" id="dex-turn-right" type="button" aria-label="물고기 오른쪽으로 회전">회전 ↷</button></div>
         </div>
         <div id="dex-list"></div>
-        </section></div><button class="modal-close-btn" id="btn-dex-close">수첩 닫기 (Tab / Esc)</button>
+        </section></div><footer class="journal-footer"><span id="book-page-number">01 / 04</span><button class="modal-close-btn" id="btn-dex-close">책 덮기</button></footer>
     </div>
 
     <div id="inventory-modal">
@@ -823,7 +857,1116 @@ window.IslandAdventures = (() => {
         <button id="dev-close">개발자 패널 닫기 (F10)</button>
     </div>
 
-    <script>
+    <!-- VOYAGE ASSETS -->
+<script>
+/* Coastal model kit, compatible with THREE r128. No scene or renderer globals.
+ * const kit = IslandModelAssets.create(THREE);
+ * Every factory returns a local, ground-origin Group; place / rotate the group yourself.
+ * Inputs: rock({seed,scale,color,kind}), tree({seed,size,theme,green}),
+ * roof({width,depth,height,theme,color,trim,tiers}), coral({seed,size,color,kind}),
+ * landmark({theme,seed,size,palette}), lamppost({height,color,metal,style}).
+ * Mesh geometry/materials are shared, immutable and suitable for instancing by identity.
+ * Each model has footprint {radius,height}; landmark colliders are local cylinders.
+ * A lamp's glow mesh has userData.lightAnchor {color,intensity,distance,nightOnly}.
+ * kit.update(elapsedSeconds) animates wind; works after meshes are baked to InstancedMesh.
+ * Update emissive strength / pooled lights externally; no PointLights are allocated here.
+ */
+window.IslandModelAssets = (() => {
+    const libraries = new WeakMap();
+    function create(THREE) {
+        if (libraries.has(THREE)) return libraries.get(THREE);
+        const geometries = new Map(), materials = new Map();
+        const windTime = {value:0};
+        const up = new THREE.Vector3(0, 1, 0);
+        const palette = {
+            grass: {stone:0x8d8a7e,wood:0x725336,leaf:0x4f8b46,roof:0x567e68,trim:0xd4b98b,glow:0xffd895},
+            coral: {stone:0xe3c8af,wood:0x877052,leaf:0x409f70,roof:0x32a29e,trim:0xf1dec0,glow:0xffddac},
+            bamboo: {stone:0x78856e,wood:0x756741,leaf:0x659845,roof:0x315f48,trim:0xcfbc81,glow:0xffe1a1},
+            cliff: {stone:0x7f8a92,wood:0x755f4d,leaf:0x58765a,roof:0x456b85,trim:0xc8c1a6,glow:0xffdda0},
+            volcano: {stone:0x383b3f,wood:0x3a302a,leaf:0x508744,roof:0x81493b,trim:0xc39a72,glow:0xffc87e},
+            mist: {stone:0x536962,wood:0x58614b,leaf:0x718e69,roof:0x456564,trim:0xb1bc9d,glow:0x8affd5},
+            ice: {stone:0x91b4ca,wood:0x655b51,leaf:0x456c70,roof:0x4b6b8b,trim:0xe5eee8,glow:0xffd492},
+            storm: {stone:0x4a5867,wood:0x675a49,leaf:0x536f62,roof:0x354659,trim:0xc5ab79,glow:0xffd892},
+            ruins: {stone:0xb7a27d,wood:0x746344,leaf:0x438764,roof:0x477b68,trim:0xd4ae56,glow:0xffdfa1},
+            dragon: {stone:0x776a8b,wood:0x554759,leaf:0x8a739c,roof:0x537e85,trim:0xddba74,glow:0xacf2f1}
+        };
+        const themeName = value => ({glacier:'ice',gold:'ruins',golden:'ruins',palm:'coral',snow:'ice',burned:'volcano'}[value] || value || 'grass');
+        function rng(seed = 1) {
+            let state = (Number(seed) || 1) >>> 0;
+            return () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 4294967296; };
+        }
+        function geo(key, factory) {
+            if (!geometries.has(key)) geometries.set(key, factory());
+            return geometries.get(key);
+        }
+        function mat(color, options = {}) {
+            const {wind=false,...surface}=options;
+            const key = `${color}:${surface.emissive || 0}:${surface.roughness === undefined ? .86 : surface.roughness}:${surface.metalness || 0}:${surface.side || 0}:${wind}`;
+            if (!materials.has(key)) {
+                const material=new THREE.MeshStandardMaterial({color,roughness:.86,...surface});
+                if(wind) {
+                    material.userData.windAnimated=true;
+                    material.onBeforeCompile=shader=>{
+                        shader.uniforms.islandModelWindTime=windTime;
+                        shader.vertexShader='uniform float islandModelWindTime;\n'+shader.vertexShader;
+                        // Apply motion in world space after instancing, so all scales sway gently.
+                        shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',`
+                            vec4 islandWindPosition=vec4(transformed,1.0);
+                            #ifdef USE_INSTANCING
+                                islandWindPosition=instanceMatrix*islandWindPosition;
+                            #endif
+                            islandWindPosition=modelMatrix*islandWindPosition;
+                            float islandWindPhase=islandModelWindTime*1.1+islandWindPosition.x*.29+islandWindPosition.z*.21;
+                            islandWindPosition.x+=sin(islandWindPhase)*.075+sin(islandWindPhase*2.13)*.016;
+                            islandWindPosition.z+=cos(islandWindPhase*.81)*.052;
+                            vec4 mvPosition=viewMatrix*islandWindPosition;
+                            gl_Position=projectionMatrix*mvPosition;
+                        `);
+                    };
+                    material.customProgramCacheKey=()=> 'island-model-wind-v1';
+                }
+                materials.set(key,material);
+            }
+            return materials.get(key);
+        }
+        function shade(color, factor) { return new THREE.Color(color).multiplyScalar(factor).getHex(); }
+        function mesh(parent, geometry, color, position = [0,0,0], scale = [1,1,1], options = {}) {
+            const item = new THREE.Mesh(geometry, typeof color === 'number' ? mat(color,options) : color);
+            item.position.set(...position); item.scale.set(...scale);
+            item.castShadow = true; item.receiveShadow = true;
+            parent.add(item); return item;
+        }
+        function box(parent, color, position, scale) {
+            return mesh(parent,geo('cube',()=>new THREE.BoxGeometry(1,1,1)),color,position,scale);
+        }
+        function cylinder(parent, color, position, radius, length, taper = 1, sides = 10) {
+            const factor = Math.round(taper * 10) / 10;
+            return mesh(parent,geo(`cylinder-${factor}-${sides}`,()=>new THREE.CylinderGeometry(factor,1,1,sides,1)),color,position,[radius,length,radius]);
+        }
+        function beam(parent, color, start, end, radius, taper = .65) {
+            const a = new THREE.Vector3(...start), b = new THREE.Vector3(...end);
+            const direction = b.clone().sub(a), length = direction.length();
+            const item = cylinder(parent,color,a.clone().add(b).multiplyScalar(.5).toArray(),radius,Math.max(.001,length),taper,7);
+            if (length > .00001) item.quaternion.setFromUnitVectors(up,direction.divideScalar(length));
+            return item;
+        }
+        function orb(parent, color, position, scale) {
+            return mesh(parent,geo('leaf-orb',()=>new THREE.SphereGeometry(1,10,7)),color,position,scale);
+        }
+        function finish(group, name, radius, height, colliders = []) {
+            group.name = name;
+            group.userData.modelAsset = true;
+            group.userData.footprint = {radius,height};
+            group.userData.colliders = colliders;
+            return group;
+        }
+        function scaleModel(group, amount) {
+            group.scale.multiplyScalar(amount);
+            group.userData.footprint.radius *= amount;
+            group.userData.footprint.height *= amount;
+            group.userData.colliders.forEach(c => {c.x *= amount;c.z *= amount;c.radius *= amount;c.height *= amount;});
+            return group;
+        }
+        function rockGeometry(seed, kind) {
+            const variant = Math.abs(seed | 0) % 16;
+            return geo(`rock-${kind}-${variant}`,()=>{
+                const random = rng(variant * 113 + 11), phases = Array.from({length:4},()=>random()*Math.PI*2);
+                const geometry = kind === 'ice' ? new THREE.IcosahedronGeometry(1,1) : new THREE.SphereGeometry(1,12,8);
+                const position = geometry.attributes.position;
+                for (let n = 0; n < position.count; n++) {
+                    const x = position.getX(n), y = position.getY(n), z = position.getZ(n);
+                    // Position-based noise keeps duplicate seam vertices welded visually.
+                    const noise = 1 + Math.sin(x*4.3+z*2.8+phases[0])*.10 + Math.sin(y*5.2+x*3.1+phases[1])*.085;
+                    const terrace = kind === 'slate' ? .055 * Math.sin(y * 25 + phases[2]) : 0;
+                    position.setXYZ(n,x*(noise+terrace)*(1-y*.16),Math.max(-.78,y*noise)*.75+.59,z*(noise+terrace)*(.88+Math.sin(y*2+phases[3])*.08));
+                }
+                geometry.computeVertexNormals(); geometry.computeBoundingSphere();
+                return geometry;
+            });
+        }
+        function rock(options = {}) {
+            const seed = options.seed || 1, kind = options.kind || 'stone';
+            const group = new THREE.Group(), color = options.color === undefined ? (kind === 'basalt' ? 0x353b3c : kind === 'ice' ? 0xa4d8e5 : 0x8d8980) : options.color;
+            const item = mesh(group,rockGeometry(seed,kind),color);
+            item.rotation.y = rng(seed)()*Math.PI*2;
+            if (kind === 'ice') item.material = mat(color,{roughness:.27,metalness:.08});
+            finish(group,`coastal-${kind}-rock`,1.12,1.62);
+            const scale = options.scale === undefined ? 1 : options.scale;
+            if (typeof scale === 'number') return scaleModel(group,scale);
+            group.scale.set(scale[0],scale[1],scale[2]);
+            group.userData.footprint = {radius:Math.max(scale[0],scale[2])*1.12,height:scale[1]*1.62};
+            return group;
+        }
+        function stemGeometry(variant = 0) {
+            variant = Math.abs(variant|0)%8;
+            return geo(`bent-stem-${variant}`,()=>{
+                const geometry = new THREE.CylinderGeometry(.52,1,1,9,7);
+                const attr = geometry.attributes.position;
+                for(let n=0;n<attr.count;n++) {
+                    const t=attr.getY(n)+.5;
+                    attr.setXYZ(n,attr.getX(n)+Math.sin(t*2.3+variant*.45)*t*.36,t,attr.getZ(n)+Math.sin(t*3+variant*.72)*t*.22);
+                }
+                geometry.computeVertexNormals(); return geometry;
+            });
+        }
+        function leafGeometry() {
+            return geo('lance-leaf',()=>{
+                const geometry = new THREE.BufferGeometry();
+                geometry.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0,-.14,.04,.34,-.08,.08,.73,0,.10,1,.08,.08,.73,.14,.04,.34,0,.12,.48],3));
+                geometry.setIndex([0,1,6,1,2,6,2,3,6,3,4,6,4,5,6,5,0,6]);geometry.computeVertexNormals();return geometry;
+            });
+        }
+        function frondGeometry() {
+            return geo('palm-feather',()=>{
+                const vertices=[],indices=[];
+                for(let n=0;n<=18;n++) {
+                    const t=n/18, width=Math.pow(Math.sin(Math.PI*t),.8)*.23*(n%2?.82:1);
+                    const y=Math.sin(t*Math.PI)*.25-t*t*.31;
+                    vertices.push(-width,y-.045,t,0,y+.025,t,width,y-.045,t);
+                    if(n<18){const k=n*3;indices.push(k,k+3,k+1,k+1,k+3,k+4,k+1,k+4,k+2,k+2,k+4,k+5);}
+                }
+                const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setIndex(indices);geometry.computeVertexNormals();return geometry;
+            });
+        }
+        function foliage(parent, color, position, scale, yaw = 0) {
+            const item=orb(parent,mat(color,{wind:true}),position,scale);item.rotation.y=yaw;return item;
+        }
+        function tree(options = {}) {
+            const seed=options.seed||1, random=rng(seed), theme=themeName(options.theme);
+            const p=palette[theme]||palette.grass, group=new THREE.Group();
+            const size=options.size===undefined?1:options.size;
+            const burned=(theme==='volcano'&&!options.green)||options.theme==='burned';
+            const bark=options.green?0x76513c:p.wood;
+            if(theme==='bamboo') {
+                for(let s=0;s<3;s++) {
+                    const stalk=new THREE.Group(), h=5.4+random()*2.4;
+                    stalk.position.set((s-1)*.62,0,(random()-.5)*.8);stalk.rotation.z=(random()-.5)*.10;group.add(stalk);
+                    cylinder(stalk,p.leaf,[0,h/2,0],.11,h,.8,8);
+                    for(let n=1;n<9;n++)cylinder(stalk,p.trim,[0,h*n/9,0],.125,.048,.9,8);
+                    for(let n=0;n<5;n++) {
+                        const y=h*(.48+n*.09),angle=random()*6.283,reach=.5+random()*.55;
+                        const end=[Math.cos(angle)*reach,y+.12,Math.sin(angle)*reach];
+                        beam(stalk,p.leaf,[0,y,0],end,.037,.3);
+                        const spray=new THREE.Group();spray.position.set(...end);spray.rotation.y=-angle+Math.PI/2;stalk.add(spray);
+                        for(let l=0;l<5;l++){
+                            const leaf=mesh(spray,leafGeometry(),p.leaf,[(l-2)*.12,0,0],[.8,.8,.65+random()*.35],{side:THREE.DoubleSide,wind:true});
+                            leaf.rotation.y=(l-2)*.43;leaf.rotation.x=.2+random()*.2;
+                        }
+                    }
+                }
+                finish(group,'bamboo-leaf-grove',2.3,8.2);
+            } else if(theme==='coral') {
+                const h=5.6+random()*1.2,lean=.36+random()*.65;
+                const trunk=mesh(group,stemGeometry(seed),bark,[0,0,0],[.25,h,.25]);trunk.rotation.z=lean*.12;
+                const crown=[-Math.sin(trunk.rotation.z)*h+.09,h-.12,0];
+                for(let n=0;n<9;n++){
+                    const frond=mesh(group,frondGeometry(),n%3?p.leaf:shade(p.leaf,1.13),crown,[2.7,2.7,2.7+random()*.6],{side:THREE.DoubleSide,wind:true});
+                    frond.rotation.y=n/9*Math.PI*2+random()*.18;frond.rotation.x=(random()-.5)*.13;
+                }
+                for(let n=0;n<3;n++)orb(group,0x6f5536,[crown[0]+Math.cos(n*2.1)*.22,crown[1]-.14,Math.sin(n*2.1)*.22],[.19,.25,.18]);
+                finish(group,'curved-feather-palm',3.4,7.4);
+            } else if(theme==='ice') {
+                const h=6.0+random()*2;
+                mesh(group,stemGeometry(seed),bark,[0,0,0],[.3,h*.91,.3]);
+                for(let tier=0;tier<5;tier++){
+                    const r=1.75*(1-tier*.155),y=1.3+tier*h*.145;
+                    mesh(group,geo('pine-crown',()=>new THREE.ConeGeometry(1,1,11,2)),p.leaf,[0,y+.8,0],[r,2.0,r]);
+                    const snow=mesh(group,geo('snow-crown',()=>new THREE.ConeGeometry(1,1,11,2)),0xe7f0ed,[0,y+1.05,0],[r*.93,1.72,r*.93]);snow.rotation.y=.27;
+                }
+                finish(group,'layered-snow-pine',1.9,h+1.2);
+            } else {
+                const h=burned?3.8+random()*1.9:4.1+random()*1.2;
+                const lean=theme==='storm'?.25+random()*.16:(random()-.5)*.08;
+                const body=new THREE.Group();body.rotation.z=lean;group.add(body);
+                mesh(body,stemGeometry(seed),bark,[0,0,0],[burned?.25:.34,h,.31]);
+                for(let root=0;root<4;root++) {
+                    const a=root*Math.PI/2+random()*.4;
+                    beam(body,bark,[0,.65,0],[Math.cos(a)*.63,.02,Math.sin(a)*.63],.13,.4);
+                }
+                const branches=burned?3+(seed%3):5;
+                for(let branch=0;branch<branches;branch++) {
+                    const a=branch*2.4+random()*.7,base=h*(.38+random()*.25),span=.75+random()*.75;
+                    const elbow=[Math.cos(a)*span*.58,base+.65,Math.sin(a)*span*.58];
+                    const tip=[Math.cos(a)*span,base+1.0+random()*.55,Math.sin(a)*span];
+                    beam(body,bark,[0,base,0],elbow,.11,.8);beam(body,bark,elbow,tip,.085,.22);
+                    if(burned) {
+                        if(branch%2===0)beam(body,0x51463a,elbow,[elbow[0]+Math.cos(a+1.1)*.5,elbow[1]+.45,elbow[2]+Math.sin(a+1.1)*.5],.053,.2);
+                    } else {
+                        const leaf=options.green?palette.grass.leaf:p.leaf;
+                        foliage(body,branch%3?leaf:shade(leaf,1.13),[tip[0],tip[1]+.2,tip[2]],[1.05+random()*.3,.8+random()*.2,1.0],a);
+                        foliage(body,shade(leaf,.89),[tip[0]*.64,tip[1]-.1,tip[2]*.64],[.85,.62,.85],a);
+                    }
+                }
+                if(!burned)foliage(body,options.green?0x659947:shade(p.leaf,1.13),[0,h,0],[1.12,.92,1.04]);
+                finish(group,burned?'irregular-charred-tree':`${theme}-branched-tree`,burned?1.75:2.9,h+1.1);
+            }
+            return scaleModel(group,size);
+        }
+        function roofGeometry(theme) {
+            return geo(`roof-shell-${theme}`,()=>{
+                const vertices=[],indices=[],curved=['bamboo','mist','dragon','ruins'].includes(theme);
+                const steep=theme==='ice',flat=theme==='coral',rows=10,cols=6;
+                for(let z=0;z<=cols;z++)for(let x=0;x<=rows;x++){
+                    const xx=x/rows*2-1,zz=z/cols*2-1,a=Math.abs(xx);
+                    const ridge=flat?.34:steep?1.36:1;
+                    let y=ridge*(1-a);
+                    if(curved)y+=Math.pow(a,4)*.27+Math.pow(a,3)*Math.pow(Math.abs(zz),6)*.20;
+                    if(theme==='coral')y+=Math.pow(a,5)*.055;
+                    vertices.push(xx,y,zz);
+                }
+                for(let z=0;z<cols;z++)for(let x=0;x<rows;x++){
+                    const n=z*(rows+1)+x;indices.push(n,n+rows+1,n+1,n+1,n+rows+1,n+rows+2);
+                }
+                const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setIndex(indices);geometry.computeVertexNormals();return geometry;
+            });
+        }
+        function roof(options={}) {
+            const theme=themeName(options.theme),p=palette[theme]||palette.grass;
+            const width=options.width||6,depth=options.depth||5,height=options.height||width*.22,tiers=Math.max(1,Math.min(3,options.tiers||1));
+            const color=options.color===undefined?p.roof:options.color,trim=options.trim===undefined?p.trim:options.trim;
+            const group=new THREE.Group();
+            for(let tier=0;tier<tiers;tier++){
+                const w=width*(1-tier*.22),d=depth*(1-tier*.2),h=height*(1-tier*.08),y=tier*height*1.15;
+                mesh(group,roofGeometry(theme),color,[0,y,0],[w*.5,h,d*.5],{side:THREE.DoubleSide});
+                const peak=h*(theme==='ice'?1.36:theme==='coral'?.34:1);
+                beam(group,trim,[0,y+peak+.035,-d*.51],[0,y+peak+.035,d*.51],.085,.99);
+                const curve=['bamboo','mist','dragon','ruins'].includes(theme);
+                for(const side of [-1,1]) {
+                    const lipY=y+(curve?.27*h:theme==='coral'?.055*h:0);
+                    beam(group,trim,[side*w*.5,lipY,-d*.5],[side*w*.5,lipY,d*.5],.095,.99);
+                    for(const front of [-1,1]) {
+                        const steps=curve?7:2;
+                        let previous=[0,y+peak,front*d*.503];
+                        for(let step=1;step<=steps;step++) {
+                            const a=step/steps;
+                            const yy=peak*(1-a)+(curve?Math.pow(a,4)*h*.27+Math.pow(a,3)*h*.2:0);
+                            const next=[side*w*.5*a,y+yy,front*d*.503];
+                            beam(group,trim,previous,next,.082,.99);previous=next;
+                        }
+                    }
+                }
+                // Large raised roof seams add legible roofing detail with no overlapping sheets.
+                const rows=theme==='storm'?5:4;
+                for(let row=1;row<rows;row++) {
+                    const a=row/rows,yy=peak*(1-a)+(curve?Math.pow(a,4)*h*.27:theme==='coral'?Math.pow(a,5)*h*.055:0);
+                    for(const side of [-1,1])beam(group,shade(color,.84),[side*w*.5*a,y+yy+.017,-d*.49],[side*w*.5*a,y+yy+.017,d*.49],.025,.99);
+                }
+                if(theme==='ice')mesh(group,roofGeometry(theme),0xe9f1ed,[0,y+.085,0],[w*.51,h,d*.515],{side:THREE.DoubleSide});
+            }
+            return finish(group,`${theme}-crafted-roof`,Math.hypot(width,depth)*.5,height*(tiers*1.15+.4));
+        }
+        function coral(options={}) {
+            const random=rng(options.seed||1),color=options.color===undefined?[0xe88da0,0xeeb282,0x83b9cf,0xb59acf][Math.abs(options.seed||1)%4]:options.color;
+            const group=new THREE.Group(),kind=options.kind||'branch';
+            if(kind==='table'){
+                cylinder(group,shade(color,.74),[0,.6,0],.19,1.2,.6,8);
+                for(let n=0;n<3;n++){
+                    const plate=mesh(group,rockGeometry(n+3,'stone'),color,[Math.sin(n*2)*.5,1+n*.25,Math.cos(n*2)*.3],[1.35,.12,1.1]);plate.rotation.y=n;
+                }
+            } else if(kind==='fan') {
+                for(let n=0;n<9;n++) {
+                    const a=(n/8-.5)*Math.PI*.9,end=[Math.sin(a)*1.1,.3+Math.cos(a)*1.5,Math.sin(n)*.07];
+                    beam(group,color,[0,0,0],end,.09,.15);
+                    for(let branch=0;branch<3;branch++) {
+                        const t=.4+branch*.18;
+                        beam(group,color,[end[0]*t,end[1]*t,0],[end[0]*t+(n%2?.28:-.28),end[1]*t+.3,.03],.038,.15);
+                    }
+                }
+            } else {
+                for(let stem=0;stem<5;stem++) {
+                    const a=stem*2.4,h=.9+random()*1.5,elbow=[Math.cos(a)*.42,h*.56,Math.sin(a)*.42],tip=[Math.cos(a)*.64,h,Math.sin(a)*.64];
+                    beam(group,shade(color,.88),[0,0,0],elbow,.14,.72);beam(group,color,elbow,tip,.11,.65);
+                    for(const side of [-1,1]){
+                        const end=[tip[0]+Math.cos(a+side)*.35,tip[1]+.19,tip[2]+Math.sin(a+side)*.35];
+                        beam(group,color,[elbow[0]*.3+tip[0]*.7,elbow[1]*.3+tip[1]*.7,elbow[2]*.3+tip[2]*.7],end,.065,.65);
+                        orb(group,shade(color,1.13),end,[.085,.10,.085]);
+                    }
+                }
+            }
+            finish(group,`living-${kind}-coral`,1.55,2.7);return scaleModel(group,options.size||1);
+        }
+        function lightAnchor(parent,color,position,size=.18,nightOnly=true) {
+            const material=mat(color,{emissive:color,emissiveIntensity:.35,roughness:.42});
+            const glow=orb(parent,material,position,[size,size*1.2,size]);
+            glow.castShadow=false;glow.receiveShadow=false;
+            glow.userData.lightAnchor={color,intensity:1.1,distance:9,nightOnly};
+            return glow;
+        }
+        function lamppost(options={}) {
+            const h=options.height||3.3,metal=options.metal===undefined?0x394440:options.metal,color=options.color===undefined?0xffd69a:options.color;
+            const group=new THREE.Group(),style=options.style||'village';
+            cylinder(group,metal,[0,.12,0],.26,.24,.8,12);
+            cylinder(group,metal,[0,.32,0],.16,.32,.7,10);
+            cylinder(group,metal,[0,h*.46,0],.073,h*.83,.9,9);
+            if(style==='harbor'){
+                beam(group,metal,[0,h*.78,0],[.4,h*.94,0],.065,.95);
+                beam(group,metal,[.4,h*.94,0],[.76,h*.94,0],.063,.95);
+                cylinder(group,metal,[.76,h*.87,0],.34,.15,.3,12);
+                const anchor=lightAnchor(group,color,[.76,h*.81,0],.16);anchor.userData.lightAnchor.distance=11;
+            } else {
+                const y=h*.86;
+                cylinder(group,metal,[0,y-.22,0],.28,.08,.9,6);
+                for(let n=0;n<4;n++){
+                    const a=Math.PI/4+n*Math.PI/2;
+                    beam(group,metal,[Math.sin(a)*.19,y-.2,Math.cos(a)*.19],[Math.sin(a)*.19,y+.22,Math.cos(a)*.19],.025,.95);
+                }
+                mesh(group,geo('lantern-cap',()=>new THREE.ConeGeometry(.36,.23,4)),metal,[0,y+.31,0]).rotation.y=Math.PI/4;
+                lightAnchor(group,color,[0,y,0],.16);
+                orb(group,metal,[0,y+.49,0],[.045,.065,.045]);
+            }
+            return finish(group,`${style}-illuminated-lantern`,style==='harbor'?1:.4,h+.2);
+        }
+        function ring(parent,color,y,radius,tube=.08) {
+            const item=mesh(parent,geo('ring-12',()=>new THREE.TorusGeometry(1,.04,5,32)),color,[0,y,0],[radius,radius,tube/.04]);
+            item.rotation.x=Math.PI/2;return item;
+        }
+        function stoneColumn(parent,p,x,z,h=5,radius=.7) {
+            cylinder(parent,p.stone,[x,.17,z],radius*1.28,.34,.95,12);
+            cylinder(parent,p.stone,[x,h*.5+.3,z],radius,h,.85,12);
+            cylinder(parent,p.trim,[x,h+.4,z],radius*1.25,.28,1,12);
+            for(let n=0;n<3;n++)cylinder(parent,shade(p.stone,.89),[x,1+n*(h-1)/3,z],radius*(1-n*.035)+.018,.05,1,12);
+        }
+        function tower(parent,p,x,z,h=7,r=2) {
+            const group=new THREE.Group();group.position.set(x,0,z);parent.add(group);
+            cylinder(group,p.stone,[0,.25,0],r*1.15,.5,.95,16);
+            cylinder(group,p.stone,[0,h*.5+.4,0],r,h,.85,16);
+            for(let n=1;n<5;n++)cylinder(group,shade(p.stone,.85),[0,h*n/5+.4,0],r*(1-.15*n/5)+.012,.05,1,16);
+            for(let n=0;n<4;n++){
+                const a=n*Math.PI/2,window=box(group,0x263c48,[Math.sin(a)*r*.95,h*.62,Math.cos(a)*r*.95],[.52,1.25,.13]);window.rotation.y=a;
+                const sill=box(group,p.trim,[Math.sin(a)*r,h*.62-.69,Math.cos(a)*r],[.78,.16,.38]);sill.rotation.y=a;
+            }
+            cylinder(group,p.trim,[0,h+.4,0],r*1.13,.35,1,16);
+            for(let n=0;n<12;n++){
+                const a=n/12*Math.PI*2;beam(group,p.wood,[Math.sin(a)*r,h+.5,Math.cos(a)*r],[Math.sin(a)*r,h+1.2,Math.cos(a)*r],.055,.8);
+            }
+            ring(group,p.wood,h+1.15,r);
+            return group;
+        }
+        function arch(parent,p,x,y,z,span=4,h=4) {
+            for(const side of [-1,1])cylinder(parent,p.stone,[x+side*span*.5,y+h*.38,z],.47,h*.76,.95,9);
+            const vertices=[],indices=[],steps=14;
+            for(let n=0;n<=steps;n++){
+                const a=n/steps*Math.PI;
+                for(const depth of [-.35,.35])for(const radius of [span*.5-.15,span*.5+.4])vertices.push(x+Math.cos(a)*radius,y+h*.75+Math.sin(a)*radius,z+depth);
+            }
+            for(let n=0;n<steps;n++){
+                const a=n*4,b=a+4;indices.push(a,b,a+1,a+1,b,b+1,a+2,a+3,b+2,a+3,b+3,b+2,a,a+2,b,a+2,b+2,b,a+1,b+1,a+3,a+3,b+1,b+3);
+            }
+            const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setIndex(indices);geometry.computeVertexNormals();mesh(parent,geometry,p.stone);
+        }
+        function wreck(parent,p) {
+            const body=new THREE.Group();body.rotation.set(.04,-.22,-.10);parent.add(body);
+            const hull=geo('open-wreck-hull',()=>{
+                const v=[],idx=[],sections=12,sides=10;
+                for(let n=0;n<=sections;n++){
+                    const t=n/sections,x=(t-.5)*9,width=Math.pow(Math.sin(Math.PI*t),.6)*1.55;
+                    for(let side=0;side<=sides;side++){
+                        const angle=side/sides*Math.PI;
+                        v.push(x,.2+(1-Math.sin(angle))*1.4,Math.cos(angle)*width);
+                    }
+                }
+                for(let n=0;n<sections;n++)for(let side=0;side<sides;side++){
+                    if((n===7||n===8)&&side<3)continue;
+                    const a=n*(sides+1)+side;idx.push(a,a+sides+1,a+1,a+1,a+sides+1,a+sides+2);
+                }
+                const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.setIndex(idx);g.computeVertexNormals();return g;
+            });
+            mesh(body,hull,0x77664e,[0,0,0],[1,1,1],{side:THREE.DoubleSide});
+            for(let n=1;n<6;n++) {
+                const x=(n/6-.5)*9,width=Math.pow(Math.sin(Math.PI*n/6),.6)*1.55;
+                for(let side=0;side<6;side++){
+                    const a=side/6*Math.PI,b=(side+1)/6*Math.PI;
+                    beam(body,0x534d3d,[x,.2+(1-Math.sin(a))*1.4,Math.cos(a)*width],[x,.2+(1-Math.sin(b))*1.4,Math.cos(b)*width],.095,.95);
+                }
+            }
+            beam(body,p.wood,[0,.3,0],[.7,5.5,.3],.12,.48);
+            beam(body,p.wood,[-1.5,3.2,.2],[2,3.4,.2],.07,.8);
+            for(let n=0;n<5;n++){
+                const growth=coral({seed:n+18,size:.7,kind:n%2?'fan':'branch'});growth.position.set((n-2)*1.4,.4,(n%2?1:-1)*1.2);parent.add(growth);
+            }
+        }
+        function landmark(options={}) {
+            const theme=themeName(options.theme),p={...(palette[theme]||palette.grass),...(options.palette||{})},random=rng(options.seed||1),group=new THREE.Group();
+            let radius=8,height=10;const colliders=[];
+            const collider=(x,z,r,h)=>colliders.push({x,z,radius:r,height:h});
+            if(theme==='coral') {
+                wreck(group,p);radius=7;height=6;
+                for(let n=0;n<10;n++){
+                    const a=n*2.4,r=3.5+random()*2.5,c=coral({seed:n+41,kind:['branch','table','fan'][n%3],size:.8+random()*.7});
+                    c.position.set(Math.cos(a)*r,0,Math.sin(a)*r);group.add(c);
+                }
+                collider(0,0,3,2);
+            } else if(theme==='bamboo') {
+                for(const side of [-1,1]){
+                    const grove=tree({theme:'bamboo',seed:13+side,size:1.05});grove.position.set(side*4.7,0,.9);group.add(grove);
+                    beam(group,p.wood,[side*2.1,0,-1],[side*2.1,4.3,-1],.23,.9);collider(side*2.1,-1,.4,4.4);
+                }
+                const cap=roof({theme,width:6.2,depth:2.8,height:.9});cap.position.set(0,4.25,-1);group.add(cap);
+                box(group,p.wood,[0,3.85,-1],[4.7,.23,.3]);
+                for(let n=0;n<5;n++){const stalk=tree({theme:'bamboo',seed:61+n,size:.88+n*.07});stalk.position.set(-4+n*2,0,4.5+Math.sin(n)*1.3);group.add(stalk);}
+                radius=8;height=9;
+            } else if(theme==='cliff') {
+                tower(group,p,-4,1,9,2.1);tower(group,p,4,2.6,6.5,1.75);
+                collider(-4,1,2.3,10);collider(4,2.6,1.9,8);
+                const cap=roof({theme,width:5.3,depth:5.3,height:1.4});cap.position.set(-4,10.6,1);group.add(cap);
+                for(let n=0;n<3;n++){const stone=rock({seed:91+n,color:p.stone,scale:[1.7,1.5,1.2],kind:'slate'});stone.position.set(-6+n*6,0,4.5);group.add(stone);}
+                radius=8;height=13;
+            } else if(theme==='volcano') {
+                // A small geothermal rock vent. The actual mountain remains continuous terrain.
+                for(let n=0;n<11;n++){
+                    const a=n/11*Math.PI*2,r=2.4+random()*.6,stone=rock({seed:200+n,kind:'basalt',color:n%2?p.stone:0x494546,scale:[1.3+random()*.9,1.1+random()*1.8,1.2]});
+                    stone.position.set(Math.cos(a)*r,-.12,Math.sin(a)*r);group.add(stone);collider(stone.position.x,stone.position.z,1.2,3);
+                }
+                cylinder(group,mat(0x672e21,{emissive:0xff510d,emissiveIntensity:.7}),[0,.04,0],2.5,.1,1,24);
+                lightAnchor(group,0xff7b2f,[0,.4,0],.22,false);
+                for(let n=0;n<3;n++){const t=tree({theme:'volcano',seed:77+n,size:.8+random()*.3});t.position.set(Math.cos(n*2.2)*5,0,Math.sin(n*2.2)*5);group.add(t);}
+                radius=7;height=6;
+            } else if(theme==='mist') {
+                arch(group,p,0,0,0,5,4);
+                for(const side of [-1,1]){
+                    stoneColumn(group,p,side*4,2.5,3.2,.55);lightAnchor(group,p.glow,[side*4,3.9,2.5],.25,false);collider(side*4,2.5,.8,4);
+                    const t=tree({theme:'mist',seed:50+side,size:1.1});t.position.set(side*6,0,4);group.add(t);
+                    collider(side*2.5,0,.5,4);
+                }
+                ring(group,p.trim,.05,3.9);
+                for(let n=0;n<5;n++){
+                    const a=n*2.4,x=Math.cos(a)*4.2,z=Math.sin(a)*4.2;
+                    cylinder(group,p.wood,[x,.25,z],.055,.5,.6,7);
+                    const cap=mesh(group,geo('mushroom-cap',()=>new THREE.SphereGeometry(1,10,6,0,Math.PI*2,0,Math.PI*.5)),mat(p.glow,{emissive:p.glow,emissiveIntensity:.28}),[x,.5,z],[.33,.18,.33]);cap.castShadow=false;
+                }
+                radius=9;height=8;
+            } else if(theme==='ice') {
+                for(let n=0;n<7;n++){
+                    const a=n/7*Math.PI*2,r=2.4+random()*2.7,h=3.3+random()*6;
+                    const crystal=mesh(group,geo('glacier-spire',()=>new THREE.CylinderGeometry(.05,1,1,5,1)),mat(n%2?0x9ecbdc:0xc1e2e9,{roughness:.26,metalness:.08}),[Math.cos(a)*r,h/2,Math.sin(a)*r],[1.1,h,1.4]);
+                    crystal.rotation.z=(random()-.5)*.22;collider(crystal.position.x,crystal.position.z,1.2,h);
+                    const drift=rock({seed:n+70,scale:[1.6,.6,1.6],color:0xe3eded});drift.position.set(crystal.position.x,0,crystal.position.z);group.add(drift);
+                }
+                radius=7;height=10;
+            } else if(theme==='storm') {
+                tower(group,p,-3,2,8,1.75);collider(-3,2,2,9);
+                for(const side of [-1,1]){
+                    beam(group,p.wood,[side*1.8,0,-2],[side*1.8,4.8,-2],.17,.9);collider(side*1.8,-2,.22,5);
+                }
+                beam(group,p.wood,[-2.2,4.8,-2],[2.2,4.8,-2],.19,.99);
+                beam(group,p.trim,[0,4.8,-2],[0,2.1,-2],.025,.95);
+                ring(group,p.trim,2.1,.45).position.z=-2;
+                for(let n=0;n<5;n++){const r=rock({kind:'slate',seed:23+n,scale:[1.15,.9+random()*.7,1.1],color:p.stone});r.position.set(n*1.6-3,0,5);group.add(r);}
+                const lamp=lamppost({style:'harbor',height:5,color:p.glow});lamp.position.set(2.6,0,1);group.add(lamp);
+                radius=7;height=10;
+            } else if(theme==='ruins') {
+                for(let tier=0;tier<3;tier++)box(group,p.stone,[0,.16+tier*.29,0],[11-tier*1.3,.32,8.5-tier]);
+                for(const x of [-3.9,3.9])for(const z of [-2.5,2.5]){
+                    stoneColumn(group,p,x,z,4.2,.48);collider(x,z,.7,6);
+                }
+                const cap=roof({theme,width:10.4,depth:7.9,height:1.2,color:p.stone,trim:p.trim});cap.position.y=5.55;group.add(cap);
+                const seal=cylinder(group,p.trim,[0,1.7,1.6],1.3,.32,1,16);seal.rotation.x=Math.PI/2;
+                for(let n=0;n<5;n++){
+                    const stone=rock({seed:221+n,scale:[.8,.7,.9],color:p.stone,kind:'slate'});stone.position.set(-5+n*2.5,0,4.7);group.add(stone);
+                }
+                radius=7.5;height=7.2;
+            } else if(theme==='dragon') {
+                cylinder(group,p.stone,[0,.23,0],6,.46,1,24);
+                cylinder(group,p.trim,[0,.53,0],5.5,.18,1,24);
+                for(const x of [-3.7,3.7])for(const z of [-2.7,2.7]){
+                    stoneColumn(group,p,x,z,5,.37);collider(x,z,.55,6.5);
+                }
+                const cap=roof({theme,width:10.5,depth:8.5,height:1.5,tiers:2});cap.position.y=5.9;group.add(cap);
+                for(const side of [-1,1]) {
+                    const guardian=new THREE.Group();guardian.position.set(side*4.8,.7,-4.5);group.add(guardian);
+                    const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,0),new THREE.Vector3(.1,1.2,.3),new THREE.Vector3(-.3,2.4,.1),new THREE.Vector3(0,3,-.6)]);
+                    mesh(guardian,geo('dragon-neck',()=>new THREE.TubeGeometry(curve,16,.23,8,false)),p.stone);
+                    orb(guardian,p.stone,[0,3.08,-.75],[.38,.31,.55]);
+                    for(const horn of [-1,1])beam(guardian,p.trim,[horn*.23,3.25,-.55],[horn*.4,3.9,-.27],.095,.1);
+                    lightAnchor(guardian,p.glow,[-.27,3.18,-1],.055,false);lightAnchor(guardian,p.glow,[.27,3.18,-1],.055,false);
+                    collider(side*4.8,-4.5,.7,4.6);
+                }
+                ring(group,p.glow,.64,4.7,.04);
+                radius=8;height=10.8;
+            }
+            finish(group,`${theme}-landmark`,radius,height,colliders);
+            return scaleModel(group,options.size||1);
+        }
+        const api={rock,tree,roof,coral,landmark,lamppost,palette,update:time=>{windTime.value=Number.isFinite(time)?time:0;},stats:()=>({geometries:geometries.size,materials:materials.size})};
+        libraries.set(THREE,api);return api;
+    }
+    return {create};
+})();
+
+</script>
+<script>
+(function (global) {
+    'use strict';
+
+    // Camera-local props. All textures and geometry are generated locally.
+    function create(options) {
+        const THREE = options.THREE;
+        const camera = options.camera;
+        const doc = options.document || global.document;
+        if (!THREE || !camera || !doc) throw new Error('VoyageHeldTools requires THREE, camera and document.');
+
+        const root = new THREE.Group();
+        root.name = 'voyage-held-tools';
+        camera.add(root);
+        const geometries = new Set(), materials = new Set(), textures = new Set();
+        const colors = new Map();
+        const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+        const ease = n => { n = clamp(n, 0, 1); return n * n * (3 - 2 * n); };
+        let destroyed = false, desiredMode = 'none', bookAmount = 0, radarAmount = 0;
+        let pageAmount = 1, pageDirection = 1, pageNumber = 1, lastBookProgress = -1;
+        let radarTexture = null, radarCanvas = null, radarScreen = null, lastRadarTextureTime = -1;
+
+        function material(color, extra) {
+            if (!extra && colors.has(color)) return colors.get(color);
+            const mat = new THREE.MeshBasicMaterial(Object.assign({
+                color: color, depthTest: false, depthWrite: false, fog: false, toneMapped: false
+            }, extra || {}));
+            materials.add(mat);
+            if (!extra) colors.set(color, mat);
+            return mat;
+        }
+        function mesh(geo, mat, parent, order) {
+            geometries.add(geo);
+            const part = new THREE.Mesh(geo, mat);
+            part.frustumCulled = false;
+            part.renderOrder = order === undefined ? 1010 : order;
+            (parent || root).add(part);
+            return part;
+        }
+        function box(parent, size, position, color, order) {
+            const part = mesh(new THREE.BoxGeometry(size[0], size[1], size[2]),
+                typeof color === 'number' ? material(color) : color, parent, order);
+            part.position.set(position[0], position[1], position[2]);
+            return part;
+        }
+        function oval(parent, position, size, color, order) {
+            const part = mesh(new THREE.SphereGeometry(1, 14, 10), material(color), parent, order);
+            part.position.set(position[0], position[1], position[2]);
+            part.scale.set(size[0], size[1], size[2]);
+            return part;
+        }
+        function bone(parent, from, to, radiusA, radiusB, color, order) {
+            const a = new THREE.Vector3(from[0], from[1], from[2]);
+            const b = new THREE.Vector3(to[0], to[1], to[2]);
+            const delta = b.clone().sub(a);
+            const part = mesh(new THREE.CylinderGeometry(radiusB, radiusA, delta.length(), 12), material(color), parent, order);
+            part.position.copy(a).add(b).multiplyScalar(.5);
+            part.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), delta.normalize());
+            return part;
+        }
+        function texture(canvas) {
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.encoding = THREE.sRGBEncoding;
+            tex.anisotropy = 2;
+            textures.add(tex);
+            return tex;
+        }
+        function label(text, width, height, color, background) {
+            const canvas = doc.createElement('canvas');
+            canvas.width = 640; canvas.height = Math.max(96, Math.round(640 * height / width));
+            const ctx = canvas.getContext('2d');
+            if (background) { ctx.fillStyle = background; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+            ctx.fillStyle = color || '#ead4a1';
+            ctx.font = '600 ' + Math.round(canvas.height * .48) + 'px serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2, canvas.width * .94);
+            return material(0xffffff, {map: texture(canvas), transparent: !background, side: THREE.DoubleSide});
+        }
+        function roundedPlate(parent, width, height, depth, radius, mat, order) {
+            const shape = new THREE.Shape(), x = -width / 2, y = -height / 2;
+            shape.moveTo(x + radius, y);
+            shape.lineTo(x + width - radius, y);
+            shape.quadraticCurveTo(x + width, y, x + width, y + radius);
+            shape.lineTo(x + width, y + height - radius);
+            shape.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            shape.lineTo(x + radius, y + height);
+            shape.quadraticCurveTo(x, y + height, x, y + height - radius);
+            shape.lineTo(x, y + radius);
+            shape.quadraticCurveTo(x, y, x + radius, y);
+            return mesh(new THREE.ExtrudeGeometry(shape, {depth: depth, bevelEnabled: true, bevelSegments: 2,
+                steps: 1, bevelSize: .006, bevelThickness: .004, curveSegments: 5}), mat, parent, order);
+        }
+
+        const skin = 0xc68e64, highlightSkin = 0xdaa47c, shadowSkin = 0xa66d49;
+        function hand(parent, x, y, z, side, size) {
+            const group = new THREE.Group();
+            group.position.set(x, y, z);
+            group.scale.setScalar(size || 1);
+            group.rotation.z = -side * .20;
+            parent.add(group);
+            // A tapered forearm, cuff, palm and individual bent fingers make a visible grip.
+            bone(group, [side * .055, -.30, -.07], [0, -.055, -.035], .067, .054, 0x234d5d, 1000);
+            bone(group, [0, -.115, -.025], [0, -.061, -.014], .058, .056, 0x729b9c, 1001);
+            oval(group, [0, -.04, 0], [.052, .079, .037], skin, 1022);
+            oval(group, [side * .022, -.005, .007], [.039, .042, .033], highlightSkin, 1023);
+            for (let i = 0; i < 4; i++) {
+                const fx = (i - 1.5) * .023;
+                const fingerLength = [.062, .077, .073, .056][i];
+                bone(group, [fx, .006, -.015], [fx, fingerLength * .62, -.038], .013, .012, skin, 1023);
+                bone(group, [fx, fingerLength * .62, -.038], [fx, fingerLength, -.009], .012, .010, highlightSkin, 1024);
+                oval(group, [fx, fingerLength, -.009], [.011, .012, .012], highlightSkin, 1024);
+            }
+            bone(group, [side * .035, -.040, .019], [side * .068, .009, .029], .020, .016, shadowSkin, 1025);
+            bone(group, [side * .068, .009, .029], [side * .042, .032, .051], .016, .013, highlightSkin, 1026);
+            oval(group, [side * .041, .033, .053], [.012, .016, .007], 0xe8baa0, 1027);
+            return group;
+        }
+
+        const book = new THREE.Group();
+        book.name = 'held-exploration-book'; book.visible = false; root.add(book);
+        const bookShell = new THREE.Group(); book.add(bookShell);
+        const leftLeaf = new THREE.Group(), rightLeaf = new THREE.Group();
+        bookShell.add(leftLeaf, rightLeaf);
+        leftLeaf.position.x = -.016; rightLeaf.position.x = .016;
+        const paperColor = 0xf3e7ca, edgeColor = 0xd9c8a6;
+
+        function paperCanvas(side) {
+            const canvas = doc.createElement('canvas'); canvas.width = 768; canvas.height = 1024;
+            const c = canvas.getContext('2d');
+            c.fillStyle = '#f3e7ca'; c.fillRect(0, 0, 768, 1024);
+            const shade = c.createLinearGradient(0, 0, 768, 0);
+            if (side < 0) { shade.addColorStop(0, '#efdfbb'); shade.addColorStop(.78, '#f7edd7'); shade.addColorStop(1, '#bca885'); }
+            else { shade.addColorStop(0, '#bca885'); shade.addColorStop(.22, '#f7edd7'); shade.addColorStop(1, '#efdfbb'); }
+            c.fillStyle = shade; c.fillRect(0, 0, 768, 1024);
+            let seed = side < 0 ? 311 : 97;
+            for (let i = 0; i < 2300; i++) {
+                seed = (seed * 16807) % 2147483647; const x = seed % 768;
+                seed = (seed * 16807) % 2147483647; const y = seed % 1024;
+                c.fillStyle = i % 3 ? 'rgba(111,84,48,.035)' : 'rgba(255,255,255,.15)';
+                c.fillRect(x, y, 1 + i % 3, 1);
+            }
+            c.strokeStyle = '#b59763'; c.lineWidth = 2; c.strokeRect(33, 34, 702, 956);
+            c.strokeStyle = '#ccbb97'; c.lineWidth = 1; c.strokeRect(41, 42, 686, 940);
+            c.fillStyle = '#9b8256'; c.font = '20px serif'; c.textAlign = 'center';
+            c.fillText(side < 0 ? 'VOYAGE JOURNAL' : 'FIELD NOTES', 384, 70);
+            return canvas;
+        }
+        const leftPaperCanvas = paperCanvas(-1), rightPaperCanvas = paperCanvas(1);
+        const leftPaperTexture = texture(leftPaperCanvas), rightPaperTexture = texture(rightPaperCanvas);
+        function leaf(group, side, tex) {
+            const center = side * .328;
+            box(group, [.668, .944, .034], [center, 0, -.056], 0x3d281e, 1004);
+            box(group, [.642, .918, .012], [center, 0, -.033], 0x805337, 1005);
+            box(group, [.616, .886, .052], [center, 0, .001], edgeColor, 1006);
+            // Slightly different outer edges expose individual paper leaves.
+            for (let i = 0; i < 8; i++) {
+                const edgeZ = -.020 + i * .0062;
+                box(group, [.618 - (i % 3) * .002, .883 - (i % 2) * .002, .0014],
+                    [center - side * (i % 3) * .001, 0, edgeZ], i % 3 ? paperColor : 0xcbb995, 1007 + i);
+            }
+            const surface = mesh(new THREE.PlaneGeometry(.618, .882, 20, 2), material(0xffffff, {map: tex}), group, 1018);
+            surface.position.set(center, 0, .034);
+            const p = surface.geometry.attributes.position;
+            for (let i = 0; i < p.count; i++) {
+                const t = .5 + side * p.getX(i) / .618;
+                p.setZ(i, .013 * Math.pow(1 - t, 3));
+            }
+            p.needsUpdate = true; surface.geometry.computeVertexNormals();
+            for (const y of [-.424, .424]) {
+                box(group, [.071, .015, .006], [side * .609, y, -.034], 0xb89a57, 1016);
+                box(group, [.014, .070, .006], [side * .638, y - Math.sign(y) * .025, -.034], 0xb89a57, 1016);
+            }
+        }
+        leaf(leftLeaf, -1, leftPaperTexture); leaf(rightLeaf, 1, rightPaperTexture);
+        box(bookShell, [.035, .936, .072], [0, 0, -.033], 0x654329, 1005);
+        for (let i = 0; i < 5; i++) box(bookShell, [.044, .016, .081], [0, -.36 + i * .18, -.029], 0xa98a50, 1019);
+        // Cloth bookmarks remain visible at the outer edge and below the paper stack.
+        const bookmarkColors = [0x467f79, 0xb9664c, 0x557a9b, 0xae9454];
+        bookmarkColors.forEach((color, index) => {
+            const marker = box(rightLeaf, [.092, .083, .004], [.659, .295 - index * .159, .025], color, 1017);
+            marker.rotation.z = -.025 + index * .013;
+        });
+        box(rightLeaf, [.025, .14, .002], [.11, -.464, .031], 0xa75e46, 1018).rotation.z = .08;
+        const leftHand = hand(book, -.615, -.424, .050, -1, 1.10);
+        const rightHand = hand(book, .615, -.424, .050, 1, 1.10);
+
+        const turningPagePivot = new THREE.Group();
+        bookShell.add(turningPagePivot);
+        const turningPage = mesh(new THREE.PlaneGeometry(.614, .881, 18, 2),
+            material(0xf6edd9, {map: rightPaperTexture, side: THREE.DoubleSide}), turningPagePivot, 1020);
+        turningPage.position.set(.325, 0, .055);
+        turningPagePivot.visible = false;
+        const turnBase = Float32Array.from(turningPage.geometry.attributes.position.array);
+
+        const radar = new THREE.Group();
+        radar.name = 'held-navigation-radar'; radar.visible = false; root.add(radar);
+        const body = roundedPlate(radar, .555, .733, .09, .057, material(0x253c37), 1005);
+        body.position.z = -.064;
+        const rubber = roundedPlate(radar, .514, .691, .016, .043, material(0x132522), 1006);
+        rubber.position.z = .033;
+        const bezel = mesh(new THREE.TorusGeometry(.224, .014, 8, 56), material(0x8a9b82), radar, 1016);
+        bezel.position.set(0, .05, .061);
+        const blackScreen = mesh(new THREE.CircleGeometry(.212, 56), material(0x061a14), radar, 1017);
+        blackScreen.position.set(0, .05, .064);
+        radarScreen = mesh(new THREE.CircleGeometry(.212, 56), material(0xffffff, {transparent: true}), radar, 1018);
+        radarScreen.position.set(0, .05, .066);
+        const title = mesh(new THREE.PlaneGeometry(.36, .039), label('MARINE RADAR', .36, .039, '#d3dac0'), radar, 1019);
+        title.position.set(0, .311, .065);
+        for (const x of [-.238, .238]) for (const y of [-.326, .325]) {
+            const screw = mesh(new THREE.CylinderGeometry(.010, .010, .005, 10), material(0x9caa95), radar, 1019);
+            screw.rotation.x = Math.PI / 2; screw.position.set(x, y, .063);
+            box(radar, [.011, .002, .001], [x, y, .067], 0x35433a, 1020);
+        }
+        const control = mesh(new THREE.CylinderGeometry(.039, .042, .022, 18), material(0x71846f), radar, 1019);
+        control.rotation.x = Math.PI / 2; control.position.set(.155, -.279, .075);
+        box(radar, [.003, .019, .003], [.155, -.265, .090], 0xd1d7bc, 1020);
+        for (let i = 0; i < 5; i++) box(radar, [.100, .005, .002], [-.105, -.265 - i * .011, .061], 0x081b17, 1019);
+        oval(radar, [.053, -.279, .069], [.009, .009, .004], 0x79dd89, 1020);
+        bone(radar, [.205, .342, -.010], [.205, .529, -.010], .014, .010, 0x182c28, 1004);
+        oval(radar, [.205, .531, -.010], [.010, .014, .010], 0x182c28, 1004);
+        hand(radar, -.259, -.277, .045, -1, .96);
+        hand(radar, .250, -.293, .033, 1, .94);
+
+        function setRadarCanvas(canvas) {
+            if (!canvas || canvas === radarCanvas) return;
+            if (radarTexture) { radarTexture.dispose(); textures.delete(radarTexture); }
+            radarCanvas = canvas; radarTexture = texture(canvas);
+            radarScreen.material.map = radarTexture; radarScreen.material.needsUpdate = true;
+        }
+        setRadarCanvas(options.radarCanvas || doc.getElementById('radar'));
+
+        function setMode(mode) {
+            desiredMode = mode === 'book' || mode === 'radar' ? mode : 'none';
+        }
+        function flipPage(direction) {
+            if (bookAmount < .80 || pageAmount < 1) return false;
+            pageDirection = direction < 0 ? -1 : 1;
+            pageNumber = Math.max(1, pageNumber + pageDirection);
+            pageAmount = 0; turningPagePivot.visible = true;
+            turningPage.position.x = pageDirection * .325;
+            if (options.onPageFlip) options.onPageFlip(pageNumber, pageDirection);
+            return true;
+        }
+        function update(dt, time, state) {
+            if (destroyed) return;
+            state = state || {};
+            if (state.mode !== undefined) setMode(state.mode);
+            const delta = clamp(Number(dt) || 0, 0, .10);
+            const elapsed = Number(time) || 0;
+            const motion = state.reducedMotion ? 0 : clamp(Number(state.moving) || 0, 0, 1);
+            const instant = !!state.reducedMotion;
+            // The previous prop lowers before the new one rises, avoiding overlapping hands.
+            const bookTarget = desiredMode === 'book' && radarAmount < .08 ? 1 : 0;
+            const radarTarget = desiredMode === 'radar' && bookAmount < .08 ? 1 : 0;
+            const step = instant ? 1 : delta / .72;
+            bookAmount = clamp(bookAmount + clamp(bookTarget - bookAmount, -step * 1.30, step), 0, 1);
+            radarAmount = clamp(radarAmount + clamp(radarTarget - radarAmount, -step * 1.5, step * 1.3), 0, 1);
+            book.visible = bookAmount > .001; radar.visible = radarAmount > .001;
+            const aspect = camera.aspect || 1.7;
+            const bookScale = (Number(options.bookScale) || 1.38) * Math.min(1, aspect / 1.10);
+            const raise = ease(bookAmount);
+            const opening = ease((bookAmount - .22) / .78);
+            const sway = Math.sin(elapsed * 5.7) * .014 * motion;
+            book.scale.setScalar(bookScale);
+            book.position.set(sway, -.045 - (1 - raise) * 1.2, -1.36 + .13 * (1 - raise));
+            book.rotation.set(-.065 + (1 - raise) * .68, (1 - raise) * -.31, sway * .25);
+            leftLeaf.rotation.y = (1 - opening) * Math.PI * .48 + .025;
+            rightLeaf.rotation.y = -(1 - opening) * Math.PI * .48 - .025;
+            leftHand.position.x = -.615 + (1 - opening) * .32;
+            rightHand.position.x = .615 - (1 - opening) * .32;
+            leftHand.position.z = rightHand.position.z = .050 + (1 - opening) * .21;
+            const radarRaise = ease(radarAmount);
+            const radarScale = (Number(options.radarScale) || 1) * Math.min(1, aspect / .93);
+            radar.scale.setScalar(radarScale);
+            radar.position.set(Math.min(.52, aspect * .27) + sway, -.31 - (1 - radarRaise) * .98 + Math.sin(elapsed * 11.4) * .007 * motion, -1.20);
+            radar.rotation.set(-.095 + (1 - radarRaise) * .58, -.105, -.052 + sway * .7);
+
+            if (pageAmount < 1) {
+                pageAmount = Math.min(1, pageAmount + (instant ? 1 : delta / .46));
+                const p = ease(pageAmount), curl = Math.sin(p * Math.PI) * .085;
+                turningPagePivot.rotation.y = -pageDirection * p * Math.PI;
+                const positions = turningPage.geometry.attributes.position;
+                for (let i = 0; i < positions.count; i++) {
+                    const x = turnBase[i * 3], y = turnBase[i * 3 + 1];
+                    const t = .5 + pageDirection * x / .614;
+                    positions.setXYZ(i, x, y, Math.sin(t * Math.PI) * curl);
+                }
+                positions.needsUpdate = true;
+                if (pageAmount === 1) turningPagePivot.visible = false;
+            }
+            if (radar.visible && radarTexture && elapsed - lastRadarTextureTime > .05) {
+                radarTexture.needsUpdate = true; lastRadarTextureTime = elapsed;
+            }
+            if (Math.abs(lastBookProgress - opening) > .002) {
+                lastBookProgress = opening;
+                if (options.onBookProgress) options.onBookProgress(opening, desiredMode === 'book');
+            }
+        }
+        function dispose() {
+            if (destroyed) return;
+            destroyed = true; camera.remove(root);
+            geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose());
+        }
+
+        function getBookViewportBounds() {
+            // Fractions of the viewport: usable paper bounds for a matching HTML overlay.
+            // Only expose its contents when bookProgress is near one, after the covers open.
+            book.updateMatrix();
+            let minX = 1, minY = 1, maxX = -1, maxY = -1;
+            for (const x of [-.626, .626]) for (const y of [-.415, .415]) {
+                const p = new THREE.Vector3(x, y, .058).applyMatrix4(book.matrix).applyMatrix4(camera.projectionMatrix);
+                minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+                minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+            }
+            return {left: (minX + 1) * .5, top: (1 - maxY) * .5,
+                width: (maxX - minX) * .5, height: (maxY - minY) * .5};
+        }
+
+        return {
+            root, book, radar, leftPaperCanvas, rightPaperCanvas,
+            setMode, update, flipPage, setRadarCanvas, getBookViewportBounds, dispose,
+            markRadarDirty() { if (radarTexture) radarTexture.needsUpdate = true; },
+            markPagesDirty() { leftPaperTexture.needsUpdate = true; rightPaperTexture.needsUpdate = true; },
+            get mode() { return desiredMode; },
+            get bookProgress() { return ease((bookAmount - .22) / .78); },
+            get radarProgress() { return ease(radarAmount); },
+            get isBusy() { return (bookAmount > 0 && bookAmount < 1) || (radarAmount > 0 && radarAmount < 1) || pageAmount < 1; }
+        };
+    }
+    global.VoyageHeldTools = {create: create};
+})(typeof window === 'undefined' ? globalThis : window);
+
+</script>
+<script>
+/* World-anchored coast, cloud and light assets. No camera-relative weather. */
+window.IslandEnvironment = (() => {
+    function create(api) {
+        const T=api.THREE, worlds=new Map(), lightSources=[], lights=[];
+        const clockUniform={value:0}, temp=new T.Vector3();
+        const coastData=new Uint8Array(193*10*4),coastTexture=new T.DataTexture(coastData,193,10,T.RGBAFormat);
+        coastTexture.minFilter=coastTexture.magFilter=T.LinearFilter;coastTexture.needsUpdate=true;
+        const coastRoutes=api.routes.slice(1).map(r=>new T.Vector4(r.x,r.z,r.rx,r.rz));
+        const coastModes=api.routes.slice(1).map(r=>new T.Vector2(r.orientation||0,0));
+        // Complementary coverage: nearby water replaces the ocean instead of tinting it twice.
+        api.waterMaterial.onBeforeCompile=shader=>{
+            shader.uniforms.coastAtlas={value:coastTexture};shader.uniforms.coastRoutes={value:coastRoutes};shader.uniforms.coastModes={value:coastModes};
+            shader.vertexShader='varying vec2 oceanWorld;\n'+shader.vertexShader;
+            shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\noceanWorld=(modelMatrix*vec4(transformed,1.)).xz;');
+            shader.fragmentShader='uniform sampler2D coastAtlas;uniform vec4 coastRoutes[9];uniform vec2 coastModes[9];varying vec2 oceanWorld;\n'+shader.fragmentShader;
+            shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',`#include <alphamap_fragment>
+                float surfFade=0.;
+                for(int i=0;i<9;i++){
+                    vec4 r=coastRoutes[i];vec2 mode=coastModes[i],v=oceanWorld-r.xy;
+                    float c=cos(mode.x),s=sin(mode.x);vec2 local=vec2(c*v.x-s*v.y,s*v.x+c*v.y),q=local/r.zw;
+                    float angle=mod(atan(q.y,q.x)+6.2831853,6.2831853);
+                    vec2 packedRadius=texture2D(coastAtlas,vec2((angle/6.2831853*192.+.5)/193.,(float(i)+1.5)/10.)).rg;
+                    float radius=(packedRadius.r*65280.+packedRadius.g*255.)/65535.*1.5;
+                    float d=(length(q)-radius)*length(vec2(cos(angle)*r.z,sin(angle)*r.w));
+                    float edge=smoothstep(-2.,-.5,d)*(1.-smoothstep(17.,24.,d));surfFade=max(surfFade,edge*mode.y);
+                }
+                diffuseColor.a*=(1.-surfFade)/max(.001,1.-opacity*surfFade);`);
+        };api.waterMaterial.customProgramCacheKey=()=> 'ocean-coast-complement-v1';api.waterMaterial.needsUpdate=true;
+        const smooth=(a,b,v)=>T.MathUtils.smoothstep(v,a,b);
+        const seed=n=>{const v=Math.sin(n*127.1+13.3)*43758.5453;return v-Math.floor(v);};
+        // A fixed pool keeps shader light counts stable as islands are approached.
+        for(let i=0;i<8;i++){
+            const light=new T.PointLight(0xffcf86,0,14,2);light.castShadow=i<2;
+            light.shadow.mapSize.set(256,256);light.shadow.camera.near=.15;light.shadow.camera.far=18;light.shadow.bias=-.001;
+            api.scene.add(light);lights.push(light);
+        }
+        function register(group,index) {
+            if(group.userData.lightingRegistered)return;
+            group.userData.lightingRegistered=true;
+            group.updateMatrixWorld(true);
+            group.traverse(object=>{
+                if(object.userData.lightAnchor){
+                    const anchor=object.userData.lightAnchor;
+                    lightSources.push({object,index,...anchor,position:new T.Vector3()});
+                }
+            });
+            for(const anchor of group.userData.lightAnchors||[]){
+                const object=new T.Object3D();object.position.set(anchor.x,anchor.y,anchor.z);group.add(object);
+                lightSources.push({object,index,...anchor,position:new T.Vector3()});
+            }
+        }
+        function coastAt(route,angle,distance=0) {
+            const radius=api.coastRadius(route,angle);
+            // Solve the actual waterline, including the island's beach slope.
+            let lo=.05,hi=1.12;
+            // Find the outermost wet/dry crossing, including bays and lagoons.
+            for(let r=1.1;r>.04;r-=.02){
+                const p=api.frame(route,route.x+Math.cos(angle)*route.rx*radius*r,route.z+Math.sin(angle)*route.rz*radius*r);
+                if(api.ground(route,p.x,p.z)>0){lo=r;hi=r+.02;break;}
+            }
+            for(let n=0;n<14;n++){
+                const r=(lo+hi)/2,point=api.frame(route,route.x+Math.cos(angle)*route.rx*radius*r,route.z+Math.sin(angle)*route.rz*radius*r);
+                if(api.ground(route,point.x,point.z)>0)lo=r;else hi=r;
+            }
+            const r=(lo+hi)/2;
+            return api.frame(route,route.x+Math.cos(angle)*(route.rx*radius*r+distance),route.z+Math.sin(angle)*(route.rz*radius*r+distance));
+        }
+        function ribbon(route) {
+            const segments=192,rows=22,positions=[],uvs=[],indices=[],samples=[],fades=[];
+            const coast=Array.from({length:segments+1},(_,a)=>{
+                const angle=a/segments*Math.PI*2,p=coastAt(route,angle),n=api.frame({...route,x:0,z:0},Math.cos(angle),Math.sin(angle));
+                const local=api.frame(route,p.x,p.z,true),radius=Math.hypot((local.x-route.x)/route.rx,(local.z-route.z)/route.rz);
+                const packed=Math.round(radius/1.5*65535),offset=(route.index*193+a)*4;
+                coastData[offset]=packed>>8;coastData[offset+1]=packed&255;coastData[offset+3]=255;
+                return {...p,nx:n.x,nz:n.z,angle};
+            });
+            coastTexture.needsUpdate=true;
+            for(let a=0;a<=segments;a++)for(let row=0;row<=rows;row++){
+                const angle=a/segments*Math.PI*2,d=-2+row/rows*26,c=coast[a],p={x:c.x+c.nx*d,z:c.z+c.nz*d};
+                const y=api.ground(route,p.x,p.z),factor=y>0?.03:smooth(.05,2.8,-y);
+                positions.push(p.x,0,p.z);uvs.push(p.x/1000+.5,-p.z/1000+.5);
+                samples.push({x:p.x,z:p.z,d,factor,angle});
+                fades.push(smooth(-2,-.5,d)*(1-smooth(17,24,d)));
+            }
+            for(let a=0;a<segments;a++)for(let row=0;row<rows;row++){
+                const i=a*(rows+1)+row,j=i+rows+1;indices.push(i,j,i+1,j,j+1,i+1);
+            }
+            const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));geo.setIndex(indices);geo.computeVertexNormals();
+            geo.setAttribute('coastFade',new T.Float32BufferAttribute(fades,1));
+            const material=api.waterMaterial.clone();material.depthWrite=false;material.transparent=true;material.polygonOffset=true;material.polygonOffsetFactor=-1;material.polygonOffsetUnits=-1;
+            material.onBeforeCompile=shader=>{
+                shader.vertexShader='attribute float coastFade;varying float vCoastFade;\n'+shader.vertexShader;
+                shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvCoastFade=coastFade;');
+                shader.fragmentShader='varying float vCoastFade;\n'+shader.fragmentShader;
+                shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>','#include <alphamap_fragment>\ndiffuseColor.a*=vCoastFade;');
+            };material.customProgramCacheKey=()=> 'island-surf-fade-v2';
+            const water=new T.Mesh(geo,material);water.frustumCulled=false;water.renderOrder=2;
+            const fpos=[],fuv=[],findices=[];
+            for(let a=0;a<=segments;a++)for(let row=0;row<5;row++){fpos.push(0,0,0);fuv.push(a/segments*48,row/4);}
+            for(let a=0;a<segments;a++)for(let row=0;row<4;row++){const i=a*5+row,j=i+5;findices.push(i,j,i+1,j,j+1,i+1);}
+            const fg=new T.BufferGeometry();fg.setAttribute('position',new T.Float32BufferAttribute(fpos,3));fg.setAttribute('uv',new T.Float32BufferAttribute(fuv,2));fg.setIndex(findices);
+            const fm=new T.ShaderMaterial({uniforms:{time:clockUniform,strength:{value:0},night:{value:1}},transparent:true,depthWrite:false,side:T.DoubleSide,
+                vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+                fragmentShader:`uniform float time;uniform float strength;uniform float night;varying vec2 vUv;
+                    float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+                    void main(){vec2 p=vec2(vUv.x*6.,vUv.y*14.);vec2 id=floor(p);vec2 q=fract(p)-.5;
+                        float pores=smoothstep(.14,.27,length(q+vec2(hash(id)-.5,hash(id+8.)-.5)*.4));
+                        float edge=smoothstep(0.,.18,vUv.y)*(1.-smoothstep(.6,1.,vUv.y));
+                        float streak=.58+.42*sin(vUv.x*13.+sin(vUv.y*9.-time*.3));
+                        gl_FragColor=vec4(vec3(.88,.98,1.)*night,edge*pores*streak*strength);}`});
+            const foam=new T.Mesh(fg,fm);foam.frustumCulled=false;foam.renderOrder=4;
+            return {water,foam,samples,segments,coast};
+        }
+        function clouds(route,group) {
+            const cloudGroup=new T.Group();cloudGroup.name='regional-clouds';
+            const geometry=new T.SphereGeometry(1,12,8),count=route.index===7?144:80;
+            const material=new T.MeshStandardMaterial({color:route.index===7?0x677586:0xf3f6f5,roughness:1,transparent:true,opacity:route.index===5?.67:.92,depthWrite:false});
+            const mesh=new T.InstancedMesh(geometry,material,count),dummy=new T.Object3D();
+            for(let i=0;i<count;i++){
+                const cluster=Math.floor(i/8),a=seed(cluster+route.index*51)*Math.PI*2,r=(.2+seed(cluster+90)*.8)*route.rx;
+                dummy.position.set(Math.cos(a)*r+(seed(i+31)-.5)*22,82+route.index*4+seed(cluster+20)*30+seed(i)*7,Math.sin(a)*r+(seed(i+69)-.5)*15);
+                dummy.scale.set(8+seed(i+7)*10,3+seed(i+9)*5,7+seed(i+11)*8);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+            }
+            mesh.frustumCulled=false;cloudGroup.add(mesh);cloudGroup.position.set(route.x,0,route.z);group.add(cloudGroup);
+            return cloudGroup;
+        }
+        function lava(route,group) {
+            const points=[];
+            let x=route.x+route.rx*.22,z=route.z+route.rz*.28;
+            const ground=(xx,zz)=>{const p=api.frame(route,xx,zz);return api.ground(route,p.x,p.z);};
+            let height=ground(x,z);
+            for(let n=0;n<110;n++){
+                const world=api.frame(route,x,z);points.push(new T.Vector3(world.x,height+.09,world.z));
+                let best=null;
+                for(let k=0;k<24;k++){
+                    const a=k/24*Math.PI*2,nx=x+Math.cos(a)*2.3,nz=z+Math.sin(a)*2.3,ny=ground(nx,nz);
+                    const oldR=Math.hypot((x-route.x)/route.rx-.04,(z-route.z)/route.rz-.38),newR=Math.hypot((nx-route.x)/route.rx-.04,(nz-route.z)/route.rz-.38);
+                    // Stay east of the green village and choose a genuinely downhill step.
+                    if(nx<route.x+route.rx*.04||ny>=height-.002||newR<oldR)continue;
+                    const score=ny+Math.abs(nx-(route.x+route.rx*.4))*.01;
+                    if(!best||score<best.score)best={x:nx,z:nz,y:ny,score};
+                }
+                if(!best||height<.2)break;({x,z}=best);height=best.y;
+            }
+            if(points.length<2)return;
+            const vertices=[],uv=[],idx=[];
+            points.forEach((p,i)=>{
+                const tangent=points[Math.min(i+1,points.length-1)].clone().sub(points[Math.max(0,i-1)]).normalize();
+                const width=1.1+Math.sin(i*.43)*.35;
+                for(const s of [-1,1]){const x=p.x-tangent.z*width*s,z=p.z+tangent.x*width*s;vertices.push(x,api.ground(route,x,z)+.09,z);uv.push((s+1)/2,i*.22);}
+                if(i<points.length-1){const n=i*2;idx.push(n,n+2,n+1,n+1,n+2,n+3);}
+            });
+            const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
+            const m=new T.ShaderMaterial({uniforms:{time:clockUniform},side:T.DoubleSide,
+                vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+                fragmentShader:`uniform float time;varying vec2 vUv;void main(){float edge=pow(abs(vUv.x-.5)*2.,3.);float crust=smoothstep(.35,.8,sin(vUv.y*8.-time*1.1+sin(vUv.x*25.))*sin(vUv.x*17.+vUv.y*5.));vec3 hot=mix(vec3(1.,.12,.008),vec3(1.,.77,.12),.5+.5*sin(vUv.y*3.-time));gl_FragColor=vec4(mix(hot,vec3(.065,.038,.031),clamp(edge+crust*.6,0.,1.)),1.);}`});
+            const flow=new T.Mesh(g,m);flow.name='downhill-lava';group.add(flow);
+            for(let i=0;i<points.length;i+=15){const anchor=new T.Object3D();anchor.position.copy(points[i]).add(new T.Vector3(0,1.5,0));anchor.userData.lightAnchor={color:0xff5921,intensity:1.3,distance:9,nightOnly:false};group.add(anchor);}
+            group.userData.lavaPoints=points.map(p=>[p.x,p.y,p.z]);
+        }
+        function ensure(route) {
+            if(worlds.has(route.index))return worlds.get(route.index);
+            const group=new T.Group();group.name='island-atmosphere-'+route.index;api.scene.add(group);
+            const coast=route.index?ribbon(route):null;if(coast)group.add(coast.water,coast.foam);
+            const sky=clouds(route,group);
+            if(route.index===4)lava(route,group);
+            // Ground-hugging mist is local, so landmarks above it stay legible.
+            let mist=null;
+            if(route.index===5){
+                const pos=[];for(let i=0;i<64;i++){const a=seed(i)*6.28,r=seed(i+9)*route.rx*.8,p=api.frame(route,route.x+Math.cos(a)*r,route.z+Math.sin(a)*r);pos.push(p.x,api.ground(route,p.x,p.z)+1.2,p.z);}
+                const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(pos,3));
+                const mat=new T.ShaderMaterial({uniforms:{time:clockUniform},transparent:true,depthWrite:false,
+                    vertexShader:'uniform float time;void main(){vec3 p=position;p.x+=sin(time*.07+p.z*.06)*3.;vec4 v=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*v;gl_PointSize=clamp(15000./max(1.,-v.z),1.,280.);}',
+                    fragmentShader:'void main(){float d=length((gl_PointCoord-.5)*vec2(1.,2.5));gl_FragColor=vec4(.68,.79,.78,(1.-smoothstep(.05,.5,d))*.1);}'});
+                mist=new T.Points(geo,mat);mist.frustumCulled=false;group.add(mist);
+            }
+            register(group,route.index);const world={route,group,coast,sky,mist};worlds.set(route.index,world);return world;
+        }
+        function update(dt,time,observer,sunHeight,quality) {
+            clockUniform.value=time;
+            for(const route of api.routes){
+                const show=api.visible(route.index);let world=worlds.get(route.index);
+                if(route.index)coastModes[route.index-1].y=show?1:0;
+                if(!show){if(world)world.group.visible=false;continue;}
+                if(!world)world=ensure(route);world.group.visible=true;
+                const storm=route.index===7;
+                world.sky.position.x=route.x+Math.sin(time*(storm?.013:.003)+route.index)*22;
+                world.sky.position.z=route.z+Math.cos(time*.002+route.index)*12;
+                if(!world.coast)continue;
+                const {water,foam,samples,coast,segments}=world.coast;
+                water.material.color.copy(api.waterMaterial.color);
+                const waveCycle=(time*.15+route.index*.137)%1;
+                const attr=water.geometry.attributes.position;
+                for(let i=0;i<samples.length;i++){
+                    const p=samples[i],phase=waveCycle;
+                    const fade=1-smooth(14,24,p.d);
+                    const base=api.baseWave(p.x,p.z,time,p.factor);
+                    attr.setY(i,base+api.shoreWave(p.d,storm?1.65:1,phase)*fade+.018*fade);
+                }
+                attr.needsUpdate=true;if(Math.floor(time*20)!==world.normalFrame){water.geometry.computeVertexNormals();world.normalFrame=Math.floor(time*20);}
+                const cycle=waveCycle,swash=smooth(.42,.65,cycle);
+                const ease=v=>{const t=Math.max(0,Math.min(1,v));return t*t*t*(t*(t*6-15)+10);};
+                const distance=cycle<.42?8.4+(1.35-8.4)*ease(cycle/.42):cycle<.5?1.35-1.2*ease((cycle-.42)/.08):cycle<.65?.15-1.2*ease((cycle-.5)/.15):cycle<.7?-1.05:-1.05+5.45*Math.pow((cycle-.7)/.3,1.65);
+                const strength=smooth(.2,.44,cycle)*(1-smooth(.66,.995,cycle));
+                const fp=foam.geometry.attributes.position;
+                for(let a=0;a<=segments;a++)for(let row=0;row<5;row++){
+                    const p=coast[a],d=distance+(row/4-.5)*(1.6+swash*2.5),x=p.x+p.nx*d,z=p.z+p.nz*d;
+                    const g=api.ground(route,x,z),factor=g>0?.03:smooth(.05,2.8,-g);
+                    const y=Math.max(g+.027,api.baseWave(x,z,time,factor)+api.shoreWave(d,storm?1.65:1,cycle)+.055);
+                    fp.setXYZ(a*5+row,x,y,z);
+                }
+                fp.needsUpdate=true;foam.material.uniforms.strength.value=strength*.8;foam.material.uniforms.night.value=.32+.68*smooth(-.2,.2,sunHeight);
+            }
+            const nighttime=1-smooth(-.12,.18,sunHeight),candidates=[];
+            for(const source of lightSources){
+                if(!api.visible(source.index))continue;
+                source.object.getWorldPosition(source.position);
+                const distance=source.position.distanceTo(observer);
+                if(distance<55)candidates.push({source,distance});
+                const material=source.emissiveMaterial||source.object.material;
+                if(material?.emissive)material.emissiveIntensity=(source.nightOnly===false?1:nighttime)*1.4;
+            }
+            candidates.sort((a,b)=>a.distance-b.distance);
+            for(let i=0;i<lights.length;i++){
+                const light=lights[i],candidate=i<[3,5,8][quality]?candidates[i]:null;
+                if(!candidate){light.intensity=0;continue;}
+                const source=candidate.source,fade=1-smooth(38,55,candidate.distance);
+                light.position.copy(source.position);light.color.set(source.color||0xffcf86);light.distance=source.distance||14;
+                light.intensity=(source.intensity||1.6)*(source.nightOnly===false?1:nighttime)*fade;
+            }
+        }
+        return {register,ensure,update,worlds,lights,lightSources};
+    }
+    return {create};
+})();
+
+</script>
+<!-- /VOYAGE ASSETS -->
+<script>
 /* Procedural block scenery. Shared geometry keeps detailed islands inexpensive to draw. */
 window.IslandRemodel = (() => {
     const palettes = [
@@ -865,6 +2008,17 @@ window.IslandRemodel = (() => {
         group.name = `remodel-${level + 1}-${route.theme}`;
         group.position.set(route.x, 0, route.z);
         const solid = [], luminous = [], obstacles = [], paths = [];
+        const models = [], lightAnchors = [];
+        const assets = window.IslandModelAssets?.create(THREE);
+        function model(object,x,y,z,yaw=0) {
+            if(houseFrame){({x,z}=turnPoint(x,z,houseFrame.x,houseFrame.z,houseFrame.yaw));yaw+=houseFrame.yaw;}
+            object.position.set(x,y,z);object.rotation.y+=yaw;
+            object.updateMatrixWorld(true);
+            object.traverse(part=>{
+                if(part.userData.lightAnchor){const p=part.getWorldPosition(new THREE.Vector3());lightAnchors.push({...part.userData.lightAnchor,x:p.x,y:p.y,z:p.z,emissiveMaterial:part.material});}
+                if(part.isMesh)models.push({geometry:part.geometry,material:part.material,matrix:part.matrixWorld.clone(),shadow:part.castShadow!==false});
+            });
+        }
         const placements = [];
         const districts = [];
         let houseFrame = null;
@@ -919,12 +2073,14 @@ window.IslandRemodel = (() => {
         }
         function lamp(x, z, tall = 3) {
             const y = height(x, z);
+            if(assets){model(assets.lamppost({height:tall,color:p.glow,metal:p.stone,style:route.theme}),x,y,z);return;}
             block(x, y + tall / 2, z, .17, tall, .17, p.stone);
             block(x, y + tall, z, .62, .68, .62, p.glow, 0, true);
             block(x, y + tall + .42, z, .86, .16, .86, p.roof);
             block(x, y + .16, z, .7, .32, .7, p.trim);
         }
         function roof(x, y, z, width, depth, tiers = 1) {
+            if(assets){model(assets.roof({width,depth,height:level===6?3.1:1.9,theme:route.theme,color:p.roof,trim:p.trim,tiers}),x,y,z);return;}
             if(level===1){
                 for(let n=0;n<4;n++)block(x,y+n*.24,z,width-n*.38,.26,depth-n*.35,n===0?p.trim:p.roof);
                 return;
@@ -989,12 +2145,18 @@ window.IslandRemodel = (() => {
                 block(x + side * (w / 2 - .1), floorY + h / 2, z - d / 2, .2, h, .2, p.stone);
                 for (let floor = 0; floor < floors; floor++) {
                     block(x + side * w * .28, floorY + 1.65 + floor * 3.2, z - d / 2 - .05, 1.05, 1.2, .12, p.roof);
+                    block(x + side * w * .28, floorY + 1.65 + floor * 3.2, z - d / 2 - .14, .84, .97, .06, 0xffd798,0,true);
                     block(x + side * w * .28, floorY + 1.65 + floor * 3.2, z - d / 2 - .13, .08, 1.2, .09, p.trim);
                     block(x + side * w * .28, floorY + 1.05 + floor * 3.2, z - d / 2 - .3, 1.3, .2, .55, p.trim);
                     for (let f = 0; f < 4; f++) block(x + side * w * .28 - .4 + f * .27, floorY + 1.25 + floor * 3.2, z - d / 2 - .3, .23, .22, .22, p.flower);
                 }
             }
             block(x, floorY + 1, z - d / 2 - .07, 1.1, 2, .15, p.stone);
+            if(assets)model(assets.lamppost({height:2.6,color:0xffcf86,style:'wall'}),x+w*.43,floorY,z-d*.57);
+            for(const side of [-1,1]){
+                block(x+side*w*.37,floorY+.25,z-d*.62,w*.2,.5,.48,p.stone);
+                block(x+side*w*.37,floorY+.61,z-d*.62,w*.24,.32,.64,p.leaf);
+            }
             roof(x, floorY + h + .1, z, w + 1.1, d + 1.3, 1);
             obstacle(x, z, Math.hypot(w, d) * .52);
             const entry=turnPoint(x,z-Math.hypot(w,d)/2-3,x,z,facing);
@@ -1010,6 +2172,11 @@ window.IslandRemodel = (() => {
         }
         function tree(x, z, size) {
             const y = height(x, z);
+            if(assets){
+                const green=level===4&&(z<route.rz*-.18||x<route.rx*-.26);
+                model(assets.tree({seed:Math.floor(random()*10000),size,theme:route.theme,green}),x,y,z,random()*Math.PI*2);
+                return;
+            }
             const bamboo = level === 2, ice = level === 6;
             if(level===4){
                 block(x,y+size*1.7,z,.32,size*3.4,.32,0x342d2b,0,false,.12);
@@ -1167,13 +2334,17 @@ window.IslandRemodel = (() => {
 
 
         // Coastal masonry, broken rock shelves and flowering pockets frame the island.
-        const coastCount = level === 0 ? 0 : 34 + level * 9;
+        const coastCount = level === 0 ? 34 : 50 + level * 12;
         for (let n = 0; n < coastCount; n++) {
-            const angle = n / coastCount * Math.PI * 2;
+            const angle = (n+random()*.65) / coastCount * Math.PI * 2;
             const x = Math.cos(angle) * route.rx * .87, z = Math.sin(angle) * route.rz * .85;
             if (z < -route.rz * .45 && Math.abs(x) < 21) continue;
             if (blocked(x, z, 3) || height(x, z) < .1) continue;
             const h = 1 + random() * (1.4 + level * .4);
+            if(assets){
+                model(assets.rock({seed:n+level*113,scale:[2.2,h,1.7],color:level===4?0x2b292a:p.stone,kind:level===6?'ice':'rock'}),x,height(x,z)-.15,z,angle);
+                obstacle(x,z,2.1);continue;
+            }
             for (let row = 0; row < 3 + level; row++) {
                 const w = 3.6 - row * .16;
                 block(x, height(x, z) + row * h / (3 + level), z, w, h / (3 + level) + .05, 3.1, row % 3 ? p.stone : p.trim, angle);
@@ -1181,11 +2352,20 @@ window.IslandRemodel = (() => {
             obstacle(x, z, 2.2);
         }
         let planted = 0;
+        if(assets&&level===4){
+            for(let n=0;n<160;n++){
+                const x=(random()*1.6-.65)*route.rx,z=(random()*.9-.12)*route.rz;
+                if(height(x,z)<2||blocked(x,z,3)||paths.some(p=>Math.hypot(p.x-x,p.z-z)<p.width/2+3)||obstacles.some(o=>Math.hypot(o.x-route.x-x,o.z-route.z-z)<o.radius+3))continue;
+                const size=.7+random()*1.8;
+                model(assets.rock({seed:n,kind:'basalt',scale:[size,size*(.5+random()),size*.8],color:n%3?0x302e30:0x50433c}),x,height(x,z)-.2,z,random()*6.28);
+                obstacle(x,z,size*.8,3);
+            }
+        }
         const treeCount = level === 0 ? 42 : 85 + level * 24;
         for (let attempt = 0; attempt < treeCount * 16 && planted < treeCount; attempt++) {
             const x = (random() * 2 - 1) * route.rx * .78, z = (random() * 2 - 1) * route.rz * .7;
             if ((x / route.rx) ** 2 + (z / route.rz) ** 2 > .65 || height(x, z) < .3 || blocked(x, z, 3)) continue;
-            if (level > 0 && z > route.rz * .15 && Math.abs(x) < route.rx * .4) continue;
+            if (level > 0 && z > route.rz * .15 && Math.abs(x) < route.rx * .22) continue;
             if (paths.some(point => Math.hypot(point.x - x, point.z - z) < point.width / 2 + 2.5)) continue;
             if (obstacles.some(point => Math.hypot(point.x - route.x - x, point.z - route.z - z) < point.radius + 2.5)) continue;
             tree(x, z, .7 + random() * .7);
@@ -1198,82 +2378,35 @@ window.IslandRemodel = (() => {
         }
 
         const backZ = route.rz * .35;
-        landmarkBase = ground(route.x,route.z+backZ);
-        landmarkMode = true;
-        if (level === 0) {
-            // Keep the starting island open: actual shops, trees and small flowers only.
-        } else if (level === 1) {
-            // Coral branches form a colorful seaward garden.
-            for (let n = 0; n < 22; n++) {
-                const x = Math.cos(n * 2.4) * 16, z = backZ + Math.sin(n * 2.4) * 9, y = height(x, z);
-                for (let branch = 0; branch < 5; branch++) {
-                    const xx = x + (branch - 2) * .65, h = 1.5 + (branch % 3) * .8;
-                    block(xx, y + h / 2, z, .42, h, .42, branch % 2 ? p.flower : p.roof);
-                    block(xx, y + h, z, .9, .45, .8, p.flower);
-                }
+        // Landmark models use the same ground frame as their paths and colliders.
+        if(assets && level>0){
+            let site=null;
+            const preferred=plan.trail[plan.trail.length-1];
+            for(let i=0;i<80;i++){
+                const angle=i*2.4,r=14+Math.floor(i/8)*3;
+                const x=preferred[0]+Math.cos(angle)*r,z=preferred[1]+Math.sin(angle)*r;
+                const sample=footprint(x,z,15,15);
+                if(sample.low<.4||sample.high-sample.low>2.4||blocked(x,z,10))continue;
+                if(paths.some(pt=>Math.hypot(pt.x-x,pt.z-z)<pt.width/2+9))continue;
+                if(obstacles.some(o=>Math.hypot(o.x-route.x-x,o.z-route.z-z)<o.radius+10))continue;
+                site={x,z,y:sample.high+.08};break;
             }
-        } else if (level === 2) {
-            gate(-5, backZ - 8, 8, 4);
-            tower(-10, backZ + 5, 4.5, 4);
-            for(let n=0;n<18;n++)tree(8+Math.cos(n*2.4)*11,backZ+Math.sin(n*2.4)*9,1.3);
-        } else if (level === 3) {
-            tower(-12, backZ, 5, 5);
-            tower(12, backZ, 4, 4);
-            const y = Math.max(height(-12, backZ), height(12, backZ)) + 3;
-            for (let n = 0; n < 30; n++) block(-12 + n * .83, y - Math.sin(n / 29 * Math.PI), backZ, .85, .3, 3, p.trim);
-            for (let fall = 0; fall < (level === 5 ? 3 : 2); fall++) {
-                const x = -6 + fall * 6;
-                for (let n = 0; n < 26; n++) block(x + Math.sin(n * .3) * .15, y - n * .4, backZ + .2, 1.4, .46, .5, n % 3 ? 0x6bcbd4 : 0xc6f5eb, 0, true);
+            if(site){
+                const landmark=assets.landmark({theme:route.theme,seed:level*911,size:1+level*.025,palette:p});
+                const base=landmark.userData.footprint||{radius:8};
+                const radius=typeof base==='number'?base:(base.radius||8);
+                foundation(site.x,site.z,Math.min(16,radius*2),Math.min(16,radius*2),site.y);
+                model(landmark,site.x,site.y,site.z);
+                for(const collider of landmark.userData.colliders||[])obstacle(site.x+collider.x,site.z+collider.z,collider.radius,collider.height);
+                // End outside the solid footprint; all paths remain on the terrain.
+                path(...preferred,site.x,site.z-radius-2,3);
             }
-            // The elevated bridge is a landmark; its supports remain outside the walking avenue.
-        } else if (level === 4) {
-            // The volcano is the continuous terrain itself, never a second block cone.
-            landmarkMode=false;
-            const cx=route.rx*.04,cz=route.rz*.38;
-            for(let n=0;n<95;n++){
-                const a=n*2.4,r=Math.sqrt(n/95)*route.rx*.045,x=cx+Math.cos(a)*r,z=cz+Math.sin(a)*r;
-                block(x,height(x,z)+.07,z,1.3,.12,1.3,n%4?p.glow:0xffbd57,a,true);
-            }
-            for(let n=0;n<44;n++){
-                const t=n/43,x=cx+8+Math.sin(t*5)*5,z=cz-route.rz*(.1+t*.26);
-                block(x,height(x,z)+.04,z,.75,.07,route.rz*.007,p.glow,0,true);
-            }
-        } else if(level===5){
-            // An overgrown stone sanctuary, distinct from the cliff island's paired towers.
-            for(let n=0;n<9;n++){
-                const a=n/9*Math.PI*2,x=Math.cos(a)*17,z=backZ+Math.sin(a)*12;
-                const y=height(x,z),h=3+n%4;
-                block(x,y+h/2,z,1.8,h,1.8,p.stone,a);block(x,y+h,z,2.6,.45,2.3,p.leaf,a);
-                obstacle(x,z,1.6);
-                if(n%2===0)crystal(x+2,z,1.5,p.glow);
-            }
-        } else if (level === 6) {
-            for (let n = 0; n < 12; n++) crystal(Math.cos(n * 2.4) * (10 + n % 4 * 3), backZ + Math.sin(n * 2.4) * 12, 1.5 + n % 3);
-            tower(-7, backZ, 5, 6);
-        } else if (level === 7) {
-            tower(-14, backZ, 9, 4);
-            for(let n=0;n<18;n++){
-                const x=3+n*.8,z=backZ+Math.sin(n*.17)*3,y=height(x,z);
-                block(x,y+.6,z,.78,1.2,.65,p.stone,.12);
-            }
-        } else if (level >= 8) {
-            const tiers = level === 9 ? 3 : 2;
-            for (let n = 0; n < tiers; n++) {
-                const width = 29 - n * 2.2;
-                block(0, height(0, backZ) + n * .7, backZ, width, .72, width * .8, n % 2 ? p.stone : p.trim);
-                for (let jewel = 0; jewel < 12; jewel++) block(-width / 2 + jewel * width / 11, height(0, backZ) + n * .7 + .35, backZ - width * .4 - .03, .25, .22, .12, p.glow, 0, true);
-            }
-            tower(0, backZ, level === 9 ? 9 : 6, 7);
-            for (const x of [-17, 17]) {
-                tower(x, backZ, level === 9 ? 5 : 3.5, 4);
-            }
-            gate(0, backZ - 21, 12, 4);
-            obstacle(0, backZ, 15);
-            if (level === 9) {
-                // A flowering orchard frames the small sanctuary instead of enormous floating statues.
-                for(let n=0;n<16;n++){
-                    const a=n/16*Math.PI*2,x=Math.cos(a)*25,z=backZ+Math.sin(a)*18;
-                    tree(x,z,1.05+(n%3)*.12);obstacle(x,z,.65,6);
+            if(level===1){
+                // Living coral sits below the tideline, never on a mountain top.
+                for(let n=0;n<48;n++){
+                    const a=n*2.39996,x=Math.cos(a)*route.rx*(.98+random()*.05),z=Math.sin(a)*route.rz*(.98+random()*.05);
+                    const y=height(x,z);if(y>-.12||blocked(x,z,3))continue;
+                    model(assets.coral({seed:n,size:.65+random(),kind:n%3===0?'fan':'branch'}),x,y,z,a);
                 }
             }
         }
@@ -1312,7 +2445,19 @@ window.IslandRemodel = (() => {
             }
         }
         bake(solid, false); bake(luminous, true);
-        group.userData = { islandIndex: level, blockCount: solid.length + luminous.length, theme: route.theme, houseCount: placements.length, buildings: placements, treeCount: planted, layout: plan?.name || 'meadow', streets: plan?.trail || [], paths, districts, obstacles };
+        const batches=new Map();
+        for(const part of models){
+            const e=part.matrix.elements,key=part.geometry.uuid+':'+part.material.uuid+':'+part.shadow+':'+Math.floor(e[12]/64)+':'+Math.floor(e[14]/64);
+            if(!batches.has(key))batches.set(key,[]);batches.get(key).push(part);
+        }
+        for(const items of batches.values()){
+            const mesh=new THREE.InstancedMesh(items[0].geometry,items[0].material,items.length),bounds=new THREE.Box3();
+            items.forEach((part,i)=>{mesh.setMatrixAt(i,part.matrix);part.geometry.computeBoundingBox();bounds.union(part.geometry.boundingBox.clone().applyMatrix4(part.matrix));});
+            mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=items[0].shadow;mesh.receiveShadow=true;mesh.frustumCulled=false;
+            const sphere=bounds.getBoundingSphere(new THREE.Sphere());mesh.userData.cullCenter=sphere.center;mesh.userData.cullRadius=sphere.radius;
+            mesh.userData.assetBatch=true;group.add(mesh);
+        }
+        group.userData = { islandIndex: level, blockCount: solid.length + luminous.length, modelPartCount:models.length, lightAnchors, theme: route.theme, houseCount: placements.length, buildings: placements, treeCount: planted, layout: plan?.name || 'meadow', streets: plan?.trail || [], paths, districts, obstacles };
         return group;
     }
     function paintPaths(THREE,terrain,points,route){
@@ -1354,7 +2499,8 @@ window.IslandRemodel = (() => {
     }
     return { build, palettes, layout, paintPaths };
 })();
-    </script>
+
+</script>
     <script>
 (() => {
     const bar = document.getElementById('loading-progress');
@@ -2512,7 +3658,11 @@ window.IslandRemodel = (() => {
             const dx = (x - islandInfo.x) / islandInfo.rx;
             const dz = (z - islandInfo.z) / islandInfo.rz;
             const radial = Math.hypot(dx, dz)/getRemoteCoastRadius(islandInfo,Math.atan2(dz,dx));
-            if (radial > 1.12) return -4.5;
+            // The beach continues into a submerged shelf instead of a cut disc.
+            if (radial >= 1) {
+                const shelf=THREE.MathUtils.lerp(-.28,-12,THREE.MathUtils.smoothstep(radial,1,1.48));
+                return islandInfo.index===1?THREE.MathUtils.lerp(shelf,Math.min(shelf,-1.8),getCoralWaterCut(dx,dz)):shelf;
+            }
             const shore = THREE.MathUtils.smoothstep(1 - radial, 0, .23);
             const ridge = Math.exp(-(((dx + .14) / .57) ** 2 + ((dz - .4) / .33) ** 2) * 2.2);
             const shoulder = Math.exp(-(((dx - .46) / .3) ** 2 + ((dz - .2) / .51) ** 2) * 2);
@@ -2537,8 +3687,21 @@ window.IslandRemodel = (() => {
                 case 8:terrain=35*Math.exp(-(((dx/.67)**4)+(((dz-.38)/.55)**4))*2)+28*mound(-.53,.57,.25,.3);break;
                 case 9:terrain=94*mound(-.46,.45,.24,.4)+110*mound(.08,.72,.3,.24)+84*mound(.46,.38,.25,.4);break;
             }
-            const hills = (Math.max(0,terrain) + noise * .32) * (1 - arrival);
-            return THREE.MathUtils.lerp(-.28, 1.35 + hills, shore);
+            let hills = (Math.max(0,terrain) + noise * .32) * (1 - arrival);
+            if(islandInfo.index===3||islandInfo.index===7){
+                // Weathered ledges are rounded into the mountain, with continuous walking slopes.
+                hills+=Math.sin(hills*.65)*.8*smoothRemoteHighland(dz);
+            }
+            let surface=THREE.MathUtils.lerp(-.28,1.35+hills,shore);
+            if(islandInfo.index===1){
+                surface=THREE.MathUtils.lerp(surface,-1.8,getCoralWaterCut(dx,dz));
+            }
+            return surface;
+        }
+        function smoothRemoteHighland(z){return THREE.MathUtils.smoothstep(z,.05,.25);}
+        function getCoralWaterCut(x,z){
+            const lagoon=Math.hypot((x-.30)/.35,(z-.39)/.28),channel=Math.hypot((x-.69)/.42,(z-.4)/.105);
+            return Math.max(1-THREE.MathUtils.smoothstep(lagoon,.64,1),1-THREE.MathUtils.smoothstep(channel,.55,1));
         }
 
         function isPointOnIsland(x, z, inset = 0) {
@@ -2610,7 +3773,11 @@ window.IslandRemodel = (() => {
         }
 
         function getMergedIslandHeight(x, z) {
-            const remoteIsland = getRemoteIslandAt(x, z, -8);
+            const remoteIsland = ISLAND_ROUTES.slice(1).find(route=>{
+                if(!ISLAND_PROGRESS[route.index].unlocked)return false;
+                const p=islandFramePoint(route,x,z,true);
+                return Math.hypot((p.x-route.x)/route.rx,(p.z-route.z)/route.rz)<1.5;
+            });
             if (remoteIsland) return getRemoteIslandHeight(remoteIsland, x, z);
             if (blockWuhuV2Active) return getBlockWuhuV2Height(x, z);
             if (exactWuhuIsland) {
@@ -2622,6 +3789,8 @@ window.IslandRemodel = (() => {
 
         function getShallowWaterFloorHeight(x, z) {
             if (blockWuhuV2Active || exactWuhuIsland) return null;
+            const remote=getRemoteIslandAt(x,z,-32);
+            if(remote){const h=getRemoteIslandHeight(remote,x,z);return h<-.02&&h>=SHALLOW_WATER_FLOOR?h:null;}
             if (getIslandShoreDepth(x, z, -SHALLOW_WATER_WIDTH) < 0) return null;
             const terrainHeight = getRawIslandHeight(x, z);
             if (terrainHeight > -0.02) return null;
@@ -2675,15 +3844,15 @@ window.IslandRemodel = (() => {
         await window.gameLoading.checkpoint(45, '시작 섬 지형 완료 · 해변과 파도를 준비하는 중…');
 
         function createRemoteIslandTerrain(islandInfo) {
-            const segments = 96;
+            const segments = 144;
             const positions = [], colors = [], indices = [];
-            const grassColor = new THREE.Color(islandInfo.color);
+            const grassColor = new THREE.Color(islandInfo.index===4 ? 0x668f3c : islandInfo.color);
             const sandEdgeColor = new THREE.Color(islandInfo.accent);
-            const rockColor = new THREE.Color(islandInfo.theme === 'ice' ? 0xd8edf0 : 0x665f58);
+            const rockColor = new THREE.Color(islandInfo.theme === 'ice' ? 0xb9dae4 : islandInfo.index===4 ? 0x302d30 : 0x665f58);
             for (let zIndex = 0; zIndex <= segments; zIndex++) {
-                const localZ = THREE.MathUtils.lerp(-islandInfo.rz * 1.08, islandInfo.rz * 1.08, zIndex / segments);
+                const localZ = THREE.MathUtils.lerp(-islandInfo.rz * 1.5, islandInfo.rz * 1.5, zIndex / segments);
                 for (let xIndex = 0; xIndex <= segments; xIndex++) {
-                    const localX = THREE.MathUtils.lerp(-islandInfo.rx * 1.08, islandInfo.rx * 1.08, xIndex / segments);
+                    const localX = THREE.MathUtils.lerp(-islandInfo.rx * 1.5, islandInfo.rx * 1.5, xIndex / segments);
                     const worldX = islandInfo.x + localX, worldZ = islandInfo.z + localZ;
                     const radial = Math.hypot(localX/islandInfo.rx,localZ/islandInfo.rz)/getRemoteCoastRadius(islandInfo,Math.atan2(localZ/islandInfo.rz,localX/islandInfo.rx));
                     const height = getRemoteIslandHeight(islandInfo, worldX, worldZ);
@@ -2696,9 +3865,6 @@ window.IslandRemodel = (() => {
             }
             for (let zIndex = 0; zIndex < segments; zIndex++) {
                 for (let xIndex = 0; xIndex < segments; xIndex++) {
-                    const localX = THREE.MathUtils.lerp(-islandInfo.rx * 1.08, islandInfo.rx * 1.08, (xIndex + 0.5) / segments);
-                    const localZ = THREE.MathUtils.lerp(-islandInfo.rz * 1.08, islandInfo.rz * 1.08, (zIndex + 0.5) / segments);
-                    if ((localX / islandInfo.rx) ** 2 + (localZ / islandInfo.rz) ** 2 > 1.08) continue;
                     const a = zIndex * (segments + 1) + xIndex;
                     const b = a + 1, c = a + segments + 1, d = c + 1;
                     indices.push(a, c, b, b, c, d);
@@ -3226,6 +4392,9 @@ window.IslandRemodel = (() => {
         const ridge = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 9.3, 12), hutWoodDark);
         ridge.rotation.x = Math.PI / 2; ridge.position.set(0, 6.82, 0);
         hutGroup.add(roofLeft, roofRight, ridge);
+        roofLeft.visible=roofRight.visible=ridge.visible=false;
+        const carvedHutRoof=window.IslandModelAssets.create(THREE).roof({width:9.8,depth:9.2,height:2.2,theme:'grass',color:0x7c3028});
+        carvedHutRoof.position.y=4.5;hutGroup.add(carvedHutRoof);
 
         const counterBase = new THREE.Mesh(new THREE.BoxGeometry(5.4, 1.15, 0.9), hutWoodDark);
         counterBase.position.set(0, 1.05, -3.35);
@@ -3505,6 +4674,9 @@ window.IslandRemodel = (() => {
             const roofRidge = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 6.7, 10), villageBeamMat);
             roofRidge.rotation.x = Math.PI / 2; roofRidge.position.y = 5.88;
             house.add(roofLeft, roofRight, roofRidge);
+            roofLeft.visible=roofRight.visible=roofRidge.visible=false;
+            const carvedRoof=window.IslandModelAssets.create(THREE).roof({width:7.6,depth:6.65,height:1.9,theme:'grass',color:roofColor});
+            carvedRoof.position.y=4.1;house.add(carvedRoof);
 
             const porch = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.24, 1.75), hutWoodLight);
             porch.position.set(0, 0.72, -3.42); house.add(porch);
@@ -3553,6 +4725,7 @@ window.IslandRemodel = (() => {
                 sideWindowFrame.position.set(side * 3.22, 2.45, 0.45);
                 const sideWindow = new THREE.Mesh(new THREE.BoxGeometry(0.32, 1.14, 1.34), villageWindowMat);
                 sideWindow.position.set(side * 3.24, 2.45, 0.45);
+                sideWindow.userData.lightAnchor={color:0xffcf86,intensity:.8,distance:7,nightOnly:true};
                 house.add(sideWindowFrame, sideWindow);
             });
 
@@ -3561,6 +4734,7 @@ window.IslandRemodel = (() => {
                 lanternCap.position.set(lanternX, 3.77, -3.58);
                 const lanternGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 0.48, 8), new THREE.MeshBasicMaterial({ color: 0xffc45c }));
                 lanternGlow.position.set(lanternX, 3.5, -3.58);
+                lanternGlow.userData.lightAnchor={color:0xffc45c,intensity:1.7,distance:12,nightOnly:true};
                 house.add(lanternCap, lanternGlow);
             });
 
@@ -3628,6 +4802,7 @@ window.IslandRemodel = (() => {
             lampCap.position.set(lampX, lampY + 2.95, lampZ);
             const lampGlow = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 7), new THREE.MeshBasicMaterial({ color: 0xffc45c }));
             lampGlow.position.set(lampX, lampY + 2.72, lampZ);
+            lampGlow.userData.lightAnchor={color:0xffc45c,intensity:2,distance:13,nightOnly:true};
             villageGroup.add(lampPost, lampCap, lampGlow);
         });
         [[-11.2, -2.6, 0.25], [-4.8, -7.4, -2.7]].forEach(([benchX, benchZ, benchYaw]) => {
@@ -3738,6 +4913,20 @@ window.IslandRemodel = (() => {
                 const signMat = createOutpostSign(label, signColor);
                 const sign = new THREE.Mesh(new THREE.BoxGeometry(5.4,1.2,.2), [hutWoodDark,hutWoodDark,hutWoodDark,hutWoodDark,signMat,signMat]); sign.position.set(0,3.65,-2.95);
                 stall.add(base,back,left,right,counter,top,roofA,roofB,sign);
+                roofA.visible=roofB.visible=false;
+                const carvedRoof=window.IslandModelAssets.create(THREE).roof({width:9.5,depth:8.7,height:islandInfo.index===6?3:1.9,theme:islandInfo.theme,color:palette.roof,trim:palette.trim});
+                carvedRoof.position.y=3.7;stall.add(carvedRoof);
+                // Product racks are part of the working shop, safely behind its counter.
+                const metal=new THREE.MeshStandardMaterial({color:0xaab7b4,metalness:.5,roughness:.4});
+                for(let n=0;n<4;n++){
+                    if(type==='fishing'){
+                        const pole=new THREE.Mesh(new THREE.CylinderGeometry(.025,.052,2.5,8),metal);
+                        pole.position.set(-2+n*.65,2.4,2.35);pole.rotation.z=.07+n*.025;stall.add(pole);
+                        const reel=new THREE.Mesh(new THREE.TorusGeometry(.15,.045,7,14),trimMaterial);reel.position.set(-2+n*.65,1.75,2.2);stall.add(reel);
+                    }else{
+                        const rope=new THREE.Mesh(new THREE.TorusGeometry(.38,.055,7,18),trimMaterial);rope.position.set(-2+n*1.3,2.4,2.35);stall.add(rope);
+                    }
+                }
                 const merchant = createIslandPerson(type, islandInfo.index);
                 merchant.position.set(0, .43, -1.6);
                 stall.add(merchant);
@@ -3752,14 +4941,15 @@ window.IslandRemodel = (() => {
                     column.position.set(side * 3.65, 2.15, -2.8); stall.add(column);
                     const lamp = new THREE.Mesh(new THREE.BoxGeometry(.38, .62, .38), new THREE.MeshBasicMaterial({ color: palette.glow }));
                     lamp.position.set(side * 3.15, 2.9, -3.25); stall.add(lamp);
-                    if (islandInfo.index >= 4) {
+                    lamp.userData.lightAnchor={color:palette.glow,intensity:1.8,distance:12,nightOnly:true};
+                    if (false) {
                         for (let tier = 0; tier < 3; tier++) {
                             const finial = new THREE.Mesh(new THREE.BoxGeometry(.7 - tier * .18, .4, .7 - tier * .18), trimMaterial);
                             finial.position.set(side * 4, 5.1 + tier * .37, 0); stall.add(finial);
                         }
                     }
                 }
-                if (islandInfo.index >= 7) {
+                if (false) {
                     const upperRoof = new THREE.Mesh(new THREE.BoxGeometry(6, .25, 6.2), roofMat);
                     upperRoof.position.y = 6.1; stall.add(upperRoof);
                     const crown = new THREE.Mesh(new THREE.BoxGeometry(3.8, .28, 4), trimMaterial);
@@ -4158,7 +5348,7 @@ window.IslandRemodel = (() => {
 
         const clouds = [];
         const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 0; i++) {
             const cloudGroup = new THREE.Group();
             const partCount = 3 + Math.floor(Math.random() * 4); 
             for (let j = 0; j < partCount; j++) {
@@ -4443,7 +5633,7 @@ window.IslandRemodel = (() => {
             const eye=camera.getWorldPosition(new THREE.Vector3());
             rodClearance=findRodClearance(eye,origin,candidates,getMergedIslandHeight)<1?0:findRodClearance(origin,tip,candidates,getMergedIslandHeight);
             rodGroup.scale.z=rodClearance<previous?rodClearance:THREE.MathUtils.lerp(previous,rodClearance,1-Math.exp(-delta*9));
-            rodGroup.visible=rodClearance>.08&&!isDrivingBoat;
+            rodGroup.visible=rodClearance>.08&&!isDrivingBoat&&!menuOpen&&!radarVisible&&!heldTools.isBusy&&currentState!==STATES.MODAL_OPEN;
         }
         
         function applyRodAppearance() {
@@ -4537,7 +5727,8 @@ window.IslandRemodel = (() => {
             ['whale',3.15,1.05,.75,.85,'glow'], ['dragon',4,.76,.54,1,'royal']
         ];
         const fishModelTemplates = new Map();
-        function createFishModel(species, displayScale = 1) {
+        function createFishModel(species, displayScale = 1, detail = 'full') {
+            const schooling = detail === 'school', cacheKey = schooling ? species.name + ':school' : species.name;
             const index = FISH_SPECIES.findIndex(entry => entry.name === species.name);
             const profile = FISH_MODELS[index < 0 ? 0 : index];
             function copyModel(template) {
@@ -4547,7 +5738,7 @@ window.IslandRemodel = (() => {
                 copy.traverse(part => { if (part.userData.swimmingPart) copy.userData.tailParts.push(part); });
                 return copy;
             }
-            if (fishModelTemplates.has(species.name)) return copyModel(fishModelTemplates.get(species.name));
+            if (fishModelTemplates.has(cacheKey)) return copyModel(fishModelTemplates.get(cacheKey));
             const [kind, length, depth, width, tailSize, pattern] = profile;
             const fish = new THREE.Group();
             fish.userData.speciesName = species.name;
@@ -4561,12 +5752,12 @@ window.IslandRemodel = (() => {
             const paleMat = material(pale), darkMat = material(ink), accentMat = material(accent);
             const glowing = new THREE.MeshStandardMaterial({color:accent,emissive:accent,emissiveIntensity:1.4});
             function ellipsoid(x,y,z,w,h,l,mat=bodyMat,parent=fish) {
-                const mesh = new THREE.Mesh(new THREE.SphereGeometry(1,32,20),mat);
+                const mesh = new THREE.Mesh(new THREE.SphereGeometry(1,schooling?16:32,schooling?10:20),mat);
                 mesh.position.set(x,y,z);mesh.scale.set(w,h,l);parent.add(mesh);return mesh;
             }
             function tube(points,radius,mat,parent=fish) {
                 const curve = new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));
-                const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,20,radius,6,false),mat);
+                const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,schooling?8:20,radius,6,false),mat);
                 parent.add(mesh);return mesh;
             }
             function fin(points,mat=finMat,parent=fish) {
@@ -4579,13 +5770,13 @@ window.IslandRemodel = (() => {
                     const normal=a.clone().sub(root).cross(b.clone().sub(root)).normalize();
                     const sample=(u,v)=>root.clone().lerp(a,u).addScaledVector(b.clone().sub(root),v)
                         .addScaledVector(normal,Math.sin(u*Math.PI)*Math.sin(v*Math.PI)*.045);
-                    const steps=7;
+                    const steps=schooling?3:7;
                     for(let i=0;i<steps;i++)for(let j=0;j<steps-i;j++){
                         const p=sample(i/steps,j/steps),q=sample((i+1)/steps,j/steps),r=sample(i/steps,(j+1)/steps);
                         verts.push(...p.toArray(),...q.toArray(),...r.toArray());
                         if(i+j<steps-1)verts.push(...q.toArray(),...sample((i+1)/steps,(j+1)/steps).toArray(),...r.toArray());
                     }
-                    for(let ray=0;ray<4;ray++){
+                    for(let ray=0;ray<(schooling?0:4);ray++){
                         const tip=a.clone().lerp(b,ray/4);
                         tube([root.toArray(),root.clone().lerp(tip,.55).addScaledVector(normal,.012).toArray(),tip.toArray()],.0045,mat,parent);
                     }
@@ -4665,7 +5856,7 @@ window.IslandRemodel = (() => {
                 }
             } else {
                 // Tapered body with per-vertex back/belly coloring and species-specific markings.
-                const vertices=[],colors=[],indices=[],rings=72,sides=40;
+                const vertices=[],colors=[],indices=[],rings=schooling?32:72,sides=schooling?16:40;
                 for(let ring=0;ring<=rings;ring++){
                     const t=ring/rings, z=(t-.5)*length;
                     let cross=Math.pow(Math.sin(Math.PI*t),kind==='whale'?.35:.72)*(1-t*.55);
@@ -4752,8 +5943,32 @@ window.IslandRemodel = (() => {
                 if(pattern==='scars')[-1,1].forEach(side=>tube([[side*width*.7,depth*.2,0],[side*width*.75,-depth*.2,.16]],.022,paleMat));
                 if(pattern==='stars')for(let n=0;n<24;n++)spot((n%2?1:-1)*width*.64,depth*.22,-length*.25+(n%12)*length*.04,.025,paleMat);
             }
-            fish.traverse(part=>{if(part.isMesh){part.castShadow=true;part.receiveShadow=true;}});
-            fishModelTemplates.set(species.name,fish);
+            if(schooling){
+                // Merge rigid parts only; independent tails, wings and tentacles keep their pivots.
+                const groups=[];fish.traverse(part=>{if(part.isGroup)groups.push(part);});
+                for(const group of groups){
+                    const batches=new Map();
+                    for(const part of group.children.slice()){
+                        if(!part.isMesh||part.children.length||part.userData.swimmingPart||part.userData.crabLeg)continue;
+                        const attributes=Object.keys(part.geometry.attributes).sort(),key=part.material.uuid+attributes.join('/');
+                        if(!batches.has(key))batches.set(key,[]);batches.get(key).push(part);
+                    }
+                    for(const parts of batches.values()){
+                        if(parts.length<2)continue;
+                        const copies=parts.map(part=>{part.updateMatrix();return (part.geometry.index?part.geometry.toNonIndexed():part.geometry.clone()).applyMatrix4(part.matrix);});
+                        const geometry=new THREE.BufferGeometry();
+                        for(const name of Object.keys(copies[0].attributes)){
+                            const source=copies[0].attributes[name],array=new Float32Array(copies.reduce((sum,g)=>sum+g.attributes[name].array.length,0));
+                            let offset=0;for(const copy of copies){array.set(copy.attributes[name].array,offset);offset+=copy.attributes[name].array.length;}
+                            geometry.setAttribute(name,new THREE.BufferAttribute(array,source.itemSize,source.normalized));
+                        }
+                        group.add(new THREE.Mesh(geometry,parts[0].material));
+                        parts.forEach(part=>group.remove(part));copies.forEach(copy=>copy.dispose());
+                    }
+                }
+            }
+            fish.traverse(part=>{if(part.isMesh){part.castShadow=!schooling;part.receiveShadow=true;}});
+            fishModelTemplates.set(cacheKey,fish);
             return copyModel(fish);
         }
 
@@ -4871,7 +6086,7 @@ window.IslandRemodel = (() => {
 
             const members = schoolIndex < 6 ? 8 : 5;
             for (let memberIndex = 0; memberIndex < members; memberIndex++) {
-                const fish = createFishModel(species, 0.62 + Math.min(species.tier, 3) * 0.07 + Math.random() * 0.08);
+                const fish = createFishModel(species, 0.62 + Math.min(species.tier, 3) * 0.07 + Math.random() * 0.08, 'school');
                 const row = Math.floor(memberIndex / 2);
                 const side = memberIndex % 2 === 0 ? -1 : 1;
                 fish.userData.school = school;
@@ -5289,7 +6504,7 @@ window.IslandRemodel = (() => {
                 return;
             }
             if (k === 'v' && !e.repeat && adventure?.diving) {adventure.exitDive();return;}
-            if (k === 'm' && !e.repeat && currentState !== STATES.MODAL_OPEN) {
+            if (k === 'm' && !e.repeat && currentState === STATES.IDLE) {
                 radarVisible=!radarVisible;
             }
             
@@ -5449,11 +6664,16 @@ window.IslandRemodel = (() => {
         document.getElementById('dex-turn-left').addEventListener('click', () => { if(dexSelectedIndex !== null) selectDexFish(dexSelectedIndex, dexViewAngle - Math.PI / 4); });
         document.getElementById('dex-turn-right').addEventListener('click', () => { if(dexSelectedIndex !== null) selectDexFish(dexSelectedIndex, dexViewAngle + Math.PI / 4); });
         function openDex() {
+            if(bookClosing)return;
+            radarVisible=false;
             bookResume={state:currentState,remaining:Math.max(1,biteDeadline-performance.now())};
             clearTimeout(biteTimer);clearTimeout(biteEscapeTimer);sound.stopReel();
             uiReel.style.display='none';uiBite.style.display='none';
+            document.getElementById('cast-power-ui').style.display='none';
+            if(currentState===STATES.PREPARING_CAST){targetRodRotX=baseRodRotX;targetRodRotY=baseRodRotY;}
             Object.keys(keys).forEach(k=>keys[k]=false);isMouseDown=false;
             renderExplorerBook();
+            selectBookPage(bookPage,false);
             currentState = STATES.MODAL_OPEN; document.exitPointerLock(); startScreen.style.display = 'none';
             const dexList = document.getElementById('dex-list');
             const generation = ++dexRenderGeneration;
@@ -5762,12 +6982,7 @@ window.IslandRemodel = (() => {
         function updateCompassTarget(targetIndex) {
             compassTargetIslandIndex = Number.isInteger(targetIndex)&&Boolean(ISLAND_ROUTES[targetIndex]) ? targetIndex : null;
             targetIndex = compassTargetIslandIndex;
-            if (targetIndex === null || !ISLAND_ROUTES[targetIndex]) {
-                document.getElementById('compass-ui').style.display = 'none';
-                return;
-            }
-            document.getElementById('compass-ui').style.display = 'flex';
-            document.getElementById('compass-title').innerText = `${targetIndex + 1}번째 섬 · ${ISLAND_ROUTES[targetIndex].name}`;
+            // The received route is now shown only on the handheld radar.
         }
 
         function canAccessIslandActivities(islandIndex,notify=false) {
@@ -5857,7 +7072,12 @@ window.IslandRemodel = (() => {
             sound.playCoin(); updateBagUI(); updateMoneyUI(); renderSaleTab(category);
         }));
 
-        function closeModals() {
+        function closeModals(immediate=false) {
+            if(immediate!==true&&document.getElementById('dex-modal').style.display==='block'){
+                if(bookClosing)return;
+                bookClosing=true;heldTools.setMode('none');return;
+            }
+            bookClosing=false;
             const resume=document.getElementById('dex-modal').style.display==='block'?bookResume:null;
             bookResume=null;
             document.getElementById('shop-modal').style.display = 'none';
@@ -5895,6 +7115,7 @@ window.IslandRemodel = (() => {
         function setStatus(text, color = '#f8fafc') { uiStatus.innerText = text; uiStatus.style.color = color; }
 
         function prepareCast() {
+            if(radarVisible){radarVisible=false;return;}
             updateRodClearance(0);
             if(rodClearance<.98){setStatus('낚싯대 앞에 지형이나 건물이 있어요. 넓은 바다 쪽으로 이동하세요.','#facc15');return;}
             if(adventure?.diving){setStatus('잠수 중에는 낚시할 수 없습니다. V로 귀환하세요.');return;}
@@ -6714,6 +7935,22 @@ window.IslandRemodel = (() => {
         }}catch{}
         const adaptive={level:graphics.quality,last:0,draw:0,slow:0,fast:0,smoothed:16.7,applied:''};
         let radarVisible=false,reelFeedbackInside=false,reelFeedbackTime=-1,worldTick=0,bookResume=null,biteDeadline=0;
+        let bookClosing=false,bookPage='controls',bookTurnTimer=null;
+        const heldTools=window.VoyageHeldTools.create({THREE,camera,document,radarCanvas:document.getElementById('radar')});
+        heldTools.root.traverse(part=>part.layers.set(1));
+        const bookBackdrop=new THREE.WebGLRenderTarget(640,360);
+        const bookBackdropScene=new THREE.Scene(),bookBackdropCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+        const bookBackdropMaterial=new THREE.ShaderMaterial({uniforms:{map:{value:bookBackdrop.texture},texel:{value:new THREE.Vector2(1/640,1/360)}},depthTest:false,depthWrite:false,
+            vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
+            fragmentShader:'uniform sampler2D map;uniform vec2 texel;varying vec2 vUv;void main(){vec3 c=texture2D(map,vUv).rgb*.28;for(int i=1;i<4;i++){vec2 d=texel*float(i)*1.7;c+=(texture2D(map,vUv+d).rgb+texture2D(map,vUv-d).rgb)*.12;}gl_FragColor=vec4(c*.8,1.);}'});
+        bookBackdropScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),bookBackdropMaterial));
+        const islandEnvironment=window.IslandEnvironment.create({THREE,scene,routes:ISLAND_ROUTES,
+            ground:(route,x,z)=>route.index?getRemoteIslandHeight(route,x,z):getRawIslandHeight(x,z),
+            coastRadius:getRemoteCoastRadius,frame:islandFramePoint,waterMaterial:waterMat,
+            baseWave:getBaseWaterHeight,shoreWave:getSynchronizedShoreWaveHeight,
+            visible:index=>islandInRenderRange(index)});
+        islandEnvironment.register(villageGroup,0);
+        remodeledScenery.forEach(group=>islandEnvironment.register(group,group.userData.islandIndex));
         const performanceObserver=new THREE.Vector3(),effectPoint=new THREE.Vector3();
         const effectFrustum=new THREE.Frustum(),effectMatrix=new THREE.Matrix4(),effectSphere=new THREE.Sphere();
         const pendingIslandStages=new Map();
@@ -6747,12 +7984,73 @@ window.IslandRemodel = (() => {
             return true;
         }
         function renderExplorerBook(){
-            document.getElementById('book-records').textContent=ISLAND_ROUTES[currentIslandIndex].name+'\n소지금 '+playerMoney.toLocaleString()+' G\n플레이 시간 '+formatPlayTime(playTimeSeconds);
+            const hours=((dayTime/(Math.PI*2)*24+6)%24);
+            document.getElementById('book-records').textContent=playerMoney.toLocaleString()+' G · '+String(Math.floor(hours)).padStart(2,'0')+':'+String(Math.floor(hours%1*60)).padStart(2,'0')+'\n플레이 '+formatPlayTime(playTimeSeconds);
             const quest=getTrackedQuest();
             document.getElementById('book-quest').textContent=quest?[quest.title,quest.island,...quest.rows.map(row=>row.text)].join('\n'):'진행 중인 의뢰가 없습니다. 의뢰 NPC에게 말을 걸어 보세요.';
             const controls=[['w','앞으로'],['a','왼쪽'],['s','뒤로'],['d','오른쪽'],['shift','달리기'],['e','대화 / 상호작용'],['f','배 승하차'],['r','조종 / 앉기'],['i','장비'],['m','레이더'],['tab','수첩'],['v','잠수 귀환'],[' ','잠수 상승'],['control','잠수 하강']];
             document.getElementById('book-controls').textContent=controls.map(([key,label])=>keyLabel(key)+' · '+label).join('\n')+'\n'+['1','2','3','4','5'].map(keyLabel).join(' / ')+' · 미끼 선택\n마우스 움직이기 · 시점\n좌클릭 유지 → 떼기 · 던지기\n입질 때 좌클릭 · 챔질\n낚는 중 누르면 상승, 떼면 하강\nEsc · 메뉴 / 수첩 닫기';
             document.getElementById('book-discovery').textContent='물고기 도감 · '+Object.values(fishDex).filter(f=>f.caught>0).length+' / 50종';
+            const entries=Object.values(fishDex),found=entries.filter(f=>f.caught>0).length,caught=entries.reduce((s,f)=>s+f.caught,0);
+            const goals=[
+                ['첫 손맛',caught,1,'새내기 낚시꾼'],['열 번의 입질',caught,10,'해변의 단골'],['백 번의 손맛',caught,100,'노련한 낚시꾼'],
+                ['바다의 기록',found,10,'생태 관찰자'],['물고기 연구가',found,30,'바다 연구가'],['완성된 도감',found,50,'해양 박물학자'],
+                ['새로운 해안',ISLAND_PROGRESS.filter(q=>q.visited).length,3,'탐험가'],['열 개의 발자취',ISLAND_PROGRESS.filter(q=>q.visited).length,10,'대항해사'],
+                ['든든한 선장',boatLevel,5,'숙련된 선장'],['큰 바다의 증인',Math.max(0,...entries.map(f=>f.maxLen||0)),1000,'거물 사냥꾼'],
+                ['생태 조사의 달인',ISLAND_PROGRESS.filter(q=>q.ecologyCompleted).length,10,'섬의 친구'],['해신의 시험',ISLAND_PROGRESS.filter(q=>q.completed).length,10,'용왕의 벗']
+            ];
+            const root=document.getElementById('book-achievements');root.replaceChildren();
+            for(const [title,value,target,reward] of goals){
+                const card=document.createElement('div');card.className='journal-achievement'+(value>=target?' complete':'');
+                const heading=document.createElement('strong');heading.textContent=(value>=target?'✓ ':value?'◔ ':'○ ')+title;
+                const progress=document.createElement('progress');progress.max=target;progress.value=Math.min(value,target);
+                const label=document.createElement('span');label.textContent=Math.min(value,target)+' / '+target+' · '+(value>=target?'획득 칭호: ':'칭호 보상: ')+reward;
+                card.append(heading,progress,label);root.append(card);
+            }
+        }
+        function selectBookPage(page,animate=true){
+            const pages=['controls','quest','dex','achievements'];if(!pages.includes(page))return;
+            const previous=pages.indexOf(bookPage);bookPage=page;
+            const apply=()=>{
+                document.querySelectorAll('[data-journal-page]').forEach(el=>el.hidden=el.dataset.journalPage!==page);
+                document.querySelectorAll('[data-book-page]').forEach(el=>{el.setAttribute('aria-selected',String(el.dataset.bookPage===page));el.tabIndex=el.dataset.bookPage===page?0:-1;});
+                document.getElementById('book-page-number').textContent='0'+(pages.indexOf(page)+1)+' / 04';
+            };
+            clearTimeout(bookTurnTimer);
+            if(animate&&heldTools.bookProgress>.94){
+                heldTools.flipPage(pages.indexOf(page)>=previous?1:-1);
+                const panel=document.getElementById('dex-modal');panel.classList.remove('page-turn');void panel.offsetWidth;panel.classList.add('page-turn');
+                bookTurnTimer=setTimeout(apply,180);
+            }else apply();
+        }
+        function updateHeldTools(delta,elapsed,walking){
+            const panel=document.getElementById('dex-modal'),bookOpen=panel.style.display==='block';
+            const mode=menuOpen?'none':bookOpen&&!bookClosing?'book':radarVisible&&currentState===STATES.IDLE?'radar':'none';
+            heldTools.update(delta,elapsed,{mode,moving:walking?1:0,reducedMotion:window.matchMedia('(prefers-reduced-motion: reduce)').matches});
+            heldTools.root.visible=!menuOpen;
+            if(bookOpen){
+                const bounds=heldTools.getBookViewportBounds(),pad=.018;
+                panel.style.left=(bounds.left+pad)*100+'vw';panel.style.top=(bounds.top+pad)*100+'vh';
+                panel.style.width=(bounds.width-pad*2)*100+'vw';panel.style.height=(bounds.height-pad*2)*100+'vh';
+                panel.style.opacity=String(THREE.MathUtils.smoothstep(heldTools.bookProgress,.7,.98));
+                panel.style.pointerEvents=heldTools.bookProgress>.92&&!bookClosing?'auto':'none';
+                if(!bookClosing&&Math.floor(elapsed)!==updateHeldTools.lastRecord){renderExplorerBook();updateHeldTools.lastRecord=Math.floor(elapsed);}
+                if(bookClosing&&heldTools.bookProgress===0&&!heldTools.isBusy)closeModals(true);
+            }
+        }
+        function renderVoyageScene(view){
+            const bookOpen=heldTools.bookProgress>.5&&!menuOpen;
+            if(bookOpen){
+                const width=Math.round(innerWidth*.45),height=Math.round(innerHeight*.45);
+                if(bookBackdrop.width!==width||bookBackdrop.height!==height){bookBackdrop.setSize(width,height);bookBackdropMaterial.uniforms.texel.value.set(1/width,1/height);}
+                renderer.setRenderTarget(bookBackdrop);renderer.render(scene,view);renderer.setRenderTarget(null);
+                renderer.render(bookBackdropScene,bookBackdropCamera);
+            }else renderer.render(scene,view);
+            if(!menuOpen&&(heldTools.book.visible||heldTools.radar.visible)){
+                const background=scene.background;scene.background=null;renderer.autoClear=false;renderer.clearDepth();
+                camera.layers.set(1);renderer.render(scene,camera);camera.layers.set(0);
+                renderer.autoClear=true;scene.background=background;
+            }
         }
         function radarPoints(position,range){
             return ISLAND_ROUTES.filter(r=>ISLAND_PROGRESS[r.index].unlocked).map(r=>({
@@ -6763,13 +8061,14 @@ window.IslandRemodel = (() => {
         function updateRadar(position){
             const canvas=document.getElementById('radar');
             const visible=radarVisible&&!menuOpen&&currentState!==STATES.MODAL_OPEN&&!tutorialActive;
-            canvas.style.display=visible?'block':'none';if(!visible)return;
-            const c=canvas.getContext('2d'),radius=190,range=1800;c.clearRect(0,0,440,440);c.save();c.translate(220,220);
+            canvas.style.display='none';if(!visible)return;
+            const c=canvas.getContext('2d'),radius=190,range=3600;c.fillStyle='#071c15';c.fillRect(0,0,440,440);c.save();c.translate(220,220);
             c.strokeStyle='#428765';c.lineWidth=1.5;
             for(const r of [radius/2,radius]){c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.stroke();}
             c.beginPath();c.moveTo(-radius,0);c.lineTo(radius,0);c.moveTo(0,-radius);c.lineTo(0,radius);c.stroke();
             c.font='18px sans-serif';c.textAlign='center';c.fillStyle='#b5e5ce';c.fillText('N',0,-200);
-            c.font='14px sans-serif';c.fillText('북쪽 고정 · 반경 1.8km',0,211);
+            c.font='14px sans-serif';c.fillText('북쪽 고정 · 반경 3.6km',0,211);
+            const sweep=lastFrameElapsed*.85;c.strokeStyle='#5df19c';c.globalAlpha=.4;c.beginPath();c.moveTo(0,0);c.lineTo(Math.sin(sweep)*radius,-Math.cos(sweep)*radius);c.stroke();c.globalAlpha=1;
             for(const point of radarPoints(position,range)){
                 if(point.distance>range)continue;
                 const x=point.x*radius,z=point.z*radius;
@@ -6777,6 +8076,7 @@ window.IslandRemodel = (() => {
                 if(point.index===currentIslandIndex||point.index===compassTargetIslandIndex){c.fillStyle='#d5f8df';c.fillText(point.name,Math.max(-130,Math.min(130,x)),Math.max(-160,Math.min(170,z+23)));}
             }
             c.rotate(-yaw);c.fillStyle='#fff2b1';c.beginPath();c.moveTo(0,-12);c.lineTo(-7,7);c.lineTo(7,7);c.closePath();c.fill();c.restore();
+            heldTools.markRadarDirty();
         }
         function renderGraphicsSettings(){
             const list=document.getElementById('graphics-settings');list.replaceChildren();
@@ -6801,6 +8101,11 @@ window.IslandRemodel = (() => {
         }
         function effectiveQuality(){return graphics.auto?Math.min(graphics.quality,adaptive.level):graphics.quality;}
         function visualRange(){return [420,560,700][graphics.distance]*[.85,.95,1][effectiveQuality()];}
+        function sceneViewRange(){
+            if(!menuOpen)return visualRange();
+            const route=ISLAND_ROUTES[menuViewIsland]||ISLAND_ROUTES[0];
+            return Math.max(visualRange(),Math.hypot(menuCamera.position.x-route.x,menuCamera.position.z-route.z)+Math.max(route.rx,route.rz)*1.5);
+        }
         function applyGraphicsQuality(){
             const level=effectiveQuality(),shadow=Math.min(graphics.shadows,level),ratio=Math.min(window.devicePixelRatio||1,[.8,1.2,1.6][level]);
             const signature=[level,shadow,ratio,graphics.distance].join(':');if(adaptive.applied===signature)return;adaptive.applied=signature;
@@ -6813,11 +8118,11 @@ window.IslandRemodel = (() => {
             return Math.hypot(position.x-route.x,position.z-route.z)-Math.max(route.rx,route.rz)*1.45;
         }
         function islandInRenderRange(index){
-            return ISLAND_PROGRESS[index].unlocked&&islandEdgeDistance(ISLAND_ROUTES[index],performanceObserver)<visualRange();
+            return ISLAND_PROGRESS[index].unlocked&&((menuOpen&&index===menuViewIsland)||islandEdgeDistance(ISLAND_ROUTES[index],performanceObserver)<visualRange());
         }
         function effectIsVisible(position,radius=8){
             effectSphere.center.copy(position);effectSphere.radius=radius;
-            return position.distanceToSquared(performanceObserver)<Math.pow(visualRange()+radius,2)&&effectFrustum.intersectsSphere(effectSphere);
+            return position.distanceToSquared(performanceObserver)<Math.pow(sceneViewRange()+radius,2)&&effectFrustum.intersectsSphere(effectSphere);
         }
         function ensureIslandReady(index){
             if(index===0||!ISLAND_PROGRESS[index]?.unlocked)return;
@@ -6829,6 +8134,8 @@ window.IslandRemodel = (() => {
         }
         function updatePerformanceWorld(delta,elapsed){
             applyGraphicsQuality();
+            if(menuOpen){menuCamera.far=sceneViewRange()+550;menuCamera.updateProjectionMatrix();}
+            window.IslandModelAssets.create(THREE).update(elapsed);
             const view=menuOpen?menuCamera:camera;view.updateMatrixWorld(true);view.getWorldPosition(performanceObserver);
             // A slightly wider frustum keeps effects ready just outside the screen.
             effectMatrix.copy(view.projectionMatrix);effectMatrix.elements[0]*=.85;effectMatrix.elements[5]*=.85;
@@ -6846,13 +8153,14 @@ window.IslandRemodel = (() => {
             }
             islandWorldGroups.forEach((group,index)=>{
                 group.visible=islandInRenderRange(index);
-                const details=islandEdgeDistance(ISLAND_ROUTES[index],performanceObserver)<visualRange()*.65;
-                group.children.forEach(child=>{child.visible=child===remoteIslandMeshes.find(m=>m.userData.islandIndex===index)||details;});
+                const details=(menuOpen&&index===menuViewIsland)||islandEdgeDistance(ISLAND_ROUTES[index],performanceObserver)<visualRange()*.65;
+                group.children.forEach(child=>{child.visible=child===remoteIslandMeshes.find(m=>m.userData.islandIndex===index)||details;islandEnvironment.register(child,index);});
             });
             island.visible=islandInRenderRange(0);
             remodeledScenery.forEach(group=>{
                 const index=group.userData.islandIndex;
-                group.visible=islandInRenderRange(index)&&islandEdgeDistance(ISLAND_ROUTES[index],performanceObserver)<visualRange()*.65;
+                islandEnvironment.register(group,index);
+                group.visible=islandInRenderRange(index)&&((menuOpen&&index===menuViewIsland)||islandEdgeDistance(ISLAND_ROUTES[index],performanceObserver)<visualRange()*.65);
                 group.children.forEach(chunk=>{
                     if(!chunk.userData.cullCenter)return;
                     effectPoint.copy(chunk.userData.cullCenter);chunk.localToWorld(effectPoint);
@@ -6861,8 +8169,19 @@ window.IslandRemodel = (() => {
             });
         }
         function initializeVoyageUpdate(){
+            document.querySelectorAll('[data-book-page]').forEach(button=>button.addEventListener('click',()=>selectBookPage(button.dataset.bookPage)));
+            document.getElementById('dex-modal').addEventListener('keydown',event=>{
+                if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
+                event.preventDefault();const pages=['controls','quest','dex','achievements'];
+                selectBookPage(pages[(pages.indexOf(bookPage)+(event.key==='ArrowRight'?1:3))%4]);
+                document.querySelector('[data-book-page="'+bookPage+'"]').focus();
+            });
             document.getElementById('menu-patch').addEventListener('click',()=>menuPage('patch'));
-            const entries=[{version:'1.1.0',date:'2026-09-10',groups:{
+            const entries=[{version:'1.2.0',date:'2026-09-10',groups:{
+                '추가':['손으로 펼치는 항해 일지와 조작법·의뢰·도감·도전과제 북마커','손에 드는 레이더: M으로 확인, 해금된 섬만 표시','모든 섬의 해안 포말과 지역 구름, 화산의 경사면 용암'],
+                '개선':['섬별 나무·바위·지붕·랜드마크를 곡면 모델로 교체','화산섬의 검은 암석·탄 숲과 푸른 마을 구역','가로등·상점의 야간 주변 조명과 거리별 광원 처리'],
+                '수정':['섬 가장자리의 잘린 해저를 연속 지형으로 연결','상단 방향 화살표 제거, 항로 좌표는 휴대용 레이더로 이동','원형 지형 잘림과 반복 구름의 순간이동 제거']}},
+                {version:'1.1.0',date:'2026-09-10',groups:{
                 '추가':['탐험 수첩: 조작법, 현재 의뢰, 도감, 소지금과 플레이 시간','발견한 섬을 초록색 점으로 표시하는 레이더','프레임 제한, 그래픽 설정과 자동 최적화'],
                 '개선':['너무 먼 섬 숨김과 거리별 세부 표시','섬 접근 시 지형·상점·장식을 단계적으로 준비','장식의 구역별 렌더링과 화면 밖 시각 효과 계산 절약'],
                 '수정':['비·눈을 섬에 고정된 강수 영역으로 변경','낚시 게이지를 중앙 옆으로 이동하고 포획 진행도를 세로로 표시','초록 구역과 실제 판정 일치, 프레임 사이 겹친 시간 반영'],
@@ -6961,13 +8280,6 @@ window.IslandRemodel = (() => {
             player.getWorldPosition(renderPos);
             sunMesh.position.copy(renderPos).addScaledVector(sunDir,1000);
             moonMesh.position.copy(renderPos).addScaledVector(sunDir,-1000);
-            if (compassTargetIslandIndex !== null && ISLAND_ROUTES[compassTargetIslandIndex]) {
-                const targetIsland = ISLAND_ROUTES[compassTargetIslandIndex];
-                const dx = targetIsland.x - renderPos.x, dz = targetIsland.z - renderPos.z;
-                const bearing = Math.atan2(-dx, -dz);
-                document.getElementById('compass-arrow').style.transform = `rotate(${yaw - bearing}rad)`;
-                document.getElementById('compass-meta').innerText = `${Math.round(Math.hypot(dx, dz))}m · 배 등급 ${boatLevel}/${compassTargetIslandIndex}`;
-            }
 
             sunLight.position.copy(renderPos).addScaledVector(sunDir, 200);
             sunLight.target.position.copy(renderPos);
@@ -7435,7 +8747,7 @@ window.IslandRemodel = (() => {
                 });
             }
 
-            if (hookedCatchGroup.visible && hookedFishModel) {
+            if (hookedCatchGroup.visible && hookedFishModel && !bookResume) {
                 const largeCatch = hookedFishModel.userData.visualSpan > 3;
                 fishFightTime += delta;
                 fishSplashCooldown -= delta;
@@ -7559,7 +8871,9 @@ window.IslandRemodel = (() => {
             sunMesh.visible=!isMapOverview&&sunMesh.position.y+40>0;
             moonMesh.visible=!isMapOverview&&moonMesh.position.y+30>0;
             updateRadar(renderPos);
-            renderer.render(scene, menuOpen ? menuCamera : isMapOverview ? mapCamera : camera);
+            updateHeldTools(delta,elapsed,walking);
+            islandEnvironment.update(delta,elapsed,performanceObserver,sunHeight-weatherState.cloud*.09,effectiveQuality());
+            renderVoyageScene(menuOpen ? menuCamera : isMapOverview ? mapCamera : camera);
         }
 
         window.addEventListener('resize', () => {
