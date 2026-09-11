@@ -278,15 +278,29 @@
         .tutorial-actions button:focus-visible{outline:3px solid white;outline-offset:3px;}
         #tutorial-skip{background:transparent;color:#e5e9d4;}
         body.menu-open #tutorial-panel{display:none;}
+        #tutorial-panel{inset:120px 22px auto auto;width:min(390px,calc(100vw - 44px));padding:0;background:none;pointer-events:none;display:block;z-index:150}
+        #tutorial-panel .tutorial-card{width:100%;padding:20px;background:#102e39eb;border:1px solid #8bccbe60;border-radius:12px}
+        #tutorial-count{font-size:12px;letter-spacing:1px}#tutorial-title{font-size:21px;margin:8px 0}#tutorial-text{font-size:15px;line-height:1.65;margin:9px 0}
+        #tutorial-keys{font-size:15px;line-height:1.8;color:#ffdf91;white-space:pre-line}#tutorial-progress{width:100%;height:9px;accent-color:#7adebe;margin-top:14px}#tutorial-progress-label{font-size:13px;color:#b9dcd4;display:block;margin-top:6px}
+        #tutorial-panel .tutorial-actions{margin-top:9px;justify-content:flex-end}#tutorial-skip{pointer-events:auto;font-size:12px;min-height:30px;padding:4px 9px}
+        #tutorial-direction{position:fixed;z-index:140;padding:7px 12px;background:#082b35de;color:#c1ffe9;border:1px solid #8eeacc80;border-radius:7px;pointer-events:none;font-size:14px;max-width:240px;text-align:center}
+        .tutorial-highlight{outline:3px solid #e0bc58!important;outline-offset:4px;box-shadow:0 0 22px #eac96b80!important}
+        #controls-overlay{position:fixed;bottom:20px;right:20px;z-index:40;padding:13px 16px;border:1px solid #b6d7d22e;border-radius:10px;background:#102830d9;color:#d5e9e6;white-space:pre-line;line-height:1.9;font-size:13px;pointer-events:none;max-width:370px}
+        #controls-overlay[data-side=left]{left:20px;right:auto}body.menu-open #controls-overlay,body.menu-open #tutorial-direction{display:none}
+        #controls-overlay[hidden],#tutorial-direction[hidden],#dex-modal [hidden]{display:none!important}
+        #tutorial-panel.tutorial-ui{top:12px;right:50%;transform:translateX(50%);width:min(640px,calc(100vw - 30px))}
+        #tutorial-panel.tutorial-ui .tutorial-card{padding:10px 16px}#tutorial-panel.tutorial-ui #tutorial-title{font-size:18px;margin:3px 0}#tutorial-panel.tutorial-ui #tutorial-text{font-size:14px;margin:3px 0;line-height:1.5}#tutorial-panel.tutorial-ui .tutorial-actions{position:absolute;right:16px;top:4px}#tutorial-panel.tutorial-ui #tutorial-keys{font-size:13px}#tutorial-panel.tutorial-ui #tutorial-progress{margin-top:5px}
+        #patch-entries details{border-bottom:1px solid #47606b;padding:12px 0}#patch-entries summary{cursor:pointer;font-size:18px;display:flex;justify-content:space-between;gap:24px;list-style:none}#patch-entries summary::after{content:'＋';color:#bce9dc}#patch-entries details[open] summary::after{content:'−'}#patch-entries time{font-size:14px;color:#a7bbc2}#patch-entries h4{margin:18px 0 6px}
+        @media(max-height:720px){#tutorial-panel{top:90px;width:320px}#tutorial-panel .tutorial-card{padding:13px}#tutorial-text{font-size:14px}#tutorial-title{font-size:18px}}
 </style>
 </head>
 <body class="menu-open">
-    <section id="tutorial-panel" hidden role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
-        <div class="tutorial-card"><span id="tutorial-count"></span><h2 id="tutorial-title"></h2><p id="tutorial-text"></p>
-            <div class="tutorial-actions"><button id="tutorial-next" type="button">다음</button><button id="tutorial-skip" type="button">튜토리얼 건너뛰기</button></div>
-            <p style="font-size:14px;color:#c8d5c9;margin-bottom:0">Enter 다음 · Backspace 건너뛰기 · ESC 메인 화면</p>
+    <section id="tutorial-panel" hidden role="region" aria-labelledby="tutorial-title">
+        <div class="tutorial-card"><span id="tutorial-count"></span><h2 id="tutorial-title"></h2><p id="tutorial-text"></p><div id="tutorial-keys"></div>
+            <progress id="tutorial-progress" max="1" value="0"></progress><span id="tutorial-progress-label"></span>
+            <div class="tutorial-actions"><button id="tutorial-skip" type="button">건너뛰기 · Backspace</button></div>
         </div>
-    </section>
+    </section><div id="tutorial-direction" hidden></div><div id="controls-overlay" hidden></div>
     <div id="start-screen">
         <span class="menu-eyebrow">TEN ISLANDS · A FISHING VOYAGE</span>
         <h1>열 바다의 항해자</h1>
@@ -301,8 +315,11 @@
             <label class="setting-row">마우스 감도 <output id="sensitivity-value"></output><input id="setting-sensitivity" type="range" min="0.2" max="3" step="0.1"></label>
             <label class="setting-row">전체 소리 <output id="volume-value"></output><input id="setting-volume" type="range" min="0" max="100" step="1"></label>
             <h3>화면과 성능</h3><div id="graphics-settings"></div><p id="graphics-status"></p>
+            <label class="setting-row">화면 주사율에 맞춤 <input id="setting-sync" type="checkbox"></label><p style="font-size:14px">켬: 브라우저의 화면 갱신에 맞춰 그립니다. 끔: 선택한 프레임 제한을 사용합니다. 실제 수직동기화는 브라우저·그래픽 설정에서 결정됩니다.</p>
+            <label class="setting-row">기본 조작키 표시 <input id="setting-controls" type="checkbox"></label>
+            <label class="setting-row">조작키 안내 위치 <select id="setting-controls-side"><option value="right">오른쪽 아래</option><option value="left">왼쪽 아래</option></select></label>
             <h3>키 설정</h3><p style="font-size:14px">버튼을 누르고 새 키를 입력하세요. ESC는 메뉴 열기·취소로 고정됩니다.</p>
-            <div id="key-bindings"></div><p style="font-size:14px">같은 키를 여러 동작에 지정할 수 있습니다. Ctrl 조합 단축키 보호는 전체화면에서 지원됩니다.</p><button id="keyboard-protection" type="button">전체화면 · 단축키 보호</button><button id="developer-disable" type="button" hidden>개발자 모드 끄기</button><button id="game-version" type="button" style="display:block;margin:18px 0 8px;padding:4px 0;min-height:28px;background:none;border:none;color:#a5bcb9;font-size:13px">버전 1.2.0</button><button id="settings-reset">설정 초기화</button> <button data-menu-back>돌아가기</button>
+            <div id="key-bindings"></div><p style="font-size:14px">같은 키를 여러 동작에 지정할 수 있습니다. Ctrl 조합 단축키 보호는 전체화면에서 지원됩니다.</p><button id="keyboard-protection" type="button">전체화면 · 단축키 보호</button><button id="developer-disable" type="button" hidden>개발자 모드 끄기</button><button id="game-version" type="button" style="display:block;margin:18px 0 8px;padding:4px 0;min-height:28px;background:none;border:none;color:#a5bcb9;font-size:13px">버전 1.2.1</button><button id="settings-reset">설정 초기화</button> <button data-menu-back>돌아가기</button>
         </section>
         <p id="menu-message" role="status"></p>
         <p id="menu-footer">처음 만나는 바다, 당신만의 항해.<br>ESC · 메뉴 열기 / 진행은 선택한 슬롯에 자동 저장됩니다.<br>저장 데이터는 이 브라우저에만 보관됩니다.</p>
@@ -418,18 +435,19 @@
 window.IslandAdventures = (() => {
     const campaigns = [
         {title:'첫 항해 준비',intro:'작은 물고기 2마리와 해변 채집 2회를 경험하고 항구의 출항 준비대에서 배 보급품을 챙기세요.',steps:[['fish','낚시로 물고기 2마리 잡기',2],['shore','조개·게 2개 채집',2],['kit','항구 출항 준비대 확인',1]]},
-        {title:'가라앉은 산호 해도',intro:'잠수 지점에서 G로 입수하세요. WASD로 수영하고 Space로 상승, Ctrl로 하강합니다. 산소가 떨어지기 전에 해도 조각 3개를 회수하세요.',steps:[['dive','잠수해서 해도 조각 3개 회수',3]]},
+        {title:'가라앉은 산호 해도',intro:'잠수 장비와 상호작용해 입수하세요. 수영하며 조각의 깊이까지 내려간 뒤 상호작용으로 회수합니다. 산소가 떨어지기 전에 해도 조각 3개를 모으세요.',steps:[['dive','잠수해서 해도 조각 3개 회수',3]]},
         {title:'숲지기의 통발',intro:'대나무 재료 3개를 모아 통발을 설치하세요. 20초 후 특수 미끼를 회수하고 섬의 물고기를 낚아 생태 기록을 남기세요.',steps:[['bamboo','대나무 재료 3개 모으기',3],['trap','통발 설치 후 20초 뒤 회수',1],['fish','특수 미끼 기록으로 대나무섬 물고기 낚기',1]]},
         {title:'절벽 관측소 복구',intro:'수리 자재를 모아 끊긴 탐방로를 복구하세요. 연결된 길을 따라 전망대에 도착하면 새로운 항로를 관측할 수 있어요.',steps:[['timber','수리 자재 3개 모으기',3],['bridge','탐방로 수리',1],['observe','높은 관측소에서 항로 찾기',1]]},
         {title:'뜨거운 바위의 기록',intro:'냉각 쉼터에서 준비한 뒤 열기 구역의 광물 3개를 조사하세요. 열기 수치가 높으면 쉼터로 돌아오세요. 해안 바위 낚시터에서 마지막 표본을 낚으세요.',steps:[['cool','냉각 쉼터에서 탐사 준비',1],['ore','열기 구역 광물 3개 조사',3],['poolfish','해안 바위 낚시터에서 물고기 잡기',1]]},
         {title:'안개 항로의 세 불빛',intro:'항로 표식에 적힌 순서로 등불을 켜세요: 달(2) → 해(1) → 별(3). 잘못 누르면 순서가 초기화되지만 손실은 없습니다.',steps:[['beacon','달 → 해 → 별 순서로 등불 켜기',3]]},
         {title:'빙하 탐사대의 흔적',intro:'모닥불에서 몸을 녹이고 해안 얼음 구멍을 여세요. 추위를 관리하며 빙하 물고기 2마리를 낚아 탐사 기록을 찾으세요.',steps:[['warm','모닥불에서 보온 준비',1],['drill','얼음 낚시 구멍 열기',1],['poolfish','얼음 구멍 옆에서 물고기 2마리 낚기',2]]},
-        {title:'폭풍 속 구조 신호',intro:'배를 조종해 해안 바깥의 구조 부표 3곳에 접근하세요. 10m 이내에서 G를 눌러 선원들을 구조하세요. 구조 전에는 배가 필요합니다.',steps:[['rescue','배로 조난 선원 3명 구조',3]]},
+        {title:'폭풍 속 구조 신호',intro:'배를 조종해 해안 바깥의 구조 부표 3곳에 접근하세요. 10m 이내에서 상호작용 키로 선원들을 구조하세요. 구조 전에는 배가 필요합니다.',steps:[['rescue','배로 조난 선원 3명 구조',3]]},
         {title:'잠긴 유적 수로',intro:'비석의 순서대로 수문을 조작하세요: 물(3) → 해(1) → 달(4) → 숲(2). 열린 수로 끝에서 왕실 해도를 회수하세요.',steps:[['rune','물 → 해 → 달 → 숲 순서 퍼즐',4],['relic','봉인 해제된 해도 회수',1]]},
         {title:'해신의 마지막 시험',intro:'잠수로 진주 3개를 모으고 세 봉인을 해제하세요: 별(3) → 달(2) → 해(1). 마지막으로 이 섬의 해신 리바이어던을 낚으면 항해가 완성됩니다.',steps:[['dive','해신의 진주 3개 잠수 채집',3],['seal','별 → 달 → 해 순서로 봉인 해제',3],['legend','해신 리바이어던 낚기',1]]}
     ];
     function create(api) {
         const T=api.THREE;
+        const propAssets=window.QuestPropAssets.create(T);
         const states=campaigns.map(()=>({accepted:false,stage:0,count:0,used:[],timer:0,bonus:[],catches:0}));
         const worlds=new Map();
         const repairedSurfaces=[];
@@ -471,34 +489,9 @@ window.IslandAdventures = (() => {
                 const y=yOverride??(sea?.3:groundAt(x,z)+.08);
                 const object=new T.Group();object.position.set(x,y,z);group.add(object);
                 object.name=`activity-${kind}-${id}`;
-                if(api.label){
-                    const labelSprite=api.label(`${kind==='kit'?'출항 준비 상자':label} · E/G`);
-                    labelSprite.position.y=2.7;object.add(labelSprite);object.userData.label=labelSprite;
-                }
-                const ring=mesh(new T.TorusGeometry(.8,.065,8,24),gold,0,.06,0,object);ring.rotation.x=Math.PI/2;
-                if(['rescue','diveStart','pool','drill'].includes(kind)) {
-                    mesh(new T.CylinderGeometry(.65,.85,.35,16),wood,0,.15,0,object);
-                    mesh(new T.CylinderGeometry(.06,.06,2.2,8),stone,0,1.1,0,object);
-                    mesh(new T.BoxGeometry(.9,.55,.06),gold,.4,1.95,0,object);
-                } else if(['beacon','rune','seal','observe'].includes(kind)) {
-                    mesh(new T.CylinderGeometry(.45,.7,1.6,8),stone,0,.8,0,object);
-                    const light=mesh(new T.SphereGeometry(.27,12,8),new T.MeshStandardMaterial({color:0x72d8dd,emissive:0x267b8f,emissiveIntensity:.3}),0,1.9,0,object);
-                    object.userData.lamp=light;
-                } else if(['warm','cool'].includes(kind)) {
-                    for(let n=0;n<7;n++)mesh(new T.DodecahedronGeometry(.25),stone,Math.cos(n)*.7,.18,Math.sin(n)*.7,object);
-                    mesh(new T.ConeGeometry(.32,.9,9),new T.MeshBasicMaterial({color:kind==='warm'?0xffa647:0x65d8ed}),0,.55,0,object);
-                } else {
-                    mesh(new T.BoxGeometry(.9,.65,.7),wood,0,.4,0,object);
-                    mesh(new T.BoxGeometry(.12,.68,.72),gold,0,.4,0,object);
-                }
-                if(kind==='rescue'){
-                    mesh(new T.CylinderGeometry(.23,.3,.65,12),new T.MeshStandardMaterial({color:0xf39743}),.65,.55,0,object);
-                    mesh(new T.SphereGeometry(.21,16,12),new T.MeshStandardMaterial({color:0xd8a17b}),.65,1.06,0,object);
-                    const buoy=mesh(new T.TorusGeometry(.42,.12,8,24),gold,.65,.3,0,object);buoy.rotation.x=Math.PI/2;
-                }
-                if(kind==='bamboo'||kind==='timber')for(let n=0;n<4;n++){
-                    const log=mesh(new T.CylinderGeometry(.1,.12,1.65,10),wood,(n-1.5)*.24,.8+(n%2)*.12,0,object);log.rotation.x=Math.PI/2;
-                }
+                const visual=propAssets.make(kind,{island:i,seed:id});object.add(visual);
+                object.userData.visual=visual;
+                if(visual.userData.lamp)object.userData.lamp=visual.userData.lamp;
                 const entry={kind,id,label,x,y,z,object,island:i};nodes.push(entry);return entry;
             }
             const x=route.x,z=route.z,rx=route.rx,rz=route.rz;
@@ -547,12 +540,17 @@ window.IslandAdventures = (() => {
                 mesh(new T.BoxGeometry(6,.22,5),wood,end.x,top-.11,end.z,deck);
                 repairedSurfaces.push({island:i,x:end.x,z:end.z,halfX:3,halfZ:2.5,y:top,coastal:true});
                 target.object.position.y=top;target.y=top;
+                const visual=target.object.userData.visual;
+                if(visual?.userData.questProp?.waterSurface){
+                    const len=Math.max(1,distance({x,z},target));
+                    visual.position.set((target.x-x)/len*6,-top+.03,(target.z-z)/len*6);
+                }
             }
             const land=(kind,id,label,dx,dz)=>node(kind,id,label,x+dx*rx,z+dz*rz);
             const sea=(kind,id,label,dx,dz,y)=>node(kind,id,label,x+dx*rx,z+dz*rz,true,y);
             if(i===0)node('kit','kit','출항 준비대',12,-43);
             if(i===1||i===9){
-                land('diveStart','dive-start','잠수 장비 · G 입수/귀환',0,-.72);
+                land('diveStart','dive-start','잠수 장비',0,-.72);
                 for(let n=0;n<3;n++)sea('dive',`dive-${n}`,i===1?'가라앉은 해도 조각':'해신의 진주',(n-1)*.12,-1.16-n*.025,-2.5-n*.7);
             }
             if(i===2){for(let n=0;n<3;n++)land('bamboo',`bamboo-${n}`,'대나무 재료',.08*(n-1),-.5+n*.05);land('trap','trap','대나무 통발',.12,-.72);}
@@ -603,14 +601,15 @@ window.IslandAdventures = (() => {
             if(n.kind==='cache'){
                 if(!s.bonus.includes(n.id)){s.bonus.push(n.id);api.reward(100*(i+1));api.message('탐험 상자 발견 · 보급금 획득');api.changed();}return true;
             }
-            if(n.kind==='fishingSpot'||n.kind==='pool'){api.message('이 표식에서 30m 이내의 물고기를 낚으면 장소 기록에 반영됩니다.');return true;}
+            if(n.kind==='fishingSpot'){api.message('찌가 이곳의 30m 안에 있으면 현재 낚싯대의 3~5단계 물고기만 등장합니다. 횟수 제한 없이 이용할 수 있고 힘겨루기가 조금 빨라집니다.');return true;}
+            if(n.kind==='pool'){api.message('찌를 이 표식의 30m 안에 던져 물고기를 낚으면 해당 장소 의뢰가 진행됩니다.');return true;}
             if(!s.accepted){api.message('먼저 의뢰 NPC에게 메인 사건을 받아 주세요.');return true;}
             if(n.kind==='diveStart'){
                 if(dive){exitDive();return true;}
                 if(step?.[0]!=='dive'){api.message('이 잠수 조사는 이미 완료했어요.');return true;}
                 const target=worlds.get(i).nodes.find(item=>item.kind==='dive');
                 dive={island:i,home:{x:n.x,z:n.z},center:{x:target.x,z:target.z},depth:-1};oxygen=100;
-                api.teleport(target.x,target.z,-1);api.message('잠수 시작 · WASD 수영 · Space 상승 · Ctrl 하강 · V 귀환');return true;
+                api.teleport(target.x,target.z,-1);api.message('잠수 시작 · '+(api.diveHelp?.()||'수영해서 조각에 다가가 상호작용으로 회수하세요.'));return true;
             }
             if(n.kind==='warm'){warmth=100;if(step?.[0]==='warm')advance(i,n.id);else api.message('모닥불에서 체온을 회복했습니다.');return true;}
             if(n.kind==='cool'){heat=0;if(step?.[0]==='cool')advance(i,n.id);else api.message('쉼터에서 열기를 식혔습니다.');return true;}
@@ -640,8 +639,6 @@ window.IslandAdventures = (() => {
                 if(api.canVisit&&!api.canVisit(i))continue;
                 const s=states[i],step=current(i),world=worlds.get(i);
                 if(!world)continue;
-                const hidden=world.nodes.find(n=>n.kind==='fishingSpot');
-                if(hidden&&distance(position,hidden)<30&&!s.bonus.includes('secret-fish')){s.bonus.push('secret-fish');api.reward(250*(i+1));api.message('숨겨진 낚시터 기록 완료!');api.changed();}
                 if(!s.accepted||!step||fish.tier!==i||distance(position,api.routes[i])>Math.max(api.routes[i].rx,api.routes[i].rz)+70)continue;
                 if(step[0]==='fish'||step[0]==='legend'&&fish.name==='해신 리바이어던')advance(i,`catch-${++s.catches}`);
                 if(step[0]==='poolfish'){
@@ -653,12 +650,19 @@ window.IslandAdventures = (() => {
         function tick(delta,context) {
             time+=delta;near=null;
             api.routes.forEach(route=>{if(api.unlocked(route.index)&&(!api.renderIsland||api.renderIsland(route.index)))ensure(route.index);});
+            if(dive){
+                oxygen=Math.max(0,oxygen-delta*2.2);
+                dive.depth=T.MathUtils.clamp(dive.depth+(context.up?1:0)*delta*2-(context.down?1:0)*delta*2,-7,-.7);
+                api.setDiveY(dive.depth);context.position.y=dive.depth;
+                if(oxygen<=0||distance(context.position,dive.center)>70){exitDive();api.message('잠수 안전장치로 입수 지점에 돌아왔습니다. 모은 조각은 유지됩니다.');return {near:'',oxygen:null,heat:null,warmth:null};}
+            }
             let closest=Infinity;
             for(const [i,world] of worlds){
                 world.group.visible=api.unlocked(i)&&(!api.renderIsland||api.renderIsland(i));
                 if(!world.group.visible)continue;
                 const s=states[i];
                 for(const n of world.nodes){
+                    if(n.object.userData.visual&&distance(context.position,n)<90)propAssets.update(n.object.userData.visual,time);
                     const activityStage=campaigns[i].steps.findIndex(step=>step[0]===n.kind);
                     const finished=activityStage>=0&&s.stage>activityStage;
                     const used=s.used.includes(n.id)||s.bonus.includes(n.id)||finished;
@@ -671,12 +675,6 @@ window.IslandAdventures = (() => {
                 const bridge=world.group.getObjectByName('repaired-trail');if(bridge)bridge.visible=s.stage>=2;
                 const barrier=world.group.getObjectByName('rune-barrier');if(barrier)barrier.visible=s.stage<1;
                 const channel=world.group.getObjectByName('opened-channel');if(channel)channel.visible=s.stage>=1;
-            }
-            if(dive){
-                oxygen=Math.max(0,oxygen-delta*2.2);
-                dive.depth=T.MathUtils.clamp(dive.depth+(context.up?1:0)*delta*2-(context.down?1:0)*delta*2,-7,-.7);
-                api.setDiveY(dive.depth);
-                if(oxygen<=0||distance(context.position,dive.center)>70){exitDive();api.message('잠수 안전장치로 입수 지점에 돌아왔습니다. 모은 조각은 유지됩니다.');}
             }
             const island=context.island,s=states[island];
             if(delta>0){
@@ -694,7 +692,7 @@ window.IslandAdventures = (() => {
             let prompt='';
             if(near){
                 const s=states[near.island],step=current(near.island);
-                prompt=`[E / G] ${near.label}`;
+                prompt=near.label;
                 if(near.kind==='kit'&&(!s.accepted||step?.[0]!=='kit'))prompt+=!s.accepted?' · 먼저 의뢰 NPC에게 출항 의뢰 받기':` · 먼저 ${step?.[1]||'NPC에게 보고'}`;
                 if(near.kind==='cache')prompt+=' · 열어서 보급금 받기';
                 if(['rescue','ore','observe'].includes(near.kind))prompt+=` · 정지 준비 ${Math.min(3,steadyTime).toFixed(1)}/3초${near.kind==='ore'?' · 열기 75 이하':''}`;
@@ -706,8 +704,17 @@ window.IslandAdventures = (() => {
             const candidates=(worlds.get(i)?.nodes||[]).filter(n=>(n.kind===kind||kind==='dive'&&!dive&&n.kind==='diveStart')&&!s.used.includes(n.id));
             candidates.sort((a,b)=>distance(position,a)-distance(position,b));return candidates[0]||null;
         }
-        return {campaigns,states,status,accept,done,ensure,tick,interact,caught,target,exitDive,
-            locations(i){ensure(i);return worlds.get(i)?.nodes||[];},
+        function hiddenSpotAt(position){
+            for(const [i,world] of worlds){
+                if(!api.unlocked(i))continue;
+                const point=world.nodes.find(n=>n.kind==='fishingSpot');
+                if(point&&distance(position,point)<30)return point;
+            }
+            return null;
+        }
+        return {campaigns,states,status,accept,done,ensure,tick,interact,caught,target,exitDive,hiddenSpotAt,
+            locations:(i,kind)=>{ensure(i);return (worlds.get(i)?.nodes||[]).filter(n=>!kind||n.kind===kind);},
+            get nearby(){return near;},
             walkHeight(x,z){
                 const deck=repairedSurfaces.find(s=>{
                     const local=frame(api.routes[s.island],x,z,true);
@@ -759,48 +766,56 @@ window.IslandAdventures = (() => {
 
     <style>
         #radar{display:none!important}
-        #dex-modal{position:fixed;inset:auto;padding:0;border:0;background:none;backdrop-filter:none;box-shadow:none;border-radius:0;transform:none;animation:none;min-width:0;max-height:none;overflow:visible;color:#37271c;opacity:0;z-index:105;transition:opacity .14s}
-        .journal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;height:16%;border-bottom:1px solid #a58b643f}
-        #dex-modal h2{font-size:clamp(17px,1.6vw,27px);margin:0;color:#503822}
-        #book-records{text-align:right;font-size:clamp(12px,.9vw,15px);line-height:1.6;white-space:pre-line}
-        .journal-tabs{position:absolute;left:calc(100% + 12px);top:17%;display:flex;flex-direction:column;gap:10px}
-        .journal-tabs button{width:86px;padding:12px 6px;border:0;border-radius:0 5px 5px 0;background:#466954;color:#fff7dc;box-shadow:2px 3px 4px #0003;cursor:pointer;font-size:14px;transition:width .2s,filter .2s}
+        #dex-modal{position:fixed;inset:0;width:100%;height:100%;padding:0;border:0;background:none;backdrop-filter:none;box-shadow:none;border-radius:0;transform:none;animation:none;min-width:0;max-height:none;overflow:visible;color:#37271c;opacity:0;z-index:105;pointer-events:none}
+        .book-leaf{position:fixed;left:0;top:0;width:500px;height:650px;transform-origin:0 0;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;padding:8px 12px;pointer-events:auto;text-align:left}
+        .book-leaf header{height:76px;flex:none;display:flex;align-items:center;border-bottom:1px solid #8c714b55;justify-content:space-between}
+        #dex-modal h2{font:700 25px 'Malgun Gothic',sans-serif;margin:0;color:#503822}
+        #book-records{font-size:17px;line-height:1.6;white-space:pre-line;text-align:right;width:100%}
+        .book-leaf-body{flex:1;min-height:0;padding:16px 0;overflow:hidden}
+        .book-leaf footer{height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;font-size:17px;border-top:1px solid #8c714b55}
+        .book-leaf button{font:inherit;cursor:pointer;color:#61432a;background:#b9965020;border:1px solid #9b7a4940;border-radius:5px;padding:8px 12px}
+        .book-leaf button:disabled{opacity:.35;cursor:default}
+        .book-leaf button:focus-visible,.journal-tabs button:focus-visible{outline:3px solid #2f7696;outline-offset:2px}
+        .journal-tabs{position:fixed;display:flex;flex-direction:column;gap:10px;pointer-events:auto}
+        .journal-tabs button{width:88px;padding:12px 4px;border:0;border-radius:0 6px 6px 0;background:#466954;color:#fff7dc;box-shadow:2px 3px 4px #0003;cursor:pointer;font-size:14px}
         .journal-tabs button:nth-child(2){background:#a4583f}.journal-tabs button:nth-child(3){background:#3b6678}.journal-tabs button:nth-child(4){background:#826044}
-        .journal-tabs button[aria-selected=true]{width:101px;filter:brightness(1.2)}
-        .book-pages{display:block;height:74%;position:relative;padding-top:8px}
-        .journal-page{height:100%;overflow:auto;text-align:left;scrollbar-width:thin;scrollbar-color:#92744f transparent}
-        .journal-page[hidden]{display:none!important}
-        .journal-page h3{margin:4px 0 15px;font-size:18px;color:#61452b}
-        #book-controls{white-space:pre-line;column-count:2;column-gap:12%;font-size:clamp(13px,1vw,17px);line-height:1.9}
-        #book-quest{white-space:pre-line;font-size:16px;line-height:1.8;padding-right:12px}
-        .journal-footer{display:flex;justify-content:space-between;align-items:center;height:10%;font-size:13px;color:#876d4d}
-        #dex-modal .modal-close-btn{background:none;color:#654a32;padding:5px 8px;margin:0;border:0;width:auto;box-shadow:none;font-size:14px}
-        #dex-modal #dex-list{max-height:none;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
-        #dex-modal .dex-card{background:#d6c39b35;border:1px solid #9c805c50;color:#413021;min-width:0;font-size:12px}
-        #dex-modal #dex-preview{background:#b29c7120;max-height:160px;min-height:0;padding:6px;border:0;color:#40331f}
-        #dex-modal #dex-portrait{max-height:135px;width:42%;object-fit:contain}
-        #dex-modal #dex-detail{font-size:13px;color:#4d3b28}
-        #book-achievements{display:grid;grid-template-columns:1fr 1fr;gap:12px 9%}
-        .journal-achievement{padding:10px 0;border-bottom:1px solid #9c805c55;font-size:13px;line-height:1.65}
-        .journal-achievement strong{display:block;font-size:15px;color:#614c30}
-        .journal-achievement progress{width:100%;height:5px;accent-color:#668557;display:block;margin:8px 0}
+        .journal-tabs button[aria-selected=true]{filter:brightness(1.22);transform:translateX(4px)}
+        #book-controls,#book-quest,#book-explanation{font-size:20px;line-height:1.85;white-space:pre-line;column-count:1}
+        #book-explanation h3{font-size:23px;color:#654725;margin:0 0 12px}
+        #book-explanation p{margin:0 0 12px}
+        #book-achievements{display:grid;grid-template-columns:1fr;gap:22px}
+        .journal-achievement{font-size:18px;line-height:1.7}
+        .journal-achievement strong{display:block;font-size:23px;color:#614c30}
+        .journal-achievement progress{width:100%;height:9px;accent-color:#668557;display:block;margin:12px 0}
         .journal-achievement.complete strong{color:#476d39}
-        #dex-modal.page-turn .book-pages{animation:journal-turn .42s ease-in-out}
-        @keyframes journal-turn{0%{opacity:1;transform:perspective(900px) rotateY(0)}45%{opacity:.1;transform:perspective(900px) rotateY(-12deg)}100%{opacity:1;transform:perspective(900px) rotateY(0)}}
-        @media(max-width:700px){.journal-tabs{left:calc(100% + 3px);gap:7px}.journal-tabs button{width:53px;font-size:12px;padding:10px 2px}.journal-tabs button[aria-selected=true]{width:59px}#book-controls{column-count:1}#book-achievements{grid-template-columns:1fr}#dex-modal #dex-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
-        @media(prefers-reduced-motion:reduce){#dex-modal.page-turn .book-pages{animation:none}}
+        #dex-modal #dex-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-height:none;padding:0;overflow:hidden}
+        #dex-modal .dex-card{height:137px;min-width:0;border:1px solid #9c805c50;color:#413021;background:#d6c39b35;font-size:18px;padding:6px}
+        #dex-modal .dex-card img{height:95px;width:100%;object-fit:contain;display:block}
+        #dex-modal .dex-card .unknown{font-size:42px;display:block;height:85px}
+        #dex-modal #dex-preview{display:flex;flex-direction:column;background:none;border:0;padding:0;margin:0;min-height:0;max-height:none;color:#40331f}
+        #dex-modal #dex-portrait{height:264px;width:100%;object-fit:contain}
+        #dex-modal #dex-detail{font-size:19px;line-height:1.7;color:#4d3b28;white-space:pre-line}
+        #dex-detail strong{font-size:24px;display:block;margin-bottom:8px}
+        #dex-modal .dex-turn{font-size:18px;margin-top:12px}
+        #book-discovery{font-size:16px;display:block;color:#80623f}
+        #dex-modal .modal-close-btn{background:none;color:#654a32;margin:0;width:auto;box-shadow:none;font-size:17px}
+        #dex-modal.page-turn .book-leaf-body{animation:journal-turn .32s ease-in-out}
+        @keyframes journal-turn{0%,100%{opacity:1}45%{opacity:0}}
+        @media(prefers-reduced-motion:reduce){#dex-modal.page-turn .book-leaf-body{animation:none}}
     </style>
-    <canvas id="radar" width="440" height="440" aria-label="발견한 섬 레이더"></canvas>
-    <div id="dex-modal" role="dialog" aria-label="탐험 수첩">
-        <header class="journal-header"><h2>항해 일지</h2><div id="book-records"></div></header>
-        <nav class="journal-tabs" role="tablist" aria-label="책 북마커"><button role="tab" data-book-page="controls">조작법</button><button role="tab" data-book-page="quest">의뢰</button><button role="tab" data-book-page="dex">도감</button><button role="tab" data-book-page="achievements">도전과제</button></nav>
-        <div class="book-pages"><section class="journal-page" data-journal-page="controls"><h3>항해의 첫걸음</h3><div id="book-controls"></div></section><section class="journal-page" data-journal-page="quest" hidden><h3>진행 중인 의뢰</h3><div id="book-quest"></div></section><section class="journal-page" data-journal-page="achievements" hidden><h3>항해자의 발자취</h3><div id="book-achievements"></div></section><section class="journal-page" data-journal-page="dex" hidden><h3 id="book-discovery">물고기 도감</h3>
-        <div id="dex-preview">
-            <img id="dex-portrait" alt="선택한 물고기의 3D 모델">
-            <div><div id="dex-detail">물고기를 잡으면 이곳에서 실제 모습을 볼 수 있어요.</div><button class="dex-turn" id="dex-turn-left" type="button" aria-label="물고기 왼쪽으로 회전">↶ 회전</button><button class="dex-turn" id="dex-turn-right" type="button" aria-label="물고기 오른쪽으로 회전">회전 ↷</button></div>
+    <canvas id="radar" width="440" height="440" aria-label="해금한 섬 레이더"></canvas>
+    <div id="dex-modal" role="dialog" aria-modal="true" aria-label="항해 수첩">
+        <div class="book-leaf" id="book-leaf-left">
+            <header><div><h2 id="book-heading">조작법</h2><span id="book-discovery"></span></div></header>
+            <div class="book-leaf-body"><div id="book-controls"></div><div id="book-quest" hidden></div><div id="book-achievements" hidden></div><div id="dex-list" hidden></div></div>
+            <footer><button id="book-prev" type="button">‹ 이전 장</button><span id="book-page-number" aria-live="polite">1 / 1</span></footer>
         </div>
-        <div id="dex-list"></div>
-        </section></div><footer class="journal-footer"><span id="book-page-number">01 / 04</span><button class="modal-close-btn" id="btn-dex-close">책 덮기</button></footer>
+        <div class="book-leaf" id="book-leaf-right">
+            <header><div id="book-records"></div></header>
+            <div class="book-leaf-body"><div id="book-explanation"></div><div id="dex-preview" hidden><img id="dex-portrait" alt="선택한 물고기의 3D 모델"><div id="dex-detail"></div><div><button class="dex-turn" id="dex-turn-left" type="button" aria-label="물고기 왼쪽으로 회전">↶ 회전</button><button class="dex-turn" id="dex-turn-right" type="button" aria-label="물고기 오른쪽으로 회전">회전 ↷</button></div></div></div>
+            <footer><button class="modal-close-btn" id="btn-dex-close">책 덮기</button><button id="book-next" type="button">다음 장 ›</button></footer>
+        </div>
+        <nav class="journal-tabs" role="tablist" aria-label="책 북마커"><button role="tab" data-book-page="controls">조작법</button><button role="tab" data-book-page="quest">의뢰</button><button role="tab" data-book-page="dex">도감</button><button role="tab" data-book-page="achievements">도전과제</button></nav>
     </div>
 
     <div id="inventory-modal">
@@ -1395,6 +1410,77 @@ window.IslandModelAssets = (() => {
 
 </script>
 <script>
+/* Standalone integration helper. No DOM or render-loop ownership.
+ * UMD export allows a Node math check and direct browser integration.
+ */
+(function (global) {
+    'use strict';
+
+    // Copy this function into voyage-held-tools.js create(), then expose
+    // getBookPageQuads: makeBookPageProjector(THREE,camera,leftLeaf,rightLeaf).
+    function makeBookPageProjector(THREE, camera, leftLeaf, rightLeaf) {
+        const view = new THREE.Matrix4(), projection = new THREE.Matrix4();
+        const point = new THREE.Vector3();
+        // Content sits inside the printed border, below FIELD NOTES / VOYAGE JOURNAL.
+        const halfWidth = .273, top = .342, bottom = -.365;
+        const corners = [[-halfWidth, top], [halfWidth, top],
+            [halfWidth, bottom], [-halfWidth, bottom]]; // TL, TR, BR, BL.
+        return function getBookPageQuads() {
+            camera.updateWorldMatrix(true, false);
+            view.copy(camera.matrixWorld).invert();
+            const projectLeaf = (leaf, side) => {
+                leaf.updateWorldMatrix(true, false);
+                projection.copy(camera.projectionMatrix).multiply(view).multiply(leaf.matrixWorld);
+                const quad = [];
+                for (const [x, y] of corners) {
+                    const z = .034 + .013 * Math.pow(1 - (.5 + side * x / .618), 3);
+                    const px = side * .328 + x;
+                    const m = projection.elements;
+                    const w = m[3] * px + m[7] * y + m[11] * z + m[15];
+                    if (!(w > .04)) return null;
+                    point.set(px, y, z).applyMatrix4(projection);
+                    if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) return null;
+                    quad.push({x: (point.x + 1) / 2, y: (1 - point.y) / 2});
+                }
+                return quad;
+            };
+            return {left: projectLeaf(leftLeaf, -1), right: projectLeaf(rightLeaf, 1)};
+        };
+    }
+
+    // Quad is four viewport-fraction points TL,TR,BR,BL. Return a CSS matrix
+    // for a fixed-position DOM leaf at left:0;top:0;transform-origin:0 0.
+    // Pass offsetX/Y only if a translated parent, rather than viewport, owns it.
+    function bookQuadCssMatrix(quad, viewportWidth, viewportHeight,
+        leafWidth = 500, leafHeight = 650, offsetX = 0, offsetY = 0) {
+        if (!quad || quad.length !== 4 || !(leafWidth > 0 && leafHeight > 0)) return null;
+        const [p0, p1, p2, p3] = quad.map(p => ({
+            x: p.x * viewportWidth - offsetX,
+            y: p.y * viewportHeight - offsetY
+        }));
+        const dx1 = p1.x - p2.x, dx2 = p3.x - p2.x;
+        const dy1 = p1.y - p2.y, dy2 = p3.y - p2.y;
+        const dx3 = p0.x - p1.x + p2.x - p3.x;
+        const dy3 = p0.y - p1.y + p2.y - p3.y;
+        const determinant = dx1 * dy2 - dx2 * dy1;
+        if (!Number.isFinite(determinant) || Math.abs(determinant) < 1e-6) return null;
+        const g = (dx3 * dy2 - dx2 * dy3) / determinant;
+        const h = (dx1 * dy3 - dx3 * dy1) / determinant;
+        const a = p1.x - p0.x + g * p1.x, b = p3.x - p0.x + h * p3.x;
+        const d = p1.y - p0.y + g * p1.y, e = p3.y - p0.y + h * p3.y;
+        const values = [a / leafWidth, d / leafWidth, 0, g / leafWidth,
+            b / leafHeight, e / leafHeight, 0, h / leafHeight,
+            0, 0, 1, 0, p0.x, p0.y, 0, 1];
+        if (!values.every(Number.isFinite)) return null;
+        return 'matrix3d(' + values.join(',') + ')';
+    }
+
+    const api = {makeBookPageProjector, bookQuadCssMatrix};
+    global.BookProjectionHelper = api;
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+
+</script>
+<script>
 (function (global) {
     'use strict';
 
@@ -1714,6 +1800,7 @@ window.IslandModelAssets = (() => {
 
         return {
             root, book, radar, leftPaperCanvas, rightPaperCanvas,
+            getBookPageQuads: global.BookProjectionHelper.makeBookPageProjector(THREE,camera,leftLeaf,rightLeaf),
             setMode, update, flipPage, setRadarCanvas, getBookViewportBounds, dispose,
             markRadarDirty() { if (radarTexture) radarTexture.needsUpdate = true; },
             markPagesDirty() { leftPaperTexture.needsUpdate = true; rightPaperTexture.needsUpdate = true; },
@@ -1760,8 +1847,7 @@ window.IslandEnvironment = (() => {
         const seed=n=>{const v=Math.sin(n*127.1+13.3)*43758.5453;return v-Math.floor(v);};
         // A fixed pool keeps shader light counts stable as islands are approached.
         for(let i=0;i<8;i++){
-            const light=new T.PointLight(0xffcf86,0,14,2);light.castShadow=i<2;
-            light.shadow.mapSize.set(256,256);light.shadow.camera.near=.15;light.shadow.camera.far=18;light.shadow.bias=-.001;
+            const light=new T.PointLight(0xffcf86,0,14,2);light.castShadow=false;
             api.scene.add(light);lights.push(light);
         }
         function register(group,index) {
@@ -1782,12 +1868,7 @@ window.IslandEnvironment = (() => {
         function coastAt(route,angle,distance=0) {
             const radius=api.coastRadius(route,angle);
             // Solve the actual waterline, including the island's beach slope.
-            let lo=.05,hi=1.12;
-            // Find the outermost wet/dry crossing, including bays and lagoons.
-            for(let r=1.1;r>.04;r-=.02){
-                const p=api.frame(route,route.x+Math.cos(angle)*route.rx*radius*r,route.z+Math.sin(angle)*route.rz*radius*r);
-                if(api.ground(route,p.x,p.z)>0){lo=r;hi=r+.02;break;}
-            }
+            let lo=.6,hi=1.12;
             for(let n=0;n<14;n++){
                 const r=(lo+hi)/2,point=api.frame(route,route.x+Math.cos(angle)*route.rx*radius*r,route.z+Math.sin(angle)*route.rz*radius*r);
                 if(api.ground(route,point.x,point.z)>0)lo=r;else hi=r;
@@ -1960,6 +2041,505 @@ window.IslandEnvironment = (() => {
             }
         }
         return {register,ensure,update,worlds,lights,lightSources};
+    }
+    return {create};
+})();
+
+</script>
+<script>
+/* QuestPropAssets: code-native adventure props. Compatible with THREE r128+.
+   const assets = window.QuestPropAssets.create(THREE);
+   const object = assets.make('kit', { island: 0, seed: 'kit-0' });
+   assets.update(object, elapsedSeconds);
+   Land props are authored with their lowest point at y=0. Water markers use y=0
+   for the water surface and intentionally include fish slightly below it.
+   Reuse one factory: geometry/materials are cached, repeated parts are instanced.
+   Do not dispose a single prop's shared resources. No textures or DOM required. */
+window.QuestPropAssets = (() => {
+    function create(T) {
+        const PI = Math.PI, TAU = PI * 2;
+        const geometries = new Map(), materials = new Map();
+        const up = new T.Vector3(0, 1, 0), dummy = new T.Object3D();
+        const palettes = [0x3f8190, 0xd1897f, 0x628953, 0x627a91, 0x873f36,
+            0x478383, 0xb8dce5, 0xae683b, 0x3b8e83, 0x305f81];
+        function material(name, color, extra) {
+            if (!materials.has(name)) materials.set(name, new T.MeshStandardMaterial(Object.assign({
+                color, roughness: .78, metalness: 0, flatShading: true
+            }, extra || {})));
+            return materials.get(name);
+        }
+        const M = {
+            wood: material('wood', 0x71513a), woodLight: material('wood-light', 0xad8154),
+            end: material('end-grain', 0xcfaa73), dark: material('dark', 0x252e2e),
+            iron: material('iron', 0x516367, { roughness: .4, metalness: .65 }),
+            bronze: material('bronze', 0xbb8b42, { roughness: .38, metalness: .58 }),
+            rope: material('rope', 0xb99a63), canvas: material('canvas', 0xe4d7ae),
+            bamboo: material('bamboo', 0x648b45), bambooBand: material('bamboo-band', 0x385f38),
+            stone: material('stone', 0x74817b), stoneDark: material('stone-dark', 0x424f51),
+            shell: material('shell', 0xc48e80), shellInner: material('shell-inner', 0xf0cfb6),
+            pearl: material('pearl', 0xe2fff2, { roughness: .16, metalness: .28, emissive: 0x347e79, emissiveIntensity: .28 }),
+            paper: material('paper', 0xe3c882), ink: material('map-ink', 0x745941),
+            ice: material('ice', 0x9ed6e2, { roughness: .22, metalness: .12 }),
+            snow: material('snow', 0xe2f1ec), water: material('bore-water', 0x183e50, { roughness: .13, metalness: .3 }),
+            coral: material('coral', 0xd2735d), clothRed: material('cloth-red', 0xb75137),
+            fish: material('fish-shadow', 0x245b61, { roughness: 1 }),
+            glow: material('aqua-glow', 0x88dbd3, { emissive: 0x399d9b, emissiveIntensity: .72, roughness: .3 }),
+            crystal: material('ore-crystal', 0xf4a358, { emissive: 0xb5471e, emissiveIntensity: .45, roughness: .24, metalness: .2 }),
+            flame: material('flame', 0xffbb56, { emissive: 0xff682b, emissiveIntensity: .8 }),
+            foam: material('foam', 0xc3e3db, { roughness: 1, transparent: true, opacity: .47, depthWrite: false, side: T.DoubleSide })
+        };
+        function geo(key) {
+            if (geometries.has(key)) return geometries.get(key);
+            let g;
+            if (key === 'box') g = new T.BoxGeometry(1, 1, 1);
+            else if (key === 'cylinder') g = new T.CylinderGeometry(1, 1, 1, 10);
+            else if (key === 'cone') g = new T.ConeGeometry(1, 1, 6);
+            else if (key === 'sphere') g = new T.SphereGeometry(1, 12, 8);
+            else if (key === 'rock') g = new T.DodecahedronGeometry(1, 0);
+            else if (key === 'crystal') g = new T.CylinderGeometry(.48, 1, 1, 5);
+            else if (key === 'torus') g = new T.TorusGeometry(1, .075, 5, 24);
+            else if (key === 'thinTorus') g = new T.TorusGeometry(1, .024, 4, 48);
+            else if (key === 'crescent') g = new T.TorusGeometry(.3, .07, 5, 22, PI * 1.42);
+            else if (key === 'ring') g = new T.RingGeometry(.96, 1, 48);
+            else if (key === 'arch') g = new T.CylinderGeometry(1, 1, 1, 12, 1, false, 0, PI);
+            else if (key === 'shell') {
+                const vertices = [], indices = [], rows = 6, cols = 18;
+                for (let r = 0; r <= rows; r++) for (let n = 0; n <= cols; n++) {
+                    const f = r / rows, a = -1.3 + n / cols * 2.6;
+                    vertices.push(Math.sin(a) * f, .24 * (1 - f * f) + Math.cos(n * PI) * .027 * f,
+                        Math.cos(a) * f - .2);
+                }
+                for (let r = 0; r < rows; r++) for (let n = 0; n < cols; n++) {
+                    const a = r * (cols + 1) + n, b = a + cols + 1;
+                    indices.push(a, b, a + 1, b, b + 1, a + 1);
+                }
+                g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(vertices, 3));
+                g.setIndex(indices); g.computeVertexNormals();
+            } else if (key === 'tablet') {
+                const s = new T.Shape();
+                s.moveTo(-.52, -.67); s.lineTo(.51, -.67); s.lineTo(.6, .32);
+                s.lineTo(.32, .7); s.lineTo(-.36, .66); s.lineTo(-.6, .38); s.closePath();
+                g = new T.ExtrudeGeometry(s, { depth: .27, bevelEnabled: true, bevelSize: .045, bevelThickness: .04, bevelSegments: 1, steps: 1 });
+                g.translate(0, 0, -.135);
+            } else if (key === 'map') {
+                const s = new T.Shape();
+                s.moveTo(-.54, -.34); s.lineTo(-.17, -.41); s.lineTo(-.07, -.29); s.lineTo(.06, -.4);
+                s.lineTo(.49, -.23); s.lineTo(.42, -.08); s.lineTo(.55, .1); s.lineTo(.3, .35);
+                s.lineTo(.03, .26); s.lineTo(-.12, .36); s.lineTo(-.38, .28); s.lineTo(-.31, .09); s.lineTo(-.53, .02); s.closePath();
+                g = new T.ExtrudeGeometry(s, { depth: .026, bevelEnabled: false }); g.rotateX(-PI / 2);
+            } else if (key === 'star') {
+                const s = new T.Shape();
+                for (let n = 0; n < 10; n++) {
+                    const a = n * PI / 5 + PI / 2, r = n % 2 ? .14 : .32;
+                    if (!n) s.moveTo(Math.cos(a) * r, Math.sin(a) * r); else s.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                }
+                s.closePath(); g = new T.ExtrudeGeometry(s, { depth: .035, bevelEnabled: false });
+            } else throw new Error('Unknown quest geometry: ' + key);
+            geometries.set(key, g); return g;
+        }
+        M.shell.side = T.DoubleSide; M.shellInner.side = T.DoubleSide;
+        function seeded(value) {
+            let n = typeof value === 'number' && Number.isFinite(value) ? value | 0 : 0;
+            if (typeof value === 'string') for (let i = 0; i < value.length; i++) n = Math.imul(n ^ value.charCodeAt(i), 16777619);
+            n = n >>> 0;
+            return () => { n = (Math.imul(n, 1664525) + 1013904223) >>> 0; return n / 4294967296; };
+        }
+        function symbolIndex(seed) {
+            if (typeof seed === 'number' && Number.isFinite(seed)) return Math.abs(Math.floor(seed));
+            const match = String(seed || '').match(/(\d+)$/); return match ? Number(match[1]) : 0;
+        }
+        function make(kind, options) {
+            const opts = options || {}, island = Number.isFinite(opts.island) ? opts.island : 0;
+            const random = seeded(opts.seed == null ? island : opts.seed), index = symbolIndex(opts.seed);
+            const root = new T.Group(), batches = new Map(), animations = [];
+            const theme = material('island-' + island, palettes[((island % 10) + 10) % 10]);
+            root.name = 'quest-prop-' + kind;
+            root.userData.questProp = { kind, island, version: 121, animations, waterSurface: false };
+            function part(key, mat, x, y, z, sx, sy, sz, rx, ry, rz) {
+                dummy.position.set(x || 0, y || 0, z || 0);
+                dummy.rotation.set(rx || 0, ry || 0, rz || 0);
+                dummy.scale.set(sx == null ? 1 : sx, sy == null ? 1 : sy, sz == null ? 1 : sz);
+                dummy.updateMatrix();
+                const g = geo(key), batchKey = g.uuid + ':' + mat.uuid;
+                if (!batches.has(batchKey)) batches.set(batchKey, { g, mat, matrices: [] });
+                batches.get(batchKey).matrices.push(dummy.matrix.clone());
+            }
+            function rod(mat, a, b, radius) {
+                const start = new T.Vector3(a[0], a[1], a[2]), end = new T.Vector3(b[0], b[1], b[2]);
+                const delta = end.sub(start), len = delta.length(); if (len < .00001) return;
+                dummy.position.copy(start).addScaledVector(delta, .5);
+                dummy.quaternion.setFromUnitVectors(up, delta.multiplyScalar(1 / len));
+                dummy.scale.set(radius, len, radius); dummy.updateMatrix();
+                const g = geo('cylinder'), key = g.uuid + ':' + mat.uuid;
+                if (!batches.has(key)) batches.set(key, { g, mat, matrices: [] });
+                batches.get(key).matrices.push(dummy.matrix.clone());
+            }
+            function single(key, mat, x, y, z, sx, sy, sz) {
+                const m = new T.Mesh(geo(key), mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz);
+                root.add(m); return m;
+            }
+            function pulse(mesh, amount, rate) { animations.push({ type: 'pulse', mesh, base: mesh.scale.clone(), amount, rate, phase: random() * TAU }); }
+            function rock(x, y, z, sx, sy, sz, mat) { part('rock', mat || M.stone, x, y, z, sx, sy, sz, random() * .4, random() * TAU, random() * .25); }
+            function ring(mat, x, y, z, radius, rx, sx, sy) { part('torus', mat, x, y, z, radius * (sx || 1), radius * (sy || 1), radius, rx || 0); }
+            function coil(x, y, z, size) {
+                for (let n = 0; n < 4; n++) ring(M.rope, x, y + n * .045, z, size - n * .022, PI / 2);
+                rod(M.rope, [x + size * .75, y, z], [x + size * 1.2, y, z + .34], .035);
+            }
+            function log(x, y, z, length, radius, mat) {
+                part('cylinder', mat || M.wood, x, y, z, radius, length, radius, PI / 2);
+                for (const end of [-1, 1]) {
+                    part('cylinder', M.end, x, y, z + end * (length / 2 + .008), radius * .87, .018, radius * .87, PI / 2);
+                    ring(M.woodLight, x, y, z + end * (length / 2 + .02), radius * .57, 0);
+                }
+            }
+            function symbol(symbol, x, y, z, scale, mat) {
+                const s = scale || 1, m = mat || M.glow;
+                if (symbol === 'sun') {
+                    part('sphere', m, x, y, z, .14 * s, .14 * s, .035 * s);
+                    for (let n = 0; n < 8; n++) {
+                        const a = n * TAU / 8;
+                        rod(m, [x + Math.sin(a) * .21 * s, y + Math.cos(a) * .21 * s, z],
+                            [x + Math.sin(a) * .32 * s, y + Math.cos(a) * .32 * s, z], .024 * s);
+                    }
+                } else if (symbol === 'moon') part('crescent', m, x, y, z, s, s, s, 0, 0, -.65);
+                else if (symbol === 'star') part('star', m, x, y, z, s, s, s);
+                else if (symbol === 'forest') {
+                    rod(m, [x, y - .29 * s, z], [x, y + .23 * s, z], .028 * s);
+                    for (let n = 0; n < 3; n++) for (const side of [-1, 1])
+                        rod(m, [x, y + (.3 - n * .16) * s, z], [x + side * (.15 + n * .035) * s, y + (.1 - n * .16) * s, z], .028 * s);
+                } else {
+                    for (let row = 0; row < 3; row++) for (let n = 0; n < 5; n++)
+                        rod(m, [x + (n - 2.5) * .12 * s, y + (row - 1) * .16 * s + Math.sin(n * PI / 2) * .045 * s, z],
+                            [x + (n - 1.5) * .12 * s, y + (row - 1) * .16 * s + Math.sin((n + 1) * PI / 2) * .045 * s, z], .019 * s);
+                }
+            }
+            function clam(pearl) {
+                rock(0, .15, 0, .94, .22, .78, M.stoneDark);
+                part('shell', M.shell, 0, .24, -.3, 1.18, -.5, 1.15);
+                part('shell', M.shellInner, 0, .265, -.3, 1.06, -.36, 1.04);
+                part('shell', M.shell, 0, .3, -.48, 1.18, .72, 1.12, -1.05);
+                part('shell', M.shellInner, 0, .31, -.47, 1.08, .71, 1.04, -1.05);
+                for (let n = 0; n < 5; n++) {
+                    const a = -.9 + n * .45;
+                    part('sphere', M.shellInner, Math.sin(a) * .89, .255, Math.cos(a) * .88 - .3, .06, .035, .055);
+                }
+                if (pearl) {
+                    const p = single('sphere', M.pearl, 0, .53, .07, .28, .28, .28); p.name = 'collectible-pearl'; pulse(p, .035, 1.8);
+                    for (let n = 0; n < 3; n++) part('sphere', M.pearl, Math.sin(n * 2.2) * .48, .31, .1 + Math.cos(n * 2.2) * .2, .08, .08, .08);
+                } else {
+                    part('map', M.paper, -.12, .32, .13, .74, 1, .73, 0, -.28);
+                    part('map', M.paper, .34, .335, -.04, .39, 1, .43, 0, .57);
+                    for (let n = 0; n < 4; n++) rod(M.ink, [-.35 + n * .12, .365, .2 - n * .025], [-.29 + n * .12, .365, .12 - n * .015], .011);
+                    ring(M.ink, -.23, .368, -.03, .055, PI / 2);
+                    const glow = single('sphere', M.glow, .08, .32, .23, .1, .065, .1); pulse(glow, .22, 1.7);
+                }
+                for (let n = 0; n < 3; n++) {
+                    const x = -.73 + n * .13;
+                    rod(M.coral, [x, .18, .48], [x - .06, .5 + n * .1, .46], .035);
+                    rod(M.coral, [x - .03, .35, .47], [x + .1, .48, .43], .022);
+                }
+            }
+            function chest() {
+                for (const x of [-.7, .7]) part('box', M.wood, x, .11, 0, .17, .22, 1.02);
+                part('box', M.wood, 0, .51, 0, 1.7, .69, 1.08);
+                for (let n = 0; n < 5; n++) part('box', n % 2 ? M.woodLight : theme, (n - 2) * .328, .53, -.555, .308, .59, .036);
+                // Half cylinder turns into the domed lid; axis follows the chest width.
+                part('arch', theme, 0, .865, 0, .55, 1.7, .55, 0, 0, PI / 2);
+                part('box', M.woodLight, 0, .87, 0, 1.74, .075, 1.11);
+                for (const x of [-.59, .59]) {
+                    part('box', M.bronze, x, .54, -.59, .115, .72, .055);
+                    part('box', M.bronze, x, .52, .56, .115, .72, .055);
+                    // Lid bands use segmented rods following the arch.
+                    for (let n = 0; n < 8; n++) {
+                        const a = n * PI / 8, b = (n + 1) * PI / 8;
+                        rod(M.bronze, [x, .865 + Math.sin(a) * .565, Math.cos(a) * .565], [x, .865 + Math.sin(b) * .565, Math.cos(b) * .565], .038);
+                    }
+                    for (const y of [.28, .74]) part('sphere', M.bronze, x, y, -.627, .042, .042, .018);
+                }
+                part('box', M.bronze, 0, .65, -.61, .25, .3, .065);
+                part('sphere', M.dark, 0, .68, -.65, .033, .033, .018);
+                part('box', M.dark, 0, .625, -.65, .035, .07, .012);
+                for (const x of [-.89, .89]) part('torus', M.iron, x, .57, 0, .13, .13, .13, 0, PI / 2);
+                if (island === 6) for (let n = 0; n < 3; n++) part('sphere', M.snow, (n - 1) * .48, 1.31, .07, .37, .07, .33);
+                if (island === 1 || island === 9) for (let n = 0; n < 3; n++) part('cone', M.coral, -.77 + n * .1, .29 + n * .07, .48, .07, .38, .07, 0, 0, -.2 + n * .2);
+            }
+            function fishingSpot() {
+                root.userData.questProp.waterSurface = true;
+                for (let n = 0; n < 3; n++) {
+                    const m = single('ring', M.foam, 0, .015 + n * .008, 0, 1, 1, 1); m.rotation.x = -PI / 2;
+                    m.name = 'persistent-water-ripple'; animations.push({ type: 'ripple', mesh: m, phase: n / 3 });
+                }
+                for (let n = 0; n < 8; n++) {
+                    const a = n * TAU / 8 + random() * .3, r = 1.4 + random() * .55;
+                    part('sphere', M.foam, Math.cos(a) * r, .018, Math.sin(a) * r, .11 + random() * .09, .008, .045);
+                }
+                const school = new T.Group(); root.add(school); school.name = 'small-fish-school';
+                for (let n = 0; n < 5; n++) {
+                    const fish = new T.Group(), x = (n % 3 - 1) * .52, z = Math.floor(n / 3) * .63 - .35;
+                    fish.position.set(x, -.2 - n * .035, z); school.add(fish);
+                    const body = new T.Mesh(geo('sphere'), M.fish); body.scale.set(.075, .035, .23); fish.add(body);
+                    const tail = new T.Mesh(geo('cone'), M.fish); tail.scale.set(.105, .17, .023); tail.rotation.x = -PI / 2; tail.position.z = .25; fish.add(tail);
+                }
+                animations.push({ type: 'school', mesh: school, phase: random() * TAU });
+            }
+            if (kind === 'kit' || kind === 'bridge') {
+                for (const x of [-.85, .85]) for (const z of [-.48, .48]) part('box', M.wood, x, .5, z, .15, 1, .15, 0, 0, x > 0 ? -.06 : .06);
+                for (let n = 0; n < 4; n++) part('box', M.woodLight, 0, 1.05, (n - 1.5) * .32, 2.04, .13, .3);
+                part('box', M.wood, 0, .42, .45, 1.8, .13, .12);
+                if (kind === 'kit') {
+                    part('cylinder', M.canvas, -.14, 1.32, .05, .21, 1.4, .21, 0, 0, PI / 2);
+                    for (const x of [-.62, .34]) part('torus', M.rope, x, 1.32, .05, .218, .218, .218, 0, PI / 2);
+                    for (const x of [-.85, .57]) part('torus', M.woodLight, x, 1.32, .05, .12, .12, .12, 0, PI / 2);
+                    coil(.66, 1.14, -.37, .28);
+                    part('box', theme, -.56, 1.24, -.4, .37, .22, .31);
+                    part('box', M.bronze, -.56, 1.25, -.56, .07, .2, .023);
+                } else {
+                    for (let n = 0; n < 3; n++) part('box', n % 2 ? theme : M.woodLight, -.14, 1.17 + n * .09, 0, 1.66, .08, .22, 0, .08 * n);
+                    part('box', M.iron, .64, 1.47, .23, .37, .17, .17); rod(M.wood, [.64, 1.2, .23], [.64, 1.43, .23], .047); coil(-.62, 1.44, -.15, .23);
+                }
+            } else if (kind === 'dive' || kind === 'pearl' || kind === 'map') clam(kind === 'pearl' || island === 9);
+            else if (kind === 'bamboo') {
+                const bundle = [[-.32,.2],[0,.2],[.32,.2],[-.17,.48],[.17,.48],[0,.74]];
+                bundle.forEach(([x,y], n) => {
+                    const len = 1.85 + random() * .35, z = (n % 2) * .07;
+                    part('cylinder', M.bamboo, x, y, z, .145, len, .145, PI / 2);
+                    for (const offset of [-.64, 0, .64]) part('cylinder', M.bambooBand, x, y, z + offset, .153, .055, .153, PI / 2);
+                    for (const side of [-1, 1]) {
+                        part('cylinder', M.end, x, y, z + side * (len / 2 + .008), .126, .015, .126, PI / 2);
+                        part('cylinder', M.bambooBand, x, y, z + side * (len / 2 + .018), .075, .012, .075, PI / 2);
+                    }
+                });
+                for (const z of [-.55, .55]) ring(M.rope, 0, .43, z, .53, 0, 1, .77);
+            } else if (kind === 'trap') {
+                const r = .61, cy = .64;
+                for (const z of [-.79, -.38, .04, .46, .79]) ring(M.rope, 0, cy, z, r, 0);
+                for (let n = 0; n < 16; n++) {
+                    const a = n * TAU / 16, x = Math.cos(a) * r, y = cy + Math.sin(a) * r;
+                    rod(M.bamboo, [x,y,-.79], [x,y,.79], .027);
+                    rod(M.rope, [x,y,-.79], [Math.cos(a)*.18,cy+Math.sin(a)*.18,-.41], .021);
+                }
+                ring(M.bambooBand, 0, cy, -.4, .185, 0); ring(M.rope, 0, cy, .79, .33, 0);
+                for (let n = -2; n <= 2; n++) rod(M.bamboo, [-.49,cy+n*.15,.79], [.49,cy+n*.15,.79], .023);
+                coil(.82, .07, .33, .26); rod(M.rope, [.54,.98,.6], [.91,.12,.52], .027);
+                part('sphere', M.clothRed, .93, .16, .69, .16, .19, .16);
+            } else if (kind === 'timber') {
+                [[-.43,.23],[0,.23],[.43,.23],[-.23,.61],[.23,.61]].forEach(([x,y],n) => log(x,y,(n%2)*.09,1.9+random()*.35,.21));
+                for (const z of [-.55, .58]) ring(M.rope, 0, .42, z, .69, 0, 1, .67);
+                part('box', M.woodLight, 0, .84, 0, 1.55, .11, .27, 0, .27);
+            } else if (kind === 'ore') {
+                rock(0,.21,0,.99,.33,.74,M.stoneDark);
+                for (let n = 0; n < 6; n++) {
+                    const a = n * 2.4, r = n ? .24 + random() * .3 : .04, h = .58 + random() * .59, x = Math.cos(a)*r, z = Math.sin(a)*r;
+                    const crystal = new T.Group(); crystal.position.set(x,.24,z); crystal.rotation.set(Math.sin(a)*.2, a, Math.cos(a)*.2); root.add(crystal);
+                    const body = new T.Mesh(geo('crystal'), M.crystal); body.scale.set(.16,h*.64,.16); body.position.y=h*.32; crystal.add(body);
+                    const tip = new T.Mesh(geo('cone'), M.crystal); tip.scale.set(.08,h*.36,.08); tip.position.y=h*.82; crystal.add(tip);
+                }
+                for (let n=0;n<4;n++) rock(Math.cos(n*1.7)*.77,.1,Math.sin(n*1.7)*.57,.18,.16,.2,M.stoneDark);
+            } else if (kind === 'drill') {
+                part('cylinder', M.water, 0,.018,0,.63,.032,.63);
+                ring(M.ice,0,.13,0,.73,PI/2); ring(M.snow,0,.18,0,.87,PI/2);
+                for(let n=0;n<7;n++){ const a=n*TAU/7; rock(Math.cos(a)*.89,.16,Math.sin(a)*.89,.2,.19,.14,M.ice); }
+                part('cylinder',M.ice,.98,.34,.42,.18,.61,.18,0,0,-.24);
+                part('cylinder',M.snow,.905,.643,.42,.185,.035,.185,0,0,-.24);
+                rod(M.iron,[-.95,.14,.19],[-.95,1.6,.19],.047);
+                for(let n=0;n<6;n++) ring(M.iron,-.95,.28+n*.12,.19,.15,PI/2);
+                rod(M.iron,[-.95,1.6,.19],[-.62,1.6,.19],.045);
+                rod(M.woodLight,[-.62,1.49,.19],[-.62,1.74,.19],.071);
+            } else if (kind === 'relic') {
+                part('box',M.stoneDark,0,.16,0,1.65,.3,1.12);
+                part('tablet',M.stone,0,.82,.02,1.12,1.05,1, -.16);
+                // Engraved map lines sit in a dark inset, surrounded by a bronze border.
+                part('box',M.stoneDark,0,.85,-.19,.91,.79,.027,-.16);
+                for(const x of [-.49,.49]) rod(M.bronze,[x,.42,-.12],[x,1.29,-.255],.024);
+                for(const y of [.42,1.29]) rod(M.bronze,[-.49,y,-.19-(y-.85)*.16],[.49,y,-.19-(y-.85)*.16],.024);
+                for(let n=0;n<5;n++) rod(M.glow,[-.34+n*.15,.7+Math.sin(n*1.9)*.14,-.24],[-.19+n*.15,.7+Math.sin((n+1)*1.9)*.14,-.24],.018);
+                symbol('star',.03,1.06,-.263,.52,M.bronze);
+                for(let n=0;n<3;n++)part('box',M.bronze,(n-1)*.14,.51,-.185,.07,.025,.025);
+            } else if (kind === 'cache') chest();
+            else if (kind === 'fishingSpot' || kind === 'pool') fishingSpot();
+            else if (kind === 'beacon' || kind === 'rune' || kind === 'seal') {
+                const chosen = kind === 'rune' ? ['sun','forest','water','moon'][index%4] : ['sun','moon','star'][index%3];
+                root.userData.questProp.symbol = chosen;
+                if(kind === 'beacon') {
+                    part('cylinder',M.stoneDark,0,.13,0,.52,.26,.52);
+                    part('cylinder',M.wood,0,.83,0,.16,1.42,.16);
+                    part('box',M.bronze,0,1.48,0,.65,.11,.58);
+                    part('box',M.dark,0,1.85,0,.5,.66,.44);
+                    for(const x of [-.3,.3])for(const z of [-.24,.24])part('box',M.bronze,x,1.83,z,.045,.65,.045);
+                    part('cone',theme,0,2.25,0,.48,.26,.48,0,PI/4);
+                    symbol(chosen,0,1.85,-.245,.77,M.glow);
+                } else if(kind === 'rune') {
+                    part('box',M.stoneDark,0,.12,0,1.05,.24,.83);
+                    part('tablet',M.stone,0,.86,0,.8,1.03,1);
+                    part('box',M.stoneDark,0,.91,-.181,.64,.82,.016);
+                    symbol(chosen,0,.97,-.207,.82,M.glow);
+                    for(const x of [-.24,.24])part('box',M.bronze,x,.44,-.205,.045,.13,.018);
+                } else {
+                    part('cylinder',M.stoneDark,0,.13,0,.79,.26,.79);
+                    part('cylinder',theme,0,.32,0,.6,.18,.6);
+                    part('torus',M.bronze,0,1.01,0,.69,.69,.69);
+                    part('rock',M.stone,0,.62,0,.35,.52,.27);
+                    part('cylinder',M.stoneDark,0,1.04,-.07,.4,.13,.4,PI/2);
+                    symbol(chosen,0,1.04,-.158,.92,M.glow);
+                    for(const x of [-.73,.73])part('cone',M.stone,x,.55,0,.15,.68,.15);
+                }
+                const mat=M.glow.clone(), lamp=single('sphere',mat,0,kind==='beacon'?2.03:kind==='rune'?1.56:1.7,0,.095,.095,.095);
+                lamp.name='quest-state-lamp'; root.userData.lamp=lamp; pulse(lamp,.1,1.8);
+            } else if (kind === 'diveStart') {
+                for(const x of [-.5,.5]){part('cylinder',theme,x,.63,0,.2,1.13,.2);part('sphere',M.iron,x,1.18,0,.2,.13,.2);part('box',M.iron,x,.65,-.19,.15,.67,.06);}
+                part('box',M.wood,0,.1,0,1.45,.2,.75); coil(.04,.19,.64,.35);
+                part('box',M.dark,0,1.1,-.28,.6,.25,.11);part('box',M.ice,0,1.12,-.347,.44,.14,.026);
+                rod(M.iron,[.35,1.2,-.3],[.35,1.63,-.3],.035);rod(M.iron,[.35,1.63,-.3],[.2,1.63,-.3],.035);
+                for(const x of [-.86,.86])part('box',theme,x,.13,.13,.31,.08,.88,0,x*.3);
+            } else if (kind === 'warm' || kind === 'cool') {
+                for(let n=0;n<8;n++){const a=n*TAU/8;rock(Math.cos(a)*.77,.15,Math.sin(a)*.77,.25,.19,.22);}
+                if(kind==='warm') {
+                    for(let n=0;n<3;n++)part('cylinder',M.wood,0,.23,0,.12,1.18,.12,PI/2,n*PI/3);
+                    for(let n=0;n<3;n++){const f=single('cone',n===1?M.canvas:M.flame,(n-1)*.18,.65,0,.24,.92-n*.15,.2);pulse(f,.09,3+n);}
+                } else {
+                    part('cylinder',M.wood,0,.38,0,.55,.63,.55);part('cylinder',M.ice,0,.69,0,.48,.035,.48);
+                    for(const y of [.18,.57])ring(M.iron,0,y,0,.56,PI/2);
+                    for(let n=0;n<3;n++)rock((n-1)*.2,.73,.06,.17,.13,.15,M.ice);
+                    rod(M.woodLight,[-.84,.08,.43],[-.84,1.79,.43],.055);part('box',M.canvas,0,1.81,.42,1.96,.035,.93,0,0,-.07);
+                }
+            } else if (kind === 'observe') {
+                for(let n=0;n<3;n++){const a=n*TAU/3;rod(M.wood,[Math.cos(a)*.57,.06,Math.sin(a)*.57],[0,1.31,0],.055);}
+                part('cylinder',M.bronze,0,1.42,0,.13,1.05,.13,PI/2-.19);
+                part('cylinder',M.iron,0,1.52,-.52,.2,.1,.2,PI/2-.19);
+                part('cylinder',M.ice,0,1.53,-.58,.16,.018,.16,PI/2-.19);part('box',M.woodLight,.67,.27,.15,.55,.24,.46);
+                part('map',M.paper,.67,.405,.15,.44,1,.5,0,.3);
+            } else if (kind === 'rescue') {
+                ring(M.clothRed,0,.24,0,.69,PI/2);ring(M.canvas,0,.28,0,.69,PI/2);
+                part('cylinder',M.wood,0,.19,0,.51,.26,.51);
+                part('box',theme,0,.68,0,.49,.65,.3);part('sphere',M.end,0,1.2,0,.21,.25,.2);
+                for(const x of [-.34,.34])rod(M.clothRed,[x*.7,.91,0],[x,.53,-.1],.09);
+                part('box',M.clothRed,0,.8,-.17,.54,.44,.12);rod(M.iron,[.68,.21,.29],[.68,1.95,.29],.032);
+                part('box',M.clothRed,.88,1.7,.29,.4,.31,.035);
+            } else chest();
+            for (const batch of batches.values()) {
+                const mesh = new T.InstancedMesh(batch.g, batch.mat, batch.matrices.length);
+                batch.matrices.forEach((matrix, i) => mesh.setMatrixAt(i, matrix));
+                mesh.instanceMatrix.needsUpdate = true; mesh.name = 'quest-batched-detail';
+                // r128 does not compute accurate per-instance bounds. Props are tiny
+                // and their island parent controls visibility, so avoid false culling.
+                mesh.frustumCulled = false; root.add(mesh);
+            }
+            root.traverse(o => { if(o.isMesh) { o.castShadow = !root.userData.questProp.waterSurface; o.receiveShadow = true; } });
+            if (!root.userData.questProp.waterSurface) {
+                // InstancedMesh bounds were not supported by Box3 in r128. Compute
+                // transformed geometry bounds explicitly once at construction.
+                const bounds = new T.Box3(), box = new T.Box3(), matrix = new T.Matrix4(); root.updateMatrixWorld(true);
+                root.traverse(o => {
+                    if (!o.isMesh) return; if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+                    if(o.isInstancedMesh) for(let n=0;n<o.count;n++){o.getMatrixAt(n,matrix);matrix.premultiply(o.matrixWorld);box.copy(o.geometry.boundingBox).applyMatrix4(matrix);bounds.union(box);}
+                    else {box.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);bounds.union(box);}
+                });
+                if (Number.isFinite(bounds.min.y) && Math.abs(bounds.min.y) > .00001) root.children.forEach(child => { child.position.y -= bounds.min.y; });
+                root.userData.questProp.height = bounds.max.y - bounds.min.y;
+            }
+            return root;
+        }
+        function update(group, time) {
+            const data = group && group.userData && group.userData.questProp;
+            if (!data || !Number.isFinite(time)) return;
+            for (const a of data.animations) {
+                if (a.type === 'pulse') a.mesh.scale.copy(a.base).multiplyScalar(1 + Math.sin(time * a.rate + a.phase) * a.amount);
+                else if (a.type === 'ripple') { const phase = ((time * .105 + a.phase) % 1 + 1) % 1, r = 1.16 + phase * 1.38; a.mesh.scale.set(r,r,1); }
+                else if (a.type === 'school') { a.mesh.rotation.y = Math.sin(time * .16 + a.phase) * .55; a.mesh.position.x = Math.sin(time * .31 + a.phase) * .22; a.mesh.position.z = Math.cos(time * .24 + a.phase) * .19; }
+            }
+        }
+        return { make, update };
+    }
+    return { create };
+})();
+
+</script>
+<script>
+/* First-island guidance follows walkable ground; it never draws through buildings. */
+window.VoyageNavigation=(()=>{
+    function create(api){
+        const T=api.THREE,group=new T.Group();group.name='tutorial-navigation';api.scene.add(group);group.visible=false;
+        const material=new T.MeshBasicMaterial({color:0x8fffe0,transparent:true,opacity:.72,depthWrite:false,side:T.DoubleSide});
+        const shape=new T.Shape();shape.moveTo(-.42,.35);shape.lineTo(0,-.22);shape.lineTo(.42,.35);shape.lineTo(.42,.05);shape.lineTo(0,-.52);shape.lineTo(-.42,.05);shape.closePath();
+        const geometry=new T.ShapeGeometry(shape);geometry.rotateX(-Math.PI/2);
+        const trail=new T.InstancedMesh(geometry,material,110);trail.frustumCulled=false;group.add(trail);
+        const ring=new T.Mesh(new T.RingGeometry(.9,1.06,40),material);ring.rotation.x=-Math.PI/2;group.add(ring);
+        const beamMaterial=new T.MeshBasicMaterial({color:0x9cffdc,transparent:true,opacity:.085,depthWrite:false,side:T.DoubleSide});
+        const beam=new T.Mesh(new T.CylinderGeometry(.3,1.05,7,20,1,true),beamMaterial);group.add(beam);
+        const dummy=new T.Object3D(),point=new T.Vector3();let path=[],lastTarget=null,lastStart=null,cooldown=0,elapsed=0;
+        const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
+        function ground(x,z){const y=api.ground(x,z);return Number.isFinite(y)?y:0;}
+        function safe(x,z){return api.walkable(x,z)&&ground(x,z)>-.7;}
+        function nearestSafe(target,start){
+            if(safe(target.x,target.z))return target;
+            let best=null,cost=Infinity;
+            for(let radius=1.5;radius<=8;radius+=1.5)for(let n=0;n<16;n++){
+                const a=n*Math.PI/8,x=target.x+Math.cos(a)*radius,z=target.z+Math.sin(a)*radius;
+                const score=Math.hypot(x-start.x,z-start.z)+radius*2;
+                if(score<cost&&safe(x,z)){best={x,z};cost=score;}
+            }
+            return best;
+        }
+        function clearLine(a,b){
+            const length=distance(a,b),steps=Math.max(1,Math.ceil(length/.8));let last=ground(a.x,a.z);
+            for(let i=1;i<=steps;i++){
+                const t=i/steps,x=a.x+(b.x-a.x)*t,z=a.z+(b.z-a.z)*t,y=ground(x,z);
+                if(!safe(x,z)||Math.abs(y-last)>1.1)return false;last=y;
+            }
+            return true;
+        }
+        function findPath(start,target){
+            const goal=nearestSafe(target,start);if(!goal)return [];
+            if(clearLine(start,goal))return [start,goal];
+            const size=2,origin={x:start.x,z:start.z},open=[],seen=new Map();
+            function push(node){open.push(node);let i=open.length-1;while(i){const p=(i-1)>>1;if(open[p].f<=node.f)break;open[i]=open[p];i=p;}open[i]=node;}
+            function pop(){const top=open[0],last=open.pop();if(open.length){let i=0;while(i*2+1<open.length){let n=i*2+1;if(n+1<open.length&&open[n+1].f<open[n].f)n++;if(open[n].f>=last.f)break;open[i]=open[n];i=n;}open[i]=last;}return top;}
+            const first={x:start.x,z:start.z,ix:0,iz:0,g:0,f:distance(start,goal),parent:null};push(first);seen.set('0:0',0);
+            let found=null,visited=0;
+            while(open.length&&visited++<6500){
+                const node=pop();if(node.g>seen.get(node.ix+':'+node.iz)+.001)continue;
+                if(distance(node,goal)<3&&clearLine(node,goal)){found=node;break;}
+                for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
+                    const ix=node.ix+dx,iz=node.iz+dz;if(Math.abs(ix)>160||Math.abs(iz)>160)continue;
+                    const next={ix,iz,x:origin.x+ix*size,z:origin.z+iz*size,parent:node},key=ix+':'+iz;
+                    const rise=Math.abs(ground(node.x,node.z)-ground(next.x,next.z));
+                    const g=node.g+Math.hypot(dx,dz)*size+rise*.35;
+                    if(g>=(seen.get(key)??Infinity)||!safe(next.x,next.z)||rise>1.7||!clearLine(node,next))continue;
+                    next.g=g;next.f=g+distance(next,goal);seen.set(key,g);push(next);
+                }
+            }
+            if(!found)return [];const raw=[goal];while(found){raw.push({x:found.x,z:found.z});found=found.parent;}raw.reverse();
+            const smooth=[raw[0]];for(let i=0;i<raw.length-1;){let next=Math.min(i+18,raw.length-1);while(next>i+1&&!clearLine(raw[i],raw[next]))next--;smooth.push(raw[next]);i=next;}
+            return smooth;
+        }
+        function update(dt,position,target,camera,show){
+            elapsed+=dt;cooldown-=dt;group.visible=Boolean(show&&target);if(!group.visible)return null;
+            const changed=!lastTarget||lastTarget.id!==target.id||distance(lastTarget,target)>3;
+            if(cooldown<=0&&(changed||!lastStart||distance(lastStart,position)>8)){
+                path=findPath({x:position.x,z:position.z},target);lastTarget={...target};lastStart={x:position.x,z:position.z};cooldown=.8;
+            }
+            let count=0;
+            // Start at the closest segment, avoiding guidance back toward the old start.
+            let begin=0,closest=Infinity;
+            for(let i=0;i<path.length-1;i++){
+                const a=path[i],b=path[i+1],dx=b.x-a.x,dz=b.z-a.z,t=T.MathUtils.clamp(((position.x-a.x)*dx+(position.z-a.z)*dz)/Math.max(.001,dx*dx+dz*dz),0,1);
+                const d=Math.hypot(position.x-a.x-dx*t,position.z-a.z-dz*t);if(d<closest){closest=d;begin=i;}
+            }
+            for(let i=begin;i<path.length-1&&count<110;i++){
+                const a=path[i],b=path[i+1],length=distance(a,b),n=Math.max(1,Math.ceil(length/2.4));
+                for(let k=0;k<n&&count<110;k++){
+                    const t=(k+.5)/n,x=a.x+(b.x-a.x)*t,z=a.z+(b.z-a.z)*t;
+                    if(Math.hypot(x-position.x,z-position.z)<1.4)continue;
+                    dummy.position.set(x,ground(x,z)+.06,z);dummy.rotation.set(0,Math.atan2(b.x-a.x,b.z-a.z),0);dummy.scale.setScalar(.85);dummy.updateMatrix();trail.setMatrixAt(count++,dummy.matrix);
+                }
+            }
+            trail.count=count;trail.instanceMatrix.needsUpdate=true;
+            const y=Number.isFinite(target.y)?target.y:ground(target.x,target.z);
+            ring.position.set(target.x,y+.07,target.z);ring.scale.setScalar(1+Math.sin(elapsed*2)*.07);beam.position.set(target.x,y+3.5,target.z);
+            point.set(target.x,y+2,target.z);camera.updateMatrixWorld(true);point.project(camera);
+            return {x:point.x,y:point.y,behind:point.z>1,distance:distance(position,target),hasPath:path.length>1};
+        }
+        return {update,findPath,hide(){group.visible=false;},group,get points(){return path;}};
     }
     return {create};
 })();
@@ -2577,14 +3157,18 @@ window.IslandRemodel = (() => {
         let voyageTransition=null,gameDayOffset=0,lastFrameElapsed=0;
         let playTimeSeconds=0,playTimeTick=performance.now();
         const SETTINGS_KEY='island-settings-v1';
-        const DEFAULT_BINDINGS={w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD',shift:'ShiftLeft',e:'KeyE',g:'KeyG',f:'KeyF',r:'KeyR',i:'KeyI',m:'KeyM',tab:'Tab',v:'KeyV',' ':'Space',control:'ControlLeft','1':'Digit1','2':'Digit2','3':'Digit3','4':'Digit4','5':'Digit5',f10:'F10'};
-        const gameSettings={sensitivity:1,volume:.7,bindings:{...DEFAULT_BINDINGS}};
+        const DEFAULT_BINDINGS={w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD',shift:'ShiftLeft',e:'KeyF',r:'KeyR',i:'KeyI',m:'KeyM',tab:'Tab',v:'KeyV',' ':'Space',control:'ControlLeft','1':'Digit1','2':'Digit2','3':'Digit3','4':'Digit4','5':'Digit5',f10:'F10'};
+        const gameSettings={schema:2,sensitivity:1,volume:.7,showControls:false,controlsSide:'right',syncDisplay:true,bindings:{...DEFAULT_BINDINGS}};
         try{
             const stored=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null');
             if(stored){
                 if(Number.isFinite(stored.sensitivity))gameSettings.sensitivity=Math.max(.2,Math.min(3,stored.sensitivity));
                 if(Number.isFinite(stored.volume))gameSettings.volume=Math.max(0,Math.min(1,stored.volume));
+                gameSettings.showControls=stored.showControls===true;
+                gameSettings.controlsSide=stored.controlsSide==='left'?'left':'right';
+                gameSettings.syncDisplay=stored.syncDisplay!==false;
                 const proposed=Object.fromEntries(Object.keys(DEFAULT_BINDINGS).map(k=>[k,stored.bindings?.[k]||DEFAULT_BINDINGS[k]]));
+                if(stored.schema!==2&&(!stored.bindings?.e||stored.bindings.e==='KeyE'))proposed.e='KeyF';
                 if(Object.values(proposed).every(c=>/^(Key[A-Z]|Digit[0-9]|Arrow(Up|Down|Left|Right)|Space|Tab|ShiftLeft|ControlLeft|F10)$/.test(c)))gameSettings.bindings=proposed;
             }
         }catch{}
@@ -5364,9 +5948,10 @@ window.IslandRemodel = (() => {
 
         const starsGeo = new THREE.BufferGeometry();
         const starPos = [];
-        for (let i = 0; i < 900; i++) starPos.push((Math.random() - 0.5) * 2100, 50 + Math.random() * 100, (Math.random() - 0.5) * 1700);
+        for(let i=0;i<900;i++){const y=.03+Math.random()*.97,a=Math.random()*Math.PI*2,r=Math.sqrt(1-y*y);starPos.push(Math.cos(a)*r*900,y*900,Math.sin(a)*r*900);}
         starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-        const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.5, transparent: true, opacity: 0 });
+        const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 2.1, sizeAttenuation:false, transparent: true, opacity: 0,depthWrite:false,fog:false });
+        starsMat.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>','float starRadius=length(gl_PointCoord-.5);if(starRadius>.5)discard;diffuseColor.a*=1.-smoothstep(.1,.5,starRadius);\n#include <alphatest_fragment>');};
         const stars = new THREE.Points(starsGeo, starsMat);
         scene.add(stars);
 
@@ -6411,6 +6996,7 @@ window.IslandRemodel = (() => {
             if(menuOpen&&!voyageTransition)return;
             pointerLockFallback = true;
             isPointerLocked = !menuOpen;
+            resetMouseLook();
             startScreen.style.display = 'none';
             setStatus("게임 시작됨 · 마우스를 움직여 시점을 조작하세요", "#38bdf8");
         }
@@ -6419,6 +7005,7 @@ window.IslandRemodel = (() => {
             if(menuOpen&&!voyageTransition)return;
             startScreen.style.display = 'none';
             pointerLockFallback = false;
+            resetMouseLook();
             try {
                 const lockRequest = document.body.requestPointerLock();
                 if (lockRequest && typeof lockRequest.catch === 'function') {
@@ -6430,6 +7017,7 @@ window.IslandRemodel = (() => {
         }
 
         document.addEventListener('pointerlockchange', () => {
+            resetMouseLook();
             const hasPointerLock = document.pointerLockElement === document.body;
             if (hasPointerLock) {
                 if(menuOpen&&!voyageTransition){document.exitPointerLock();return;}
@@ -6438,22 +7026,31 @@ window.IslandRemodel = (() => {
                 startScreen.style.display = 'none';
             } else if (!pointerLockFallback) {
                 isPointerLocked = false;
+                if(performance.now()<escapeReturnUntil){if(!menuOpen&&currentState!==STATES.MODAL_OPEN)enableFallbackControls();return;}
                 if (currentState !== STATES.MODAL_OPEN&&!menuOpen) openMainMenu();
             }
         });
 
-        document.addEventListener('mousemove', (e) => {
-            if (isPointerLocked && currentState !== STATES.MODAL_OPEN) {
-                yaw -= e.movementX * 0.002 * gameSettings.sensitivity; pitch -= e.movementY * 0.002 * gameSettings.sensitivity;
-                pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch)); 
-                
-                if (isOnBoat) {
-                    player.rotation.y = yaw - boatGroup.rotation.y; 
-                } else {
-                    player.rotation.y = yaw; 
-                }
-                camera.rotation.x = pitch;
-            }
+        const mouseLook={x:0,y:0,skip:2,last:0};
+        let escapeReturnUntil=0;
+        function applyLookOrientation(){player.rotation.y=yaw-(isOnBoat?boatGroup.rotation.y:0);camera.rotation.x=pitch;}
+        function resetMouseLook(){mouseLook.x=mouseLook.y=0;mouseLook.skip=2;mouseLook.last=0;applyLookOrientation();}
+        function updateMouseLook(delta){
+            if(!isPointerLocked||menuOpen||currentState===STATES.MODAL_OPEN){mouseLook.x=mouseLook.y=0;return;}
+            const limit=Math.min(.23,Math.max(.025,delta*8)),length=Math.hypot(mouseLook.x,mouseLook.y);
+            const factor=length>limit?limit/length:1,dx=mouseLook.x*factor,dy=mouseLook.y*factor;
+            yaw-=dx;pitch=THREE.MathUtils.clamp(pitch-dy,-Math.PI/2.2,Math.PI/2.2);
+            mouseLook.x-=dx;mouseLook.y-=dy;applyLookOrientation();
+            if(tutorialActive)tutorialLookDistance+=Math.hypot(dx,dy);
+        }
+        document.addEventListener('mousemove',e=>{
+            if(!isPointerLocked||menuOpen||currentState===STATES.MODAL_OPEN)return;
+            const now=performance.now();if(mouseLook.skip>0||mouseLook.last&&now-mouseLook.last>220){mouseLook.skip=Math.max(0,mouseLook.skip-1);mouseLook.last=now;return;}
+            mouseLook.last=now;
+            if(!Number.isFinite(e.movementX)||!Number.isFinite(e.movementY)||Math.abs(e.movementX)>320||Math.abs(e.movementY)>320)return;
+            const scale=.002*gameSettings.sensitivity;
+            mouseLook.x=THREE.MathUtils.clamp(mouseLook.x+e.movementX*scale,-.5,.5);
+            mouseLook.y=THREE.MathUtils.clamp(mouseLook.y+e.movementY*scale,-.4,.4);
         });
 
         function getGameKey(e) {
@@ -6463,26 +7060,55 @@ window.IslandRemodel = (() => {
             const code=e.code==='ShiftRight'?'ShiftLeft':e.code==='ControlRight'?'ControlLeft':e.code;
             return Object.keys(gameSettings.bindings).filter(action=>gameSettings.bindings[action]===code);
         }
+        function interactionTarget(refresh=true){
+            if(currentState!==STATES.IDLE||menuOpen)return null;
+            const position=player.getWorldPosition(new THREE.Vector3()),candidates=[];
+            const add=(kind,item,x,z,radius,label)=>{const distance=Math.hypot(position.x-x,position.z-z);if(distance<radius)candidates.push({kind,item,distance,label});};
+            if(refresh)adventure?.tick(0,{position,island:currentIslandIndex,onBoat:isOnBoat,driving:isDrivingBoat});
+            if(isOnBoat){
+                const n=adventure?.nearby;
+                if(n?.kind==='rescue')return {kind:'activity',item:n,distance:Math.hypot(position.x-n.x,position.z-n.z),label:n.label+' · 구조'};
+                return {kind:'boat',label:isDrivingBoat?`${keyLabel('r')}로 조종을 멈춘 뒤 하선`:isSittingOnSofa?'일어난 뒤 하선':'배에서 내리기',item:null,distance:0};
+            }
+            if(adventure?.nearby){const n=adventure.nearby;add('activity',n,n.x,n.z,n.kind==='rescue'?10:4,n.label+' · '+(n.kind==='dive'?'회수':'상호작용'));}
+            if(!adventure?.diving){
+                navigatorPoints.filter(n=>ISLAND_PROGRESS[n.islandIndex].unlocked).forEach(n=>add('npc',n,n.x,n.z,n.radius,n.group.userData.npcName+' · 의뢰 대화'));
+                villageStores.filter(n=>ISLAND_PROGRESS[n.islandIndex].unlocked).forEach(n=>add('store',n,n.x,n.z,n.radius,n.name+' 이용'));
+                shoreCollectibles.filter(n=>n.userData.active).forEach(n=>add('shore',n,n.position.x,n.position.z,3.2,n.userData.name+' 채집'));
+                add('boat',null,boatGroup.position.x,boatGroup.position.z,15,boatOwned?'낚싯배 탑승':'낚싯배 · 배 상점에서 구매');
+            }
+            candidates.sort((a,b)=>a.distance-b.distance);return candidates[0]||null;
+        }
+        function interactNearest(){
+            const target=interactionTarget();if(!target)return;
+            if(target.kind==='npc'){nearbyQuestNpc=target.item;openQuest();}
+            else if(target.kind==='store'){nearbyVillageStore=target.item;openShop(target.item);}
+            else if(target.kind==='shore')collectShoreItem(target.item);
+            else if(target.kind==='activity')adventure.interact({onBoat:isOnBoat,driving:isDrivingBoat});
+            else if(target.kind==='boat')handleGameAction('__boat',{repeat:false,preventDefault(){}});
+        }
 
         window.addEventListener('keydown', (e) => {
             if(menuOpen){handleMenuKey(e);return;}
-            if(tutorialActive&&e.key!=='Escape'){
-                if(e.key==='Enter'){e.preventDefault();nextTutorialStep();}
-                else if(e.key==='Backspace'){e.preventDefault();finishTutorial();}
-                return;
+            if(tutorialActive&&e.code==='Backspace'){e.preventDefault();finishTutorial(true);return;}
+            if(e.key==='Escape'&&document.getElementById('ending-screen').style.display!=='block'){
+                e.preventDefault();
+                const open=['dex-modal','shop-modal','inventory-modal','quest-modal','developer-panel'].find(id=>['block','flex'].includes(document.getElementById(id).style.display));
+                if(open){escapeReturnUntil=performance.now()+650;if(open==='developer-panel')closeDeveloperPanel();else closeModals();return;}
+                if(radarVisible){radarVisible=false;escapeReturnUntil=performance.now()+650;enableFallbackControls();return;}
+                openMainMenu();return;
             }
-            if(e.key==='Escape'&&document.getElementById('dex-modal').style.display==='block'){e.preventDefault();closeModals();return;}
-            if(e.key==='Escape'&&document.getElementById('ending-screen').style.display!=='block'){e.preventDefault();openMainMenu();return;}
             if(document.getElementById('ending-screen').style.display==='block'){
                 if(e.key==='Escape'){e.preventDefault();closeVoyageEnding();}
                 if(e.key==='Tab'){e.preventDefault();document.getElementById(document.activeElement?.id==='ending-next'?'ending-return':'ending-next').focus();}
                 return;
             }
             const actions=getGameKeys(e);
+            if(tutorialActive)actions.forEach(action=>tutorialKeys.add(action));
             actions.forEach(k=>{if(Object.prototype.hasOwnProperty.call(keys,k))keys[k]=true;});
             const handled=new Set();
             for(const k of actions){
-                const kind=k==='g'?'e':k;
+                const kind=k;
                 if(handled.has(kind))continue;handled.add(kind);
                 const before=currentState,boatBefore=isOnBoat,driveBefore=isDrivingBoat;
                 handleGameAction(k,e);
@@ -6499,10 +7125,6 @@ window.IslandRemodel = (() => {
                 return;
             }
             if (keys.hasOwnProperty(k)) keys[k] = true;
-            if (k === 'g' && !e.repeat && isPointerLocked && currentState === STATES.IDLE) {
-                adventure?.interact({onBoat:isOnBoat,driving:isDrivingBoat});
-                return;
-            }
             if (k === 'v' && !e.repeat && adventure?.diving) {adventure.exitDive();return;}
             if (k === 'm' && !e.repeat && currentState === STATES.IDLE) {
                 radarVisible=!radarVisible;
@@ -6515,19 +7137,9 @@ window.IslandRemodel = (() => {
             }
 
             if (k === 'e' && !e.repeat && isPointerLocked && currentState === STATES.IDLE) {
-                const promptEl = document.getElementById('interact-prompt');
-                if (promptEl.style.display === 'block' && nearbyQuestNpc) {
-                    openQuest();
-                } else if (promptEl.style.display === 'block' && nearbyVillageStore) {
-                    openShop(nearbyVillageStore);
-                } else if (adventure?.interact({onBoat:isOnBoat,driving:isDrivingBoat})) {
-                    // Activity props use the same E key as shops; G remains an optional shortcut.
-                } else if (promptEl.style.display === 'block' && nearbyShoreItem) {
-                    collectShoreItem(nearbyShoreItem);
-                }
+                interactNearest();return;
             }
-            
-            if (k === 'f' && isPointerLocked && currentState === STATES.IDLE) {
+            if (k === '__boat' && isPointerLocked && currentState === STATES.IDLE) {
                 if(adventure?.diving){setStatus('잠수 중에는 V로 귀환한 뒤 탑승하세요.');return;}
                 if (!isOnBoat) {
                     let renderPos = new THREE.Vector3(); player.getWorldPosition(renderPos);
@@ -6540,7 +7152,8 @@ window.IslandRemodel = (() => {
                         boatGroup.add(player); 
                         player.position.set(0, BOAT_EYE_Y, 3.25); 
                         yaw = boatGroup.rotation.y; 
-                        setStatus(`${boatGroup.userData.name} 탑승 · 앞쪽 운전대에서 R로 조종하세요.`, "#38bdf8");
+                        applyLookOrientation();resetMouseLook();
+                        setStatus(`${boatGroup.userData.name} 탑승 · 앞쪽 운전대에서 ${keyLabel('r')}로 조종하세요.`, "#38bdf8");
                     }
                 } else if (!isDrivingBoat && !isSittingOnSofa) {
                     let boatWorldPos = new THREE.Vector3(); boatGroup.getWorldPosition(boatWorldPos);
@@ -6552,6 +7165,7 @@ window.IslandRemodel = (() => {
                         ISLAND_PROGRESS[currentIslandIndex].visited = true;
                         player.position.set(dock.exitX, getMergedIslandHeight(dock.exitX, dock.exitZ) + 1.8, dock.exitZ); 
                         yaw = Math.PI+(dock.orientation||0);
+                        applyLookOrientation();resetMouseLook();
                         if (compassTargetIslandIndex === currentIslandIndex) updateCompassTarget(null);
                         setStatus(`${ISLAND_ROUTES[currentIslandIndex].name}에 도착했습니다.`, "#f8fafc");
                     } else if (player.position.z <= 2.5) {
@@ -6573,9 +7187,10 @@ window.IslandRemodel = (() => {
                     isDrivingBoat = true;
                     player.position.copy(BOAT_HELM);
                     yaw = yachtYaw; player.rotation.y = 0;
-                    setStatus("배 조종 · W/S 전후진 · A/D 회전 · R 조종 종료", "#facc15");
+                    applyLookOrientation();resetMouseLook();
+                    setStatus(`배 조종 · ${keyLabel('w')}/${keyLabel('s')} 전후진 · ${keyLabel('a')}/${keyLabel('d')} 회전 · ${keyLabel('r')} 조종 종료`, "#facc15");
                 } else {
-                    setStatus("앞쪽 운전대에 다가가 R을 누르세요.", "#facc15");
+                    setStatus(`앞쪽 운전대에 다가가 ${keyLabel('r')}을 누르세요.`, "#facc15");
                 }
             }
 
@@ -6599,7 +7214,7 @@ window.IslandRemodel = (() => {
         window.addEventListener('keyup',e=>{
             getGameKeys(e).forEach(k=>{if(Object.prototype.hasOwnProperty.call(keys,k))keys[k]=false;});
         });
-        window.addEventListener('blur',()=>Object.keys(keys).forEach(k=>keys[k]=false));
+        window.addEventListener('blur',()=>{Object.keys(keys).forEach(k=>keys[k]=false);resetMouseLook();});
         window.addEventListener('keydown',e=>{
             if(menuOpen||e.target?.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(e.target?.tagName))return;
             if(e.ctrlKey||e.metaKey||e.altKey||getGameKeys(e).length)e.preventDefault();
@@ -6615,8 +7230,8 @@ window.IslandRemodel = (() => {
         let dexSelectedIndex = null, dexViewAngle = 0, dexRenderGeneration = 0;
         function makeFishPortrait(species, angle = 0) {
             if (!dexPortraitRenderer) {
-                dexPortraitRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
-                dexPortraitRenderer.setSize(480, 320);
+                dexPortraitRenderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, preserveDrawingBuffer: true });
+                dexPortraitRenderer.setSize(360, 240);
                 dexPortraitRenderer.setPixelRatio(1);
                 dexPortraitRenderer.outputEncoding = THREE.sRGBEncoding;
             }
@@ -6646,17 +7261,11 @@ window.IslandRemodel = (() => {
             if (!species || !fishDex[species.name].caught) return;
             dexSelectedIndex = index; dexViewAngle = angle;
             const image = document.getElementById('dex-portrait');
-            try {
-                image.src = angle === 0 && dexPortraitCache.has(species.name)
-                    ? dexPortraitCache.get(species.name) : makeFishPortrait(species, angle);
-                image.alt = species.name + ' · 포획 모델';
-            } catch (error) {
-                image.removeAttribute('src');
-                console.warn('Fish portrait unavailable', error);
-            }
+            image.removeAttribute('src');image.alt=species.name+' · 모습 준비 중';
+            queuePortrait(species,angle,url=>{if(dexSelectedIndex===index&&dexViewAngle===angle){image.src=url;image.alt=species.name+' · 포획 모델';}});
             const entry = fishDex[species.name];
             document.getElementById('dex-detail').innerHTML = '<strong>' + species.name + '</strong>'
-                + ISLAND_ROUTES[species.tier].name + ' · ' + species.difficulty + '<br>'
+                + (species.tier+1)+'단계 낚싯대 · ' + species.difficulty + '<br>'
                 + '크기 ' + species.minLen + '–' + species.maxLen + 'cm<br>'
                 + '포획 ' + entry.caught + '회 · 최대 기록 ' + entry.maxLen + 'cm';
             document.querySelectorAll('.dex-card').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.fishIndex) === index)));
@@ -6664,55 +7273,19 @@ window.IslandRemodel = (() => {
         document.getElementById('dex-turn-left').addEventListener('click', () => { if(dexSelectedIndex !== null) selectDexFish(dexSelectedIndex, dexViewAngle - Math.PI / 4); });
         document.getElementById('dex-turn-right').addEventListener('click', () => { if(dexSelectedIndex !== null) selectDexFish(dexSelectedIndex, dexViewAngle + Math.PI / 4); });
         function openDex() {
-            if(bookClosing)return;
+            if(bookClosing||bookResume)return;
             radarVisible=false;
             bookResume={state:currentState,remaining:Math.max(1,biteDeadline-performance.now())};
             clearTimeout(biteTimer);clearTimeout(biteEscapeTimer);sound.stopReel();
             uiReel.style.display='none';uiBite.style.display='none';
             document.getElementById('cast-power-ui').style.display='none';
             if(currentState===STATES.PREPARING_CAST){targetRodRotX=baseRodRotX;targetRodRotY=baseRodRotY;}
-            Object.keys(keys).forEach(k=>keys[k]=false);isMouseDown=false;
-            renderExplorerBook();
+            Object.keys(keys).forEach(k=>keys[k]=false);isMouseDown=false;resetMouseLook();
+            bookBackdropReady=false;bookContentSignature='';
+            currentState=STATES.MODAL_OPEN;
+            document.getElementById('dex-modal').style.display='block';
             selectBookPage(bookPage,false);
-            currentState = STATES.MODAL_OPEN; document.exitPointerLock(); startScreen.style.display = 'none';
-            const dexList = document.getElementById('dex-list');
-            const generation = ++dexRenderGeneration;
-            dexList.innerHTML = '';
-            const portraits = [];
-            FISH_SPECIES.forEach((species, index) => {
-                const found = fishDex[species.name].caught > 0;
-                const card = document.createElement('button');
-                card.type = 'button'; card.className = 'dex-card'; card.disabled = !found;
-                card.dataset.fishIndex = index; card.setAttribute('aria-pressed', 'false');
-                if(found) {
-                    const thumbnail = document.createElement('img'); thumbnail.alt = species.name;
-                    if(dexPortraitCache.has(species.name)) thumbnail.src = dexPortraitCache.get(species.name);
-                    else { thumbnail.alt = species.name + ' · 미리보기 준비 중'; portraits.push({species,thumbnail}); }
-                    const label = document.createElement('span'); label.textContent = species.name;
-                    card.append(thumbnail,label);
-                    card.addEventListener('click', () => selectDexFish(index));
-                } else {
-                    card.innerHTML = '<span class="unknown">?</span><span>미발견 · ' + (species.tier + 1) + '섬</span>';
-                }
-                dexList.appendChild(card);
-            });
-            document.getElementById('dex-modal').style.display = 'block';
-            const first = FISH_SPECIES.findIndex(species => fishDex[species.name].caught > 0);
-            if(first >= 0) selectDexFish(dexSelectedIndex !== null && fishDex[FISH_SPECIES[dexSelectedIndex].name].caught ? dexSelectedIndex : first);
-            else {
-                document.getElementById('dex-portrait').removeAttribute('src');
-                document.getElementById('dex-detail').textContent = '물고기를 잡으면 여기에서 실제 모습을 볼 수 있어요.';
-            }
-            function nextPortrait() {
-                if(generation !== dexRenderGeneration || document.getElementById('dex-modal').style.display !== 'block') return;
-                const item = portraits.shift(); if(!item) return;
-                try {
-                    const url = makeFishPortrait(item.species); dexPortraitCache.set(item.species.name,url);
-                    item.thumbnail.src = url; item.thumbnail.alt = item.species.name;
-                } catch(error) { item.thumbnail.alt = item.species.name; console.warn(error); }
-                if(portraits.length) requestAnimationFrame(nextPortrait);
-            }
-            if(portraits.length) requestAnimationFrame(nextPortrait);
+            document.exitPointerLock();startScreen.style.display='none';
         }
 
         const shopTabButtons = [...document.querySelectorAll('.shop-tab-btn')];
@@ -7075,6 +7648,7 @@ window.IslandRemodel = (() => {
         function closeModals(immediate=false) {
             if(immediate!==true&&document.getElementById('dex-modal').style.display==='block'){
                 if(bookClosing)return;
+                clearTimeout(bookTurnTimer);portraitQueue=[];dexRenderGeneration++;
                 bookClosing=true;heldTools.setMode('none');return;
             }
             bookClosing=false;
@@ -7085,6 +7659,7 @@ window.IslandRemodel = (() => {
             document.getElementById('inventory-modal').style.display = 'none';
             document.getElementById('quest-modal').style.display = 'none';
             currentState = resume?resume.state:STATES.IDLE;
+            escapeReturnUntil=performance.now()+650;resetMouseLook();
             if(resume){
                 biteDeadline=performance.now()+resume.remaining;
                 if(currentState===STATES.WAITING)biteTimer=setTimeout(()=>{if(currentState===STATES.WAITING)startBite();},resume.remaining);
@@ -7120,7 +7695,7 @@ window.IslandRemodel = (() => {
             if(rodClearance<.98){setStatus('낚싯대 앞에 지형이나 건물이 있어요. 넓은 바다 쪽으로 이동하세요.','#facc15');return;}
             if(adventure?.diving){setStatus('잠수 중에는 낚시할 수 없습니다. V로 귀환하세요.');return;}
             if (isDrivingBoat || isSittingOnSofa) {
-                setStatus("조종 중에는 낚시할 수 없습니다. R을 눌러 조종을 종료하세요.", "#ef4444");
+                setStatus(`조종 중에는 낚시할 수 없습니다. ${keyLabel('r')}을 눌러 조종을 종료하세요.`, "#ef4444");
                 return;
             }
             if (!developerMode.infiniteDurability && RODS[currentRod].currentDur <= 0) {
@@ -7229,6 +7804,7 @@ window.IslandRemodel = (() => {
             balance.gain *= 1 + .2 * beginnerAssist;
             balance.loss *= 1 - .45 * beginnerAssist;
             balance.speed *= 1 - .35 * beginnerAssist;
+            if(activeFishData?.hiddenSpot){balance.speed*=1.06;balance.drift*=1.03;}
             return balance;
         }
 
@@ -7268,23 +7844,25 @@ window.IslandRemodel = (() => {
             clearTimeout(biteEscapeTimer); uiBite.style.display = 'none'; currentState = STATES.REELING;
             targetRodRotX = baseRodRotX + 0.5; rodAnimSpeed = 15;
             
+            const hiddenSpot=Boolean(adventure?.hiddenSpotAt(bobberGroup.position));
             let possibleSpecies = FISH_SPECIES.filter(f => f.tier === RODS[currentRod].fishTier);
+            if(hiddenSpot)possibleSpecies=possibleSpecies.slice(-3);
             const undiscovered = possibleSpecies.filter(f=>!(fishDex[f.name]?.caught>0));
-            const selection = undiscovered.length && !ISLAND_PROGRESS[RODS[currentRod].fishTier].completed && Math.random()<.65 ? undiscovered : possibleSpecies;
+            const selection = !hiddenSpot&&undiscovered.length && !ISLAND_PROGRESS[RODS[currentRod].fishTier].completed && Math.random()<.65 ? undiscovered : possibleSpecies;
             const species = selection[Math.floor(Math.random() * selection.length)];
             
             const caughtLength = species.minLen + Math.random() * (species.maxLen - species.minLen);
             const lengthRatio = (caughtLength - species.minLen) / Math.max(1, species.maxLen - species.minLen);
             const sizeValueBonus = 0.85 + lengthRatio * 0.3;
             const finalPrice = Math.max(5, Math.round((species.price * sizeValueBonus) / 5) * 5);
-            activeFishData = { ...species, price: finalPrice, length: caughtLength.toFixed(1) };
+            activeFishData = { ...species, hiddenSpot, price: finalPrice, length: caughtLength.toFixed(1) };
             showHookedFish(species, caughtLength);
             const reelBalance = getActiveReelBalance();
             Object.assign(reelTargetMotion, createReelMotion());
             reelProgress = 25; reelIndicatorPos = 50; reelTargetPos = 50; uiReel.style.display = 'flex';
             reelFeedbackInside=false;uiReelProgressBar.style.height='25%';uiReelIndicator.style.bottom='46%';uiReelTarget.style.bottom=(50-reelBalance.zone)+'%';
             uiReelTarget.style.height = `${reelBalance.zone * 2}%`;
-            setStatus(`[${species.difficulty}] ${species.name} · 노란 바를 초록 구역 안에 유지하세요!`, "#38bdf8");
+            setStatus(`${hiddenSpot?'숨겨진 낚시터 · ':''}[${species.difficulty}] ${species.name} · 노란 바를 초록 구역 안에 유지하세요!`, "#38bdf8");
         }
 
         function missFish(msg) {
@@ -7411,39 +7989,146 @@ window.IslandRemodel = (() => {
         document.getElementById('ending-return').addEventListener('click',closeVoyageEnding);
         document.getElementById('ending-replay').addEventListener('click',showVoyageEnding);
         function menuMessage(text){document.getElementById('menu-message').textContent=text;}
+        const tutorialKeys=new Set(),tutorialFlags=new Set(),tutorialMoveTimes={w:0,a:0,s:0,d:0};
+        let tutorialLookDistance=0,tutorialRunTime=0,tutorialCastCount=0,tutorialHookCount=0,tutorialDriveDistance=0,tutorialNavigation=null,tutorialNavTarget=null,tutorialLastPosition=null,tutorialLastState=null,tutorialReadTime=0,tutorialRenderSignature='';
+        function tutorialSnapshot(){
+            const story=adventure.states[0],found=5-getMissingIslandSpecies(0).length;
+            const fish=story.stage>0?2:story.count,shore=story.stage>1?2:story.stage===1?story.count:0;
+            return {story,found,fish,shore,book:document.getElementById('dex-modal').style.display==='block',shop:document.getElementById('shop-modal').style.display==='flex',equipment:document.getElementById('inventory-modal').style.display==='flex'};
+        }
         function tutorialPages(){
+            const s=tutorialSnapshot(),movement=['w','a','s','d'].reduce((sum,k)=>sum+Math.min(1,tutorialMoveTimes[k]/.3),0);
+            const read=(name,open)=>Number(tutorialFlags.has(name))+Number(tutorialFlags.has(name)&&!open);
             return [
-                ['섬에서 첫걸음',`마우스로 주변을 둘러보세요.\n${['w','a','s','d'].map(keyLabel).join(' / ')}로 이동하고 ${keyLabel('shift')}를 누르면 달려요.\nESC로 언제든 메인 화면을 열 수 있어요.`],
-                ['낚싯줄 던지기',`바다를 바라보고 마우스 왼쪽 버튼을 꾹 누르세요. 게이지가 차면 버튼을 놓아 찌를 던져요.\n물고기가 미끼를 물 때까지 기다리세요. 기본 떡밥도 소모되니 남은 개수를 확인하세요.`],
-                ['물고기와 힘겨루기',`물고기가 걸리면 낚시 게이지가 나타나요.\n마우스를 누르면 내 표시가 올라가고, 놓으면 내려가요. 움직이는 목표 구역 안에 표시를 유지하세요.\n계속 누르기보다 짧게 눌렀다 놓는 게 좋아요.`],
-                ['상점과 장비',`상점 앞에서 ${keyLabel('e')}를 눌러 물고기를 팔고 미끼를 사거나 낚싯대를 수리하세요.\n${keyLabel('i')}로 장비를 바꾸고 ${keyLabel('tab')}으로 물고기 도감을 볼 수 있어요.\n처음에는 낚시와 해변의 조개·게 채집으로 돈을 모으세요.`],
-                ['다음 섬으로 출항',`판매 상인과 의뢰 NPC는 서로 달라요. 의뢰 NPC 앞에서 ${keyLabel('e')}를 눌러 목표를 확인하세요.\n의뢰를 완료하면 다음 섬의 나침반이 열려요. 배 상점에서 필요한 배를 구매·업그레이드하세요.\n${keyLabel('f')}로 배에 타고 ${keyLabel('r')}로 조종을 시작해요. ${keyLabel('w')}/${keyLabel('s')} 전진·후진, ${keyLabel('a')}/${keyLabel('d')} 방향 전환!`]
+                {id:'move',title:'네 방향으로 걸어보기',text:'각 방향으로 잠깐씩 걸어보세요. 실제로 이동하면 방향별 표시가 차오릅니다.',keys:['w','a','s','d'],value:movement,total:4},
+                {id:'look',title:'주변을 둘러보기',text:'마우스를 천천히 움직여 해변과 마을을 둘러보세요. 설정에서 감도를 바꿀 수 있어요.',keys:[],value:tutorialLookDistance,total:1.7},
+                {id:'run',title:'달려보기',text:'이동키와 달리기 키를 함께 누르고 2초간 달려보세요.',keys:['shift','w'],value:tutorialRunTime,total:2},
+                {id:'accept',title:'의뢰 담당자 찾아가기',text:'바닥의 안내선을 따라 의뢰 담당자에게 가세요. 가까이에서 상호작용한 뒤 의뢰 받기를 눌러야 완료됩니다.',keys:['e'],target:'npc',value:Number(s.story.accepted),total:1},
+                {id:'book',title:'수첩에서 의뢰 확인하기',text:'수첩을 열어 의뢰 북마커를 눌러보세요. 지금 할 일과 남은 목표를 확인한 뒤 수첩 키 또는 ESC로 덮으세요.',keys:['tab'],value:read('book',s.book),total:2},
+                {id:'cast',title:'바다에 찌 던지기',text:'안내된 해변에서 바다를 바라보세요. 마우스 왼쪽 버튼을 누르며 힘을 모은 뒤 놓아 찌를 던지세요.',keys:[],target:'fish',value:Number(tutorialCastCount>0||s.fish>0),total:1},
+                {id:'hook',title:'입질을 기다려 챔질하기',text:'입질 신호가 나타날 때까지 기다리세요. 신호가 오면 마우스 왼쪽 버튼을 한 번 눌러 물고기를 거세요.',keys:[],target:'fish',value:Number(tutorialHookCount>0||s.fish>0),total:1},
+                {id:'catch',title:'첫 물고기 잡기',text:'왼쪽 버튼을 누르면 노란 표시가 올라가고, 놓으면 내려갑니다. 초록 구역 안에 유지해 옆의 세로 진행 바를 채우세요.',keys:[],target:'fish',value:Number(s.fish>0),total:1},
+                {id:'fish2',title:'의뢰용 물고기 두 마리',text:'첫 낚싯대로 물고기를 총 2마리 잡으세요. 놓쳤다면 다시 던지면 됩니다. 잡은 물고기는 가방에 보관됩니다.',keys:[],target:'fish',value:s.fish,total:2},
+                {id:'shore',title:'해변에서 두 번 채집하기',text:'가장 가까운 조개나 게로 안내합니다. 가까이 가서 상호작용하면 채집됩니다. 하나를 모으면 다음 대상으로 길이 바뀝니다.',keys:['e'],target:'shore',value:s.shore,total:2},
+                {id:'shop',title:'낚시 상점 이용법',text:'안내선을 따라 낚시 상점을 여세요. 미끼·찌 탭에서 미끼 가격과 수량을 확인한 뒤 ESC로 닫으세요. 낚싯대 수리는 낚싯대 탭에서 합니다.',keys:['e'],target:'shop',value:read('shop',s.shop),total:2},
+                {id:'equipment',title:'장비 세 종류 확인하기',text:'장비 창에서 낚싯대·릴·찌 탭을 각각 눌러보세요. 보유한 장비의 장착 버튼으로 변경합니다. 세 탭을 확인하면 창을 닫으세요.',keys:['i'],value:['rod','reel','bobber'].filter(k=>tutorialFlags.has('equipment-'+k)).length+Number(tutorialFlags.has('equipment-bobber')&&tutorialFlags.has('equipment-reel')&&tutorialFlags.has('equipment-rod')&&!s.equipment),total:4},
+                {id:'radar',title:'손에 든 레이더 살펴보기',text:'레이더를 꺼내보세요. 초록 점은 해금한 섬, 삼각형은 내 방향입니다. 목표가 있으면 노란 점으로 보입니다. 확인한 뒤 같은 키로 넣으세요.',keys:['m'],value:read('radar',radarVisible),total:2},
+                {id:'kit',title:'출항 준비대 확인하기',text:'안내선을 따라 준비대로 가서 상호작용하세요. 모아둔 물자와 항해 보급품을 확인하는 단계입니다.',keys:['e'],target:'kit',value:Number(s.story.stage>=3),total:1},
+                {id:'discover',title:'첫 바다의 다섯 어종 찾기',text:'첫 낚싯대로 이 단계의 5종을 한 번씩 발견하세요. 수첩 도감으로 남은 물고기를 확인할 수 있습니다. 이 목표는 일반 바다에서 진행하세요.',keys:['tab'],target:'fish',value:s.found,total:5},
+                {id:'report',title:'의뢰 완료 보고하기',text:'의뢰 담당자에게 돌아가 완료 보고를 누르세요. 첫 섬 보상과 두 번째 섬의 위치를 받습니다.',keys:['e'],target:'npc',value:Number(ISLAND_PROGRESS[0].completed),total:1},
+                {id:'boatshop',title:'배 상점 살펴보기',text:'배 상점은 낚시 상점과 별개입니다. 안내선을 따라가 상점을 열어 다음 섬에 필요한 배 등급과 가격을 확인하세요.',keys:['e'],target:'boatshop',value:Number(tutorialFlags.has('boatshop')),total:1},
+                {id:'buyboat',title:'첫 낚싯배 구매하기',text:'배 상점에서 첫 낚싯배를 구매하세요. 돈이 부족하면 잡은 물고기와 해변 채집물을 매입소에서 팔아 모을 수 있습니다.',keys:['e'],target:'boatshop',value:Number(boatOwned),total:1},
+                {id:'board',title:'선착장에서 배 타기',text:'배 상점을 닫고 안내선을 따라 선착장으로 가세요. 배 가까이에서 상호작용하면 탑승합니다.',keys:['e'],target:'boat',value:Number(isOnBoat),total:1},
+                {id:'helm',title:'운전대에서 조종 시작하기',text:'갑판 앞쪽 운전대에 다가가 조종 키를 누르세요. 같은 키로 조종을 끝낼 수 있습니다.',keys:['w','r'],target:'helm',value:Number(isDrivingBoat),total:1},
+                {id:'drive',title:'첫 항해 출발',text:'앞으로 키를 눌러 배를 움직여보세요. 좌우 키로 방향을 바꾸고 레이더로 다음 섬을 찾아가세요.',keys:['w','a','d','m'],value:tutorialDriveDistance,total:10}
             ];
         }
+        function resetTutorialProgress(){
+            tutorialStep=0;tutorialKeys.clear();tutorialFlags.clear();Object.keys(tutorialMoveTimes).forEach(k=>tutorialMoveTimes[k]=0);
+            tutorialLookDistance=tutorialRunTime=tutorialCastCount=tutorialHookCount=tutorialDriveDistance=0;tutorialLastPosition=null;tutorialReadTime=0;
+        }
+        function showTutorial(restart=false){
+            if(restart)resetTutorialProgress();tutorialSeen=false;tutorialActive=true;
+            document.getElementById('tutorial-panel').hidden=false;
+            if(!tutorialNavigation)tutorialNavigation=window.VoyageNavigation.create({THREE,scene,ground:tutorialGround,walkable:canPlayerWalkTo});
+            renderTutorial();if(!isPointerLocked&&currentState!==STATES.MODAL_OPEN)requestGameControls();
+        }
+        function finishTutorial(skipped=false){
+            tutorialSeen=true;tutorialActive=false;tutorialNavTarget=null;tutorialNavigation?.hide();clearTutorialHighlight();
+            document.getElementById('tutorial-panel').hidden=true;document.getElementById('tutorial-direction').hidden=true;
+            setStatus(skipped?'튜토리얼을 건너뛰었습니다. 수첩의 조작법에서 다시 시작할 수 있어요.':'첫 항해 준비 완료! 이제 레이더를 보며 자유롭게 항해해 보세요.','#a0efd5');
+            saveAdventureGame();
+        }
+        function clearTutorialHighlight(){document.querySelectorAll('.tutorial-highlight').forEach(el=>el.classList.remove('tutorial-highlight'));}
         function renderTutorial(){
-            const pages=tutorialPages(),page=pages[tutorialStep];
-            document.getElementById('tutorial-count').textContent=`첫 항해 안내 · ${tutorialStep+1} / ${pages.length}`;
-            document.getElementById('tutorial-title').textContent=page[0];
-            document.getElementById('tutorial-text').textContent=page[1];
-            document.getElementById('tutorial-next').textContent=tutorialStep===pages.length-1?'항해 시작':'다음';
-            document.getElementById('tutorial-next').focus();
+            if(!tutorialActive)return;const page=tutorialPages()[tutorialStep];if(!page)return;
+            const progress=THREE.MathUtils.clamp(page.value/page.total,0,1),signature=JSON.stringify([tutorialStep,Math.floor(progress*100),gameSettings.bindings,tutorialNavTarget?.label,currentState,BAITS[currentBait].count,RODS[currentRod].currentDur]);
+            if(signature===tutorialRenderSignature)return;tutorialRenderSignature=signature;
+            document.getElementById('tutorial-count').textContent='첫 항해 안내 · '+(tutorialStep+1)+' / '+tutorialPages().length;
+            document.getElementById('tutorial-title').textContent=page.title;
+            let detail=page.text;
+            if(page.target==='fish'&&(BAITS[currentBait].count<=0||RODS[currentRod].currentDur<=0))detail='미끼나 낚싯대 내구도가 부족합니다. 낚시 상점에서 미끼를 구매하거나 수리하세요. 돈이 부족하면 해변 채집물을 매입소에서 팔 수 있습니다.';
+            if(page.id==='hook'&&currentState===STATES.BITING)detail='지금 입질 중이에요! 마우스 왼쪽 버튼을 한 번 누르세요.';
+            document.getElementById('tutorial-text').textContent=detail;
+            document.getElementById('tutorial-keys').textContent=(page.keys.length?page.keys.map(keyLabel).join(' / '):page.id==='look'?'마우스 움직이기':'마우스 왼쪽 버튼')+(page.target&&tutorialNavTarget?'\n'+tutorialNavTarget.label:'');
+            document.getElementById('tutorial-progress').value=progress;
+            document.getElementById('tutorial-progress-label').textContent=page.id==='move'?['w','a','s','d'].map(k=>(tutorialMoveTimes[k]>=.3?'✓ ':'○ ')+keyLabel(k)).join('   '):Math.min(page.total,Math.floor(page.value*10)/10)+' / '+page.total;
+            clearTutorialHighlight();
+            let highlight=null;
+            if(page.id==='accept'||page.id==='report')highlight='#btn-story-action';
+            if(page.id==='book')highlight='[data-book-page="quest"]';
+            if(page.id==='shop')highlight='[data-shop-tab="bobbers"]';
+            if(page.id==='equipment'){const next=['rod','reel','bobber'].find(k=>!tutorialFlags.has('equipment-'+k));highlight=next?'[data-category="'+next+'"]':'#btn-inventory-close';}
+            if(highlight)document.querySelector(highlight)?.classList.add('tutorial-highlight');
         }
-        function showTutorial(){
-            tutorialActive=true;tutorialStep=0;currentState=STATES.MODAL_OPEN;
-            isPointerLocked=false;pointerLockFallback=false;Object.keys(keys).forEach(k=>keys[k]=false);
-            document.exitPointerLock();document.getElementById('tutorial-panel').hidden=false;renderTutorial();
+        function tutorialGround(x,z){
+            const pier=getRemotePierAt(x,z),main=Math.abs(x-MAIN_PIER_X)<2&&z>MAIN_PIER_Z-MAIN_PIER_HALF_LENGTH&&z<MAIN_PIER_Z+MAIN_PIER_HALF_LENGTH;
+            return Math.max(getMergedIslandHeight(x,z),adventure?.walkHeight(x,z)??-Infinity,(main||pier) ? .55 : -Infinity,getLighthouseWalkwayHeight(x,z)??-Infinity);
         }
-        function finishTutorial(){
-            if(!tutorialActive)return;
-            tutorialSeen=true;tutorialActive=false;document.getElementById('tutorial-panel').hidden=true;
-            currentState=STATES.IDLE;saveAdventureGame();requestGameControls();
+        function closestTutorialTarget(kind,position){
+            let targets=[];
+            if(kind==='npc')targets=navigatorPoints.filter(n=>n.islandIndex===0).map(n=>({...n,id:'navigator-'+n.islandIndex,label:n.group.userData.npcName+' · 의뢰 담당자'}));
+            if(kind==='shop'||kind==='boatshop')targets=villageStores.filter(n=>n.islandIndex===0&&n.storeType===(kind==='shop'?'fishing':'boat')).map(n=>({...n,id:n.name,label:n.name}));
+            if(kind==='shore')targets=shoreCollectibles.map((n,i)=>({n,i})).filter(({n})=>n.userData.active).map(({n,i})=>({x:n.position.x,z:n.position.z,y:n.position.y,id:'shore-'+i,label:n.userData.name}));
+            if(kind==='kit')targets=adventure.locations(0,'kit').map(n=>({...n,label:'출항 준비대'}));
+            if(kind==='boat')targets=[{x:boatGroup.position.x,z:boatGroup.position.z,y:0,id:'boat',label:'선착장 · 낚싯배'}];
+            if(kind==='helm'){const p=boatGroup.localToWorld(BOAT_HELM.clone());return {x:p.x,y:p.y-1,z:p.z,id:'helm',label:'앞쪽 운전대'};}
+            if(kind==='fish'){
+                if(BAITS[currentBait].count<=0||RODS[currentRod].currentDur<=0)return closestTutorialTarget('shop',position);
+                for(let i=0;i<40;i++){
+                    const a=i*Math.PI/20,r=findWaterlineRadius(a);if(!r)continue;
+                    const x=Math.cos(a)*(r-3.2),z=Math.sin(a)*(r-3.2);
+                    if(!canPlayerWalkTo(x,z)||getMergedIslandHeight(x,z)<.05||adventure.hiddenSpotAt({x,z}))continue;
+                    targets.push({x,z,id:'fishing-'+i,label:'일반 바다 낚시터'});
+                }
+            }
+            return targets.sort((a,b)=>Math.hypot(a.x-position.x,a.z-position.z)-Math.hypot(b.x-position.x,b.z-position.z))[0]||null;
         }
-        function nextTutorialStep(){
-            if(tutorialStep>=tutorialPages().length-1){finishTutorial();return;}
-            tutorialStep++;renderTutorial();
+        function tutorialSaveData(){return {version:2,step:tutorialStep,flags:[...tutorialFlags],move:{...tutorialMoveTimes},look:tutorialLookDistance,run:tutorialRunTime,cast:tutorialCastCount,hook:tutorialHookCount,drive:tutorialDriveDistance};}
+        function restoreTutorial(data){
+            resetTutorialProgress();if(!data||data.version!==2)return;
+            tutorialStep=THREE.MathUtils.clamp(Math.floor(Number(data.step)||0),0,20);
+            (Array.isArray(data.flags)?data.flags:[]).filter(v=>typeof v==='string').slice(0,30).forEach(v=>tutorialFlags.add(v));
+            const number=(value,max)=>Math.max(0,Math.min(max,Number(value)||0));
+            for(const key of ['w','a','s','d'])tutorialMoveTimes[key]=number(data.move?.[key],.3);
+            tutorialLookDistance=number(data.look,1.7);tutorialRunTime=number(data.run,2);tutorialCastCount=number(data.cast,1);tutorialHookCount=number(data.hook,1);tutorialDriveDistance=number(data.drive,10);
         }
-        document.getElementById('tutorial-next').addEventListener('click',nextTutorialStep);
-        document.getElementById('tutorial-skip').addEventListener('click',finishTutorial);
+        function updateTutorial(delta){
+            if(!tutorialActive||menuOpen){tutorialNavigation?.hide();document.getElementById('tutorial-direction').hidden=true;return;}
+            const position=player.getWorldPosition(new THREE.Vector3()),s=tutorialSnapshot(),page=tutorialPages()[tutorialStep];
+            const moving=tutorialLastPosition?Math.min(2,position.distanceTo(tutorialLastPosition)):0;
+            const active=isPointerLocked&&currentState!==STATES.MODAL_OPEN;
+            if(active&&moving>.002){for(const k of ['w','a','s','d'])if(keys[k])tutorialMoveTimes[k]=Math.min(.3,tutorialMoveTimes[k]+delta);if(keys.shift)tutorialRunTime+=delta;if(isDrivingBoat)tutorialDriveDistance+=moving;}
+            if(currentState!==tutorialLastState){if(currentState===STATES.CASTING)tutorialCastCount++;if(currentState===STATES.REELING)tutorialHookCount++;tutorialLastState=currentState;}
+            tutorialLastPosition=position.clone();
+            let reading='';
+            if(page.id==='book'&&s.book&&bookPage==='quest'&&heldTools.bookProgress>.99)reading='book';
+            if(page.id==='shop'&&s.shop&&activeShopStore.storeType==='fishing'&&document.querySelector('[data-shop-tab="bobbers"]')?.classList.contains('active'))reading='shop';
+            if(page.id==='equipment'&&s.equipment)reading='equipment-'+(document.querySelector('.inventory-tab-btn.active')?.dataset.category||'rod');
+            if(page.id==='radar'&&radarVisible&&heldTools.radarProgress>.99)reading='radar';
+            if(page.id==='boatshop'&&s.shop&&activeShopStore.storeType==='boat')reading='boatshop';
+            if(reading){tutorialReadTime+=delta;if(tutorialReadTime>.55)tutorialFlags.add(reading);}else tutorialReadTime=0;
+            const updated=tutorialPages()[tutorialStep];
+            if(updated.value>=updated.total){
+                if(tutorialStep===tutorialPages().length-1){finishTutorial();return;}
+                tutorialStep++;tutorialReadTime=0;tutorialRenderSignature='';saveAdventureGame();
+            }
+            const next=tutorialPages()[tutorialStep];tutorialNavTarget=next.target?closestTutorialTarget(next.target,position):null;
+            const showGuide=currentState!==STATES.MODAL_OPEN&&!s.book&&!s.shop&&!s.equipment;
+            document.getElementById('tutorial-panel').classList.toggle('tutorial-ui',!showGuide);
+            const nav=tutorialNavigation?.update(delta,position,tutorialNavTarget,camera,showGuide);
+            const direction=document.getElementById('tutorial-direction');direction.hidden=!nav;
+            if(nav){
+                let x=nav.x,y=nav.y;if(nav.behind){x=-x;y=-y;}
+                const onScreen=!nav.behind&&Math.abs(x)<.8&&Math.abs(y)<.76;
+                direction.style.left=THREE.MathUtils.clamp((x+1)*innerWidth/2,145,innerWidth-145)+'px';
+                direction.style.top=THREE.MathUtils.clamp((1-y)*innerHeight/2,110,innerHeight-95)+'px';direction.style.transform='translate(-50%,-50%)';
+                const bearing=Math.atan2(tutorialNavTarget.x-position.x,-(tutorialNavTarget.z-position.z))+yaw;
+                direction.textContent=(onScreen?'◆ ':Math.sin(bearing)>0?'→ ':'← ')+tutorialNavTarget.label+' · '+Math.round(nav.distance)+'m';
+            }
+            renderTutorial();
+        }
+        document.getElementById('tutorial-skip').addEventListener('click',()=>finishTutorial(true));
         function formatPlayTime(seconds){
             const total=Math.floor(Number.isFinite(seconds)?Math.max(0,seconds):0),minutes=Math.floor(total/60);
             return `${Math.floor(minutes/60)}시간 ${String(minutes%60).padStart(2,'0')}분 ${String(total%60).padStart(2,'0')}초`;
@@ -7470,6 +8155,7 @@ window.IslandRemodel = (() => {
             if(!menuOpen){stopCurrentFishingTest();adventure?.exitDive();saveAdventureGame();}
             menuViewIsland=activeSaveSlot===null?0:currentIslandIndex;
             tutorialActive=false;document.getElementById('tutorial-panel').hidden=true;
+            bookResume=null;bookClosing=false;clearTimeout(bookTurnTimer);portraitQueue=[];resetMouseLook();
             menuOpen=true;pointerLockFallback=false;isPointerLocked=false;isMapOverview=false;
             Object.keys(keys).forEach(k=>keys[k]=false);
             ['shop-modal','dex-modal','inventory-modal','quest-modal','developer-panel','ending-screen'].forEach(id=>document.getElementById(id).style.display='none');
@@ -7591,13 +8277,21 @@ window.IslandRemodel = (() => {
             if(sound.master)sound.master.gain.setValueAtTime(gameSettings.volume,sound.ctx.currentTime);
             refreshControlLabels();
         }
-        function keyLabel(action){return gameSettings.bindings[action].replace('Key','').replace('Digit','').replace('Left','');}
+        function keyLabel(action){
+            const code=gameSettings.bindings[action==='f'||action==='g'?'e':action]||action;
+            return ({Space:'Space',ControlLeft:'Ctrl',ShiftLeft:'Shift',ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→'}[code]||code.replace('Key','').replace('Digit',''));
+        }
         function refreshControlLabels(){
             document.querySelectorAll('kbd').forEach(el=>{
                 const original=el.dataset.originalKey||(el.dataset.originalKey=el.textContent);
                 if(original==='WASD')el.textContent=['w','a','s','d'].map(keyLabel).join(' ');
                 else if(gameSettings.bindings[original.toLowerCase()])el.textContent=keyLabel(original.toLowerCase());
             });
+            const help=document.getElementById('controls-overlay');
+            help.dataset.side=gameSettings.controlsSide;
+            help.textContent=[`${['w','a','s','d'].map(keyLabel).join('/')} 이동 · ${keyLabel('shift')} 달리기`,`${keyLabel('e')} 상호작용 · ${keyLabel('r')} 배 조종`,`${keyLabel('tab')} 수첩 · ${keyLabel('i')} 장비 · ${keyLabel('m')} 레이더`,'마우스 좌클릭 유지 → 떼기: 낚시','ESC 열린 창 닫기 / 메뉴'].join('\n');
+            document.getElementById('btn-inventory-close').textContent=`장비 닫기 (${keyLabel('i')})`;
+            if(typeof renderExplorerBook==='function'&&document.getElementById('dex-modal').style.display==='block')renderExplorerBook(true);
         }
         function renderSettings(){
             renderGraphicsSettings();
@@ -7605,12 +8299,15 @@ window.IslandRemodel = (() => {
             document.getElementById('sensitivity-value').textContent=gameSettings.sensitivity.toFixed(1)+'×';
             document.getElementById('setting-volume').value=Math.round(gameSettings.volume*100);
             document.getElementById('volume-value').textContent=Math.round(gameSettings.volume*100)+'%';
-            const labels={w:'앞으로',a:'왼쪽',s:'뒤로',d:'오른쪽',shift:'달리기',e:'상호작용',g:'활동',f:'배 승하차',r:'배 조종 / 앉기',i:'장비',m:'레이더',tab:'탐험 수첩',v:'잠수 귀환',' ':'잠수 상승',control:'잠수 하강','1':'미끼 1','2':'미끼 2','3':'미끼 3','4':'미끼 4','5':'미끼 5',f10:'개발자 모드'};
+            document.getElementById('setting-controls').checked=gameSettings.showControls;
+            document.getElementById('setting-controls-side').value=gameSettings.controlsSide;
+            document.getElementById('setting-sync').checked=gameSettings.syncDisplay;
+            const labels={w:'앞으로',a:'왼쪽',s:'뒤로',d:'오른쪽',shift:'달리기',e:'상호작용 (대화·채집·배 승하차)',r:'배 조종 / 앉기',i:'장비',m:'레이더',tab:'탐험 수첩',v:'잠수 귀환',' ':'잠수 상승',control:'잠수 하강','1':'미끼 1','2':'미끼 2','3':'미끼 3','4':'미끼 4','5':'미끼 5',f10:'개발자 모드'};
             const list=document.getElementById('key-bindings');list.replaceChildren();
             document.getElementById('developer-disable').hidden=!developerModeEnabled;
             Object.entries(labels).filter(([key])=>key!=='f10'||developerModeEnabled).forEach(([key,label])=>{
                 const row=document.createElement('div'),button=document.createElement('button');row.className='setting-row';row.textContent=label;
-                button.textContent=gameSettings.bindings[key].replace('Key','').replace('Digit','');
+                button.textContent=keyLabel(key);
                 button.addEventListener('click',()=>{capturingBinding=key;button.textContent='키 입력…';menuMessage(label+'에 사용할 키를 누르세요. ESC로 취소합니다.');});
                 row.append(button);list.append(row);
             });
@@ -7669,7 +8366,10 @@ window.IslandRemodel = (() => {
             document.querySelectorAll('[data-menu-back]').forEach(b=>b.addEventListener('click',()=>menuPage()));
             document.getElementById('setting-sensitivity').addEventListener('input',e=>{gameSettings.sensitivity=Number(e.target.value);document.getElementById('sensitivity-value').textContent=gameSettings.sensitivity.toFixed(1)+'×';saveSettings();});
             document.getElementById('setting-volume').addEventListener('input',e=>{gameSettings.volume=Number(e.target.value)/100;document.getElementById('volume-value').textContent=Math.round(gameSettings.volume*100)+'%';saveSettings();});
-            document.getElementById('settings-reset').addEventListener('click',()=>{gameSettings.sensitivity=1;gameSettings.volume=.7;gameSettings.bindings={...DEFAULT_BINDINGS};renderSettings();saveSettings();});
+            document.getElementById('setting-controls').addEventListener('change',e=>{gameSettings.showControls=e.target.checked;saveSettings();});
+            document.getElementById('setting-controls-side').addEventListener('change',e=>{gameSettings.controlsSide=e.target.value;saveSettings();});
+            document.getElementById('setting-sync').addEventListener('change',e=>{gameSettings.syncDisplay=e.target.checked;adaptive.draw=0;saveSettings();renderGraphicsSettings();});
+            document.getElementById('settings-reset').addEventListener('click',()=>{gameSettings.sensitivity=1;gameSettings.volume=.7;gameSettings.showControls=false;gameSettings.controlsSide='right';gameSettings.syncDisplay=true;gameSettings.bindings={...DEFAULT_BINDINGS};renderSettings();saveSettings();});
             rodGroup.visible=false;menuPage();
         }
         const ADVENTURE_SAVE_KEY = 'island-campaign-v1';
@@ -7692,7 +8392,7 @@ window.IslandRemodel = (() => {
             }catch{document.getElementById('menu-message').textContent='저장 공간을 사용할 수 없습니다. 기존 기록은 변경하지 않았습니다.';}
         }
         function captureGameData() {
-            return {version:1,endingSeen,tutorialSeen,playTimeSeconds,savedAt:Date.now(),islandIndex:currentIslandIndex,
+            return {version:1,endingSeen,tutorialSeen,tutorial:tutorialSaveData(),playTimeSeconds,savedAt:Date.now(),islandIndex:currentIslandIndex,
                 story:adventure.export(),progress:ISLAND_PROGRESS.map(q=>({completed:q.completed,unlocked:q.unlocked,visited:q.visited,delivered:q.delivered,ecologyCompleted:q.ecologyCompleted})),
                 money:playerMoney,inventory,fishDex,boatOwned,boatLevel,currentRod,currentReel,currentBobber,currentBait,
                 rods:RODS.map(r=>({owned:r.owned,currentDur:r.currentDur})),reels:REELS.map(r=>r.owned),bobbers:BOBBERS.map(r=>r.owned),baits:BAITS.map(b=>b.count)};
@@ -7711,6 +8411,7 @@ window.IslandRemodel = (() => {
             playTimeTick=performance.now();
             endingSeen=data.endingSeen===true;
             tutorialSeen=data.tutorialSeen!==false;
+            restoreTutorial(data.tutorial);
             adventure.restore(data.story);
             const clamp=(v,max)=>THREE.MathUtils.clamp(Number(v)||0,0,max);
             data.progress.slice(0,10).forEach((p,i)=>{
@@ -7748,6 +8449,7 @@ window.IslandRemodel = (() => {
                 bait:amount=>{BAITS[0].count+=amount;updateBaitUI();},
                 teleport:(x,z,y)=>{scene.add(player);isOnBoat=false;isDrivingBoat=false;player.position.set(x,y??getMergedIslandHeight(x,z)+1.8,z);},
                 setDiveY:y=>{player.position.y=y;},
+                diveHelp:()=>`${['w','a','s','d'].map(keyLabel).join('/')} 수영 · ${keyLabel(' ')} 상승 · ${keyLabel('control')} 하강 · ${keyLabel('e')} 회수 · ${keyLabel('v')} 귀환`,
                 safeReturn:i=>{stopCurrentFishingTest();const dock=islandDockPoints.find(d=>d.islandIndex===i);if(dock)player.position.set(dock.exitX,getMergedIslandHeight(dock.exitX,dock.exitZ)+1.8,dock.exitZ);}
             });
             pristineGameData=JSON.stringify(captureGameData());
@@ -7810,7 +8512,7 @@ window.IslandRemodel = (() => {
                 }
                 hints.forEach(text=>append(text,'quest-detail'));
             }
-            const prompt=document.getElementById('adventure-prompt');prompt.textContent=meters.near.replace('[E / G]',`[${keyLabel('e')} / ${keyLabel('g')}]`);prompt.style.display=active&&meters.near?'block':'none';
+            document.getElementById('adventure-prompt').style.display='none';
             adventureSaveClock+=delta;if(adventureSaveClock>5){adventureSaveClock=0;saveAdventureGame();}
         }
 
@@ -7967,7 +8669,7 @@ window.IslandRemodel = (() => {
         }
         function shouldDrawFrame(now){
             if(document.hidden){adaptive.last=0;adaptive.draw=0;adaptive.slow=0;adaptive.fast=0;return false;}
-            const interval=graphics.fps?1000/graphics.fps:0;
+            const interval=gameSettings.syncDisplay?0:graphics.fps?1000/graphics.fps:0;
             if(adaptive.draw&&now-adaptive.draw<interval-.5)return false;
             const frame=adaptive.last?now-adaptive.last:16.7;adaptive.last=now;
             adaptive.draw=interval&&adaptive.draw?now-((now-adaptive.draw)%interval):now;
@@ -7983,69 +8685,146 @@ window.IslandRemodel = (() => {
             }
             return true;
         }
-        function renderExplorerBook(){
-            const hours=((dayTime/(Math.PI*2)*24+6)%24);
-            document.getElementById('book-records').textContent=playerMoney.toLocaleString()+' G · '+String(Math.floor(hours)).padStart(2,'0')+':'+String(Math.floor(hours%1*60)).padStart(2,'0')+'\n플레이 '+formatPlayTime(playTimeSeconds);
-            const quest=getTrackedQuest();
-            document.getElementById('book-quest').textContent=quest?[quest.title,quest.island,...quest.rows.map(row=>row.text)].join('\n'):'진행 중인 의뢰가 없습니다. 의뢰 NPC에게 말을 걸어 보세요.';
-            const controls=[['w','앞으로'],['a','왼쪽'],['s','뒤로'],['d','오른쪽'],['shift','달리기'],['e','대화 / 상호작용'],['f','배 승하차'],['r','조종 / 앉기'],['i','장비'],['m','레이더'],['tab','수첩'],['v','잠수 귀환'],[' ','잠수 상승'],['control','잠수 하강']];
-            document.getElementById('book-controls').textContent=controls.map(([key,label])=>keyLabel(key)+' · '+label).join('\n')+'\n'+['1','2','3','4','5'].map(keyLabel).join(' / ')+' · 미끼 선택\n마우스 움직이기 · 시점\n좌클릭 유지 → 떼기 · 던지기\n입질 때 좌클릭 · 챔질\n낚는 중 누르면 상승, 떼면 하강\nEsc · 메뉴 / 수첩 닫기';
-            document.getElementById('book-discovery').textContent='물고기 도감 · '+Object.values(fishDex).filter(f=>f.caught>0).length+' / 50종';
+        const bookSections=['controls','quest','dex','achievements'];
+        const bookSheets={controls:0,quest:0,dex:0,achievements:0};
+        let bookContentSignature='',bookTurnUntil=0,bookBackdropReady=false,portraitQueue=[],portraitScheduled=false;
+        function bookHelpPages(){
+            return [
+                {title:'이동과 상호작용',rows:[['w','앞으로 이동'],['a','왼쪽으로 이동'],['s','뒤로 이동'],['d','오른쪽으로 이동'],['shift','달리기'],['e','대화 · 채집 · 배 승하차'],['r','배 조종 시작 / 종료']],
+                    text:'마우스를 움직여 주변을 둘러보세요.\n\n대상 가까이 가면 화면 아래에 사용할 키가 나타납니다. 상인과 의뢰 담당자는 서로 다른 NPC입니다.\n\nESC는 열린 창을 먼저 닫고, 게임 화면에서 한 번 더 누르면 메인 화면을 엽니다.'},
+                {title:'수첩과 장비',rows:[['tab','항해 수첩 열기 / 닫기'],['i','낚싯대 · 릴 · 찌 장착'],['m','휴대 레이더 확인'],['1','기본 떡밥'],['2','지렁이 미끼'],['3','새우 미끼'],['4','형광 오징어'],['5','전설의 루어']],
+                    text:'북마커로 조작법·의뢰·도감·도전과제를 고릅니다. 긴 내용은 아래 이전 장 / 다음 장 버튼으로 넘기세요.\n\n장비 창은 보유한 장비를 장착하는 곳입니다.\n\n레이더의 초록 점은 해금된 섬이며, 노란 점은 튜토리얼 목표입니다.'},
+                {title:'낚시와 잠수',rows:[[' ','잠수 상승'],['control','잠수 하강'],['v','잠수 장비로 귀환']],
+                    text:'마우스 왼쪽 버튼을 누르고 있다가 놓으면 찌를 던집니다. 입질 신호가 오면 클릭해 챔질하세요.\n\n힘겨루기에서는 누르면 노란 표시가 올라가고, 놓으면 내려갑니다. 초록 구역 안에 유지해 세로 진행 바를 채우세요.\n\n숨겨진 낚시터 30m 안에 찌를 던지면 현재 낚싯대의 3~5단계 어종이 반복해서 나옵니다. 힘겨루기는 조금 빨라집니다.'}
+            ];
+        }
+        function bookAchievementRows(){
             const entries=Object.values(fishDex),found=entries.filter(f=>f.caught>0).length,caught=entries.reduce((s,f)=>s+f.caught,0);
-            const goals=[
-                ['첫 손맛',caught,1,'새내기 낚시꾼'],['열 번의 입질',caught,10,'해변의 단골'],['백 번의 손맛',caught,100,'노련한 낚시꾼'],
+            return [['첫 손맛',caught,1,'새내기 낚시꾼'],['열 번의 입질',caught,10,'해변의 단골'],['백 번의 손맛',caught,100,'노련한 낚시꾼'],
                 ['바다의 기록',found,10,'생태 관찰자'],['물고기 연구가',found,30,'바다 연구가'],['완성된 도감',found,50,'해양 박물학자'],
                 ['새로운 해안',ISLAND_PROGRESS.filter(q=>q.visited).length,3,'탐험가'],['열 개의 발자취',ISLAND_PROGRESS.filter(q=>q.visited).length,10,'대항해사'],
                 ['든든한 선장',boatLevel,5,'숙련된 선장'],['큰 바다의 증인',Math.max(0,...entries.map(f=>f.maxLen||0)),1000,'거물 사냥꾼'],
-                ['생태 조사의 달인',ISLAND_PROGRESS.filter(q=>q.ecologyCompleted).length,10,'섬의 친구'],['해신의 시험',ISLAND_PROGRESS.filter(q=>q.completed).length,10,'용왕의 벗']
-            ];
-            const root=document.getElementById('book-achievements');root.replaceChildren();
-            for(const [title,value,target,reward] of goals){
-                const card=document.createElement('div');card.className='journal-achievement'+(value>=target?' complete':'');
-                const heading=document.createElement('strong');heading.textContent=(value>=target?'✓ ':value?'◔ ':'○ ')+title;
-                const progress=document.createElement('progress');progress.max=target;progress.value=Math.min(value,target);
-                const label=document.createElement('span');label.textContent=Math.min(value,target)+' / '+target+' · '+(value>=target?'획득 칭호: ':'칭호 보상: ')+reward;
-                card.append(heading,progress,label);root.append(card);
+                ['생태 조사의 달인',ISLAND_PROGRESS.filter(q=>q.ecologyCompleted).length,10,'섬의 친구'],['해신의 시험',ISLAND_PROGRESS.filter(q=>q.completed).length,10,'용왕의 벗']];
+        }
+        function bookSheetCount(){
+            if(bookPage==='controls')return bookHelpPages().length;
+            if(bookPage==='dex')return Math.ceil(FISH_SPECIES.length/6);
+            if(bookPage==='achievements')return Math.ceil(bookAchievementRows().length/4);
+            return Math.max(1,Math.ceil((getTrackedQuest()?.rows.length||0)/5));
+        }
+        function queuePortrait(species,angle,callback){
+            const key=species.name+':'+angle.toFixed(3);
+            if(dexPortraitCache.has(key)){callback(dexPortraitCache.get(key));return;}
+            portraitQueue.push({species,angle,key,callback,generation:dexRenderGeneration});
+            if(portraitScheduled)return;
+            portraitScheduled=true;
+            const run=()=>{
+                if(document.getElementById('dex-modal').style.display!=='block'||bookClosing||bookPage!=='dex'){portraitQueue=[];portraitScheduled=false;return;}
+                if(heldTools.bookProgress<.99||heldTools.isBusy||performance.now()<bookTurnUntil){setTimeout(run,140);return;}
+                const item=portraitQueue.shift();
+                if(item&&item.generation===dexRenderGeneration){
+                    try{const url=dexPortraitCache.get(item.key)||makeFishPortrait(item.species,item.angle);dexPortraitCache.set(item.key,url);item.callback(url);}catch{document.getElementById('dex-detail').textContent='미리보기를 준비하지 못했습니다. 다음에 다시 선택해 주세요.';}
+                }
+                if(portraitQueue.length)setTimeout(run,100);else portraitScheduled=false;
+            };
+            if(window.requestIdleCallback)window.requestIdleCallback(run,{timeout:900});else setTimeout(run,180);
+        }
+        function renderDexSheet(){
+            ++dexRenderGeneration;portraitQueue=[];
+            const list=document.getElementById('dex-list');list.replaceChildren();
+            const begin=bookSheets.dex*6,indices=FISH_SPECIES.slice(begin,begin+6).map((_,i)=>begin+i);
+            for(const index of indices){
+                const species=FISH_SPECIES[index],found=fishDex[species.name].caught>0;
+                const card=document.createElement('button');card.type='button';card.className='dex-card';card.disabled=!found;card.dataset.fishIndex=index;
+                card.setAttribute('aria-pressed','false');
+                const picture=document.createElement(found?'img':'span'),label=document.createElement('span');
+                if(found){picture.alt=species.name;queuePortrait(species,0,url=>{picture.src=url;});label.textContent=species.name;card.addEventListener('click',()=>selectDexFish(index));}
+                else{picture.className='unknown';picture.textContent='?';label.textContent='미발견';}
+                card.append(picture,label);list.append(card);
             }
+            const selected=indices.includes(dexSelectedIndex)&&fishDex[FISH_SPECIES[dexSelectedIndex].name].caught>0?dexSelectedIndex:indices.find(i=>fishDex[FISH_SPECIES[i].name].caught>0);
+            if(selected!==undefined)selectDexFish(selected);
+            else{dexSelectedIndex=null;document.getElementById('dex-portrait').removeAttribute('src');document.getElementById('dex-detail').textContent='이 장의 물고기는 아직 발견하지 못했어요.\n물고기를 잡으면 모습과 크기 기록을 확인할 수 있습니다.';}
+        }
+        function renderExplorerBook(force=false){
+            document.getElementById('book-records').textContent='소지금 '+playerMoney.toLocaleString()+' G\n항해 시간 '+formatPlayTime(playTimeSeconds);
+            const quest=getTrackedQuest(),goals=bookAchievementRows(),page=bookSheets[bookPage];
+            const signature=JSON.stringify([bookPage,page,quest,goals,gameSettings.bindings]);
+            if(!force&&signature===bookContentSignature)return;
+            bookContentSignature=signature;
+            const left=document.getElementById('book-controls'),quests=document.getElementById('book-quest'),achievements=document.getElementById('book-achievements'),dex=document.getElementById('dex-list'),explanation=document.getElementById('book-explanation'),preview=document.getElementById('dex-preview');
+            left.hidden=bookPage!=='controls';quests.hidden=bookPage!=='quest';achievements.hidden=bookPage!=='achievements';dex.hidden=bookPage!=='dex';preview.hidden=bookPage!=='dex';explanation.hidden=bookPage==='dex';
+            explanation.replaceChildren();document.getElementById('book-heading').textContent=['조작법','현재 의뢰','물고기 도감','도전과제'][bookSections.indexOf(bookPage)];
+            document.getElementById('book-discovery').textContent=bookPage==='dex'?Object.values(fishDex).filter(f=>f.caught>0).length+' / 50종 발견':'항해 일지';
+            if(bookPage==='controls'){
+                const help=bookHelpPages()[page];left.textContent=help.title+'\n\n'+help.rows.map(([key,label])=>keyLabel(key)+' · '+label).join('\n');
+                explanation.textContent=help.text;
+                if(page===0){const button=document.createElement('button');button.type='button';button.textContent=tutorialActive?'튜토리얼 계속하기':'튜토리얼 다시 시작';button.addEventListener('click',()=>{closeModals(true);showTutorial(true);});explanation.append(document.createElement('br'),button);}
+            }else if(bookPage==='quest'){
+                quests.textContent=quest?quest.title+'\n'+quest.island+'\n\n'+quest.rows.slice(page*5,page*5+5).map(row=>row.text).join('\n\n'):'진행 중인 의뢰가 없습니다.\n\n의뢰 담당자에게 다가가 '+keyLabel('e')+'로 말을 걸어보세요.';
+                explanation.textContent=quest?'의뢰 진행 안내\n\n'+adventure.status(quest.index).intro+'\n\n목표를 끝낸 뒤 의뢰 담당자에게 완료를 보고하세요. 상점의 판매와 의뢰 납품은 별개입니다.':'첫 항해 안내\n\n조작법 북마커의 첫 장에서 튜토리얼을 다시 시작할 수 있습니다.';
+            }else if(bookPage==='achievements'){
+                achievements.replaceChildren();
+                goals.slice(page*4,page*4+4).forEach(([title,value,target,reward],i)=>{
+                    const card=document.createElement('div');card.className='journal-achievement'+(value>=target?' complete':'');
+                    const heading=document.createElement('strong');heading.textContent=(value>=target?'✓ ':'○ ')+title;
+                    const progress=document.createElement('progress');progress.max=target;progress.value=Math.min(value,target);
+                    const label=document.createElement('div');label.textContent=Math.min(value,target)+' / '+target+'\n'+(value>=target?'획득 칭호: ':'칭호: ')+reward;
+                    card.append(heading,progress,label);(i<2?achievements:explanation).append(card);
+                });
+            }else renderDexSheet();
+            document.querySelectorAll('[data-book-page]').forEach(el=>{el.setAttribute('aria-selected',String(el.dataset.bookPage===bookPage));el.tabIndex=el.dataset.bookPage===bookPage?0:-1;});
+            document.getElementById('book-page-number').textContent=(page+1)+' / '+bookSheetCount();
+            document.getElementById('book-prev').disabled=page===0;document.getElementById('book-next').disabled=page>=bookSheetCount()-1;
+        }
+        function changeBookContents(apply,direction){
+            if(bookClosing||heldTools.bookProgress<.99||heldTools.isBusy||performance.now()<bookTurnUntil)return false;
+            if(!heldTools.flipPage(direction))return false;
+            bookTurnUntil=performance.now()+480;
+            const panel=document.getElementById('dex-modal');panel.classList.remove('page-turn');void panel.offsetWidth;panel.classList.add('page-turn');
+            clearTimeout(bookTurnTimer);bookTurnTimer=setTimeout(()=>{apply();renderExplorerBook(true);},180);
+            return true;
         }
         function selectBookPage(page,animate=true){
-            const pages=['controls','quest','dex','achievements'];if(!pages.includes(page))return;
-            const previous=pages.indexOf(bookPage);bookPage=page;
-            const apply=()=>{
-                document.querySelectorAll('[data-journal-page]').forEach(el=>el.hidden=el.dataset.journalPage!==page);
-                document.querySelectorAll('[data-book-page]').forEach(el=>{el.setAttribute('aria-selected',String(el.dataset.bookPage===page));el.tabIndex=el.dataset.bookPage===page?0:-1;});
-                document.getElementById('book-page-number').textContent='0'+(pages.indexOf(page)+1)+' / 04';
-            };
-            clearTimeout(bookTurnTimer);
-            if(animate&&heldTools.bookProgress>.94){
-                heldTools.flipPage(pages.indexOf(page)>=previous?1:-1);
-                const panel=document.getElementById('dex-modal');panel.classList.remove('page-turn');void panel.offsetWidth;panel.classList.add('page-turn');
-                bookTurnTimer=setTimeout(apply,180);
-            }else apply();
+            if(!bookSections.includes(page))return false;
+            if(!animate){bookPage=page;renderExplorerBook(true);return true;}
+            if(page===bookPage)return false;
+            const direction=bookSections.indexOf(page)>bookSections.indexOf(bookPage)?1:-1;
+            return changeBookContents(()=>{bookPage=page;},direction);
         }
+        function turnBookSheet(direction){
+            const next=bookSheets[bookPage]+direction;if(next<0||next>=bookSheetCount())return false;
+            return changeBookContents(()=>{bookSheets[bookPage]=next;},direction);
+        }
+        const prefersReducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
         function updateHeldTools(delta,elapsed,walking){
             const panel=document.getElementById('dex-modal'),bookOpen=panel.style.display==='block';
             const mode=menuOpen?'none':bookOpen&&!bookClosing?'book':radarVisible&&currentState===STATES.IDLE?'radar':'none';
-            heldTools.update(delta,elapsed,{mode,moving:walking?1:0,reducedMotion:window.matchMedia('(prefers-reduced-motion: reduce)').matches});
+            heldTools.update(delta,elapsed,{mode,moving:walking?1:0,reducedMotion:prefersReducedMotion.matches});
             heldTools.root.visible=!menuOpen;
             if(bookOpen){
-                const bounds=heldTools.getBookViewportBounds(),pad=.018;
-                panel.style.left=(bounds.left+pad)*100+'vw';panel.style.top=(bounds.top+pad)*100+'vh';
-                panel.style.width=(bounds.width-pad*2)*100+'vw';panel.style.height=(bounds.height-pad*2)*100+'vh';
-                panel.style.opacity=String(THREE.MathUtils.smoothstep(heldTools.bookProgress,.7,.98));
-                panel.style.pointerEvents=heldTools.bookProgress>.92&&!bookClosing?'auto':'none';
-                if(!bookClosing&&Math.floor(elapsed)!==updateHeldTools.lastRecord){renderExplorerBook();updateHeldTools.lastRecord=Math.floor(elapsed);}
+                const quads=heldTools.getBookPageQuads(),ready=heldTools.bookProgress>.99&&!bookClosing;
+                for(const side of ['left','right']){
+                    const leaf=document.getElementById('book-leaf-'+side),transform=window.BookProjectionHelper.bookQuadCssMatrix(quads[side],innerWidth,innerHeight);
+                    if(transform)leaf.style.transform=transform;leaf.style.visibility=transform?'visible':'hidden';leaf.style.pointerEvents=ready?'auto':'none';
+                }
+                const bounds=heldTools.getBookViewportBounds(),tabs=document.querySelector('.journal-tabs');
+                tabs.style.left=Math.min(innerWidth-100,(bounds.left+bounds.width)*innerWidth+5)+'px';
+                tabs.style.top=Math.max(100,bounds.top*innerHeight+80)+'px';tabs.style.pointerEvents=ready?'auto':'none';
+                panel.style.opacity=String(THREE.MathUtils.smoothstep(heldTools.bookProgress,.82,.99));
+                if(ready&&Math.floor(elapsed*2)!==updateHeldTools.lastRecord){renderExplorerBook();updateHeldTools.lastRecord=Math.floor(elapsed*2);}
+                if(ready&&!updateHeldTools.focused){document.querySelector('[data-book-page="'+bookPage+'"]').focus();updateHeldTools.focused=true;}
                 if(bookClosing&&heldTools.bookProgress===0&&!heldTools.isBusy)closeModals(true);
-            }
+            }else updateHeldTools.focused=false;
         }
         function renderVoyageScene(view){
             const bookOpen=heldTools.bookProgress>.5&&!menuOpen;
             if(bookOpen){
-                const width=Math.round(innerWidth*.45),height=Math.round(innerHeight*.45);
-                if(bookBackdrop.width!==width||bookBackdrop.height!==height){bookBackdrop.setSize(width,height);bookBackdropMaterial.uniforms.texel.value.set(1/width,1/height);}
-                renderer.setRenderTarget(bookBackdrop);renderer.render(scene,view);renderer.setRenderTarget(null);
+                const width=Math.min(800,Math.round(innerWidth*.4)),height=Math.round(width*innerHeight/innerWidth);
+                if(bookBackdrop.width!==width||bookBackdrop.height!==height){bookBackdrop.setSize(width,height);bookBackdropMaterial.uniforms.texel.value.set(1/width,1/height);bookBackdropReady=false;}
+                if(!bookBackdropReady){renderer.setRenderTarget(bookBackdrop);renderer.render(scene,view);renderer.setRenderTarget(null);bookBackdropReady=true;}
                 renderer.render(bookBackdropScene,bookBackdropCamera);
-            }else renderer.render(scene,view);
+            }else{bookBackdropReady=false;renderer.render(scene,view);}
             if(!menuOpen&&(heldTools.book.visible||heldTools.radar.visible)){
                 const background=scene.background;scene.background=null;renderer.autoClear=false;renderer.clearDepth();
                 camera.layers.set(1);renderer.render(scene,camera);camera.layers.set(0);
@@ -8060,7 +8839,7 @@ window.IslandRemodel = (() => {
         }
         function updateRadar(position){
             const canvas=document.getElementById('radar');
-            const visible=radarVisible&&!menuOpen&&currentState!==STATES.MODAL_OPEN&&!tutorialActive;
+            const visible=radarVisible&&!menuOpen&&currentState!==STATES.MODAL_OPEN;
             canvas.style.display='none';if(!visible)return;
             const c=canvas.getContext('2d'),radius=190,range=3600;c.fillStyle='#071c15';c.fillRect(0,0,440,440);c.save();c.translate(220,220);
             c.strokeStyle='#428765';c.lineWidth=1.5;
@@ -8074,6 +8853,11 @@ window.IslandRemodel = (() => {
                 const x=point.x*radius,z=point.z*radius;
                 c.fillStyle='#58f18b';c.beginPath();c.arc(x,z,point.index===currentIslandIndex?8:5,0,Math.PI*2);c.fill();
                 if(point.index===currentIslandIndex||point.index===compassTargetIslandIndex){c.fillStyle='#d5f8df';c.fillText(point.name,Math.max(-130,Math.min(130,x)),Math.max(-160,Math.min(170,z+23)));}
+            }
+            if(tutorialActive&&tutorialNavTarget){
+                const dx=tutorialNavTarget.x-position.x,dz=tutorialNavTarget.z-position.z,d=Math.hypot(dx,dz),scale=radius/Math.max(range,d);
+                c.fillStyle='#ffd369';c.beginPath();c.arc(dx*scale,dz*scale,6,0,Math.PI*2);c.fill();
+                c.fillText('안내 목표',Math.max(-130,Math.min(130,dx*scale)),Math.max(-160,Math.min(170,dz*scale-15)));
             }
             c.rotate(-yaw);c.fillStyle='#fff2b1';c.beginPath();c.moveTo(0,-12);c.lineTo(-7,7);c.lineTo(7,7);c.closePath();c.fill();c.restore();
             heldTools.markRadarDirty();
@@ -8091,6 +8875,7 @@ window.IslandRemodel = (() => {
             for(const [key,label,options] of fields){
                 const row=document.createElement('label'),select=document.createElement('select');row.className='graphics-row';row.textContent=label;
                 options.forEach(([value,text])=>{const option=document.createElement('option');option.value=String(value);option.textContent=text;select.append(option);});
+                select.disabled=key==='fps'&&gameSettings.syncDisplay;
                 select.value=String(graphics[key]);select.addEventListener('change',()=>{
                     graphics[key]=key==='auto'?select.value==='true':Number(select.value);adaptive.level=graphics.quality;adaptive.slow=adaptive.fast=0;adaptive.last=adaptive.draw=0;
                     try{localStorage.setItem('island-graphics-v1',JSON.stringify(graphics));}catch{menuMessage('그래픽 설정을 저장하지 못했습니다.');}
@@ -8170,14 +8955,22 @@ window.IslandRemodel = (() => {
         }
         function initializeVoyageUpdate(){
             document.querySelectorAll('[data-book-page]').forEach(button=>button.addEventListener('click',()=>selectBookPage(button.dataset.bookPage)));
+            document.getElementById('book-prev').addEventListener('click',()=>turnBookSheet(-1));
+            document.getElementById('book-next').addEventListener('click',()=>turnBookSheet(1));
+            document.getElementById('dex-modal').addEventListener('wheel',event=>event.preventDefault(),{passive:false});
             document.getElementById('dex-modal').addEventListener('keydown',event=>{
                 if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
-                event.preventDefault();const pages=['controls','quest','dex','achievements'];
-                selectBookPage(pages[(pages.indexOf(bookPage)+(event.key==='ArrowRight'?1:3))%4]);
-                document.querySelector('[data-book-page="'+bookPage+'"]').focus();
+                event.preventDefault();
+                if(event.target?.dataset.bookPage){const index=bookSections.indexOf(bookPage),next=bookSections[(index+(event.key==='ArrowRight'?1:3))%4];selectBookPage(next);}
+                else turnBookSheet(event.key==='ArrowRight'?1:-1);
             });
             document.getElementById('menu-patch').addEventListener('click',()=>menuPage('patch'));
-            const entries=[{version:'1.2.0',date:'2026-09-10',groups:{
+            const entries=[{version:'1.2.1',date:'2026-09-11',groups:{
+                '조작과 안내':['기본 F로 대화·채집·활동·배 승하차 통합','감도와 변경한 조작키를 게임·수첩·안내에 반영','첫 섬 완료와 출항까지 행동으로 배우는 튜토리얼 및 가까운 목표 길 안내','기본 조작키 안내 켜기·끄기와 위치 설정, 화면 주사율에 맞춤 옵션'],
+                '수첩':['실제 종이 위에 글자 정렬, 북마커별 이전 장·다음 장','책 열기 부하 감소, 같은 북마커 반복 넘김 방지','월드 시각 제거, 소지금·항해 시간 표시'],
+                '낚시와 탐험':['잠수 깊이와 조각 회수 판정 일치','의뢰별 소품 교체 및 오브젝트 위 상시 문구 제거','숨겨진 낚시터에서 현재 낚싯대의 3~5단계 어종 반복 출현, 힘겨루기 소폭 강화·일회성 보상 제거'],
+                '수정':['ESC로 열린 창 먼저 닫기','메뉴의 네모난 별 효과와 카메라 급회전 수정']}},
+                {version:'1.2.0',date:'2026-09-10',groups:{
                 '추가':['손으로 펼치는 항해 일지와 조작법·의뢰·도감·도전과제 북마커','손에 드는 레이더: M으로 확인, 해금된 섬만 표시','모든 섬의 해안 포말과 지역 구름, 화산의 경사면 용암'],
                 '개선':['섬별 나무·바위·지붕·랜드마크를 곡면 모델로 교체','화산섬의 검은 암석·탄 숲과 푸른 마을 구역','가로등·상점의 야간 주변 조명과 거리별 광원 처리'],
                 '수정':['섬 가장자리의 잘린 해저를 연속 지형으로 연결','상단 방향 화살표 제거, 항로 좌표는 휴대용 레이더로 이동','원형 지형 잘림과 반복 구름의 순간이동 제거']}},
@@ -8185,10 +8978,11 @@ window.IslandRemodel = (() => {
                 '추가':['탐험 수첩: 조작법, 현재 의뢰, 도감, 소지금과 플레이 시간','발견한 섬을 초록색 점으로 표시하는 레이더','프레임 제한, 그래픽 설정과 자동 최적화'],
                 '개선':['너무 먼 섬 숨김과 거리별 세부 표시','섬 접근 시 지형·상점·장식을 단계적으로 준비','장식의 구역별 렌더링과 화면 밖 시각 효과 계산 절약'],
                 '수정':['비·눈을 섬에 고정된 강수 영역으로 변경','낚시 게이지를 중앙 옆으로 이동하고 포획 진행도를 세로로 표시','초록 구역과 실제 판정 일치, 프레임 사이 겹친 시간 반영'],
-                '알려진 제한':['프레임은 기기 성능과 모니터 주사율에 따라 달라집니다.']}}];
+                '알려진 제한':['프레임은 기기 성능과 모니터 주사율에 따라 달라집니다.']}},
+                {version:'1.0.0',date:'2026-09-09',groups:{'개선':['같은 키에 여러 동작 지정','상시 조작 안내 숨김']}}];
             const root=document.getElementById('patch-entries');root.replaceChildren();
-            entries.forEach(entry=>{const title=document.createElement('h3');title.textContent='v'+entry.version+' · '+entry.date;root.append(title);
-                Object.entries(entry.groups).forEach(([name,items])=>{const heading=document.createElement('h4'),list=document.createElement('ul');heading.textContent=name;items.forEach(text=>{const li=document.createElement('li');li.textContent=text;list.append(li);});root.append(heading,list);});});
+            entries.forEach(entry=>{const details=document.createElement('details'),summary=document.createElement('summary'),title=document.createElement('span'),date=document.createElement('time');title.textContent='v'+entry.version;date.textContent=entry.date;date.dateTime=entry.date;summary.append(title,date);details.append(summary);
+                Object.entries(entry.groups).forEach(([name,items])=>{const visible=items.filter(text=>!/개발자|DEV|F10|7회/.test(text));if(!visible.length)return;const heading=document.createElement('h4'),list=document.createElement('ul');heading.textContent=name;visible.forEach(text=>{const li=document.createElement('li');li.textContent=text;list.append(li);});details.append(heading,list);});root.append(details);});
             document.getElementById('settings-reset').addEventListener('click',()=>{graphics={...GRAPHICS_DEFAULTS};adaptive.level=2;adaptive.applied='';try{localStorage.removeItem('island-graphics-v1');}catch{}renderGraphicsSettings();});
         }
 
@@ -8251,6 +9045,7 @@ window.IslandRemodel = (() => {
             requestAnimationFrame(animate);
             if(!shouldDrawFrame(timestamp))return;
             const delta = Math.min(clock.getDelta(), 0.1);
+            updateMouseLook(delta);
             const elapsed = clock.getElapsedTime();
             lastFrameElapsed=elapsed;
             updatePlayTime();
@@ -8356,7 +9151,7 @@ window.IslandRemodel = (() => {
                         if (keys.s) candidate.addScaledVector(forward, -boatSpeed * .5);
                         if (!isPointOnIsland(candidate.x, candidate.z, -3)) boatGroup.position.copy(candidate);
                         
-                        boatGroup.rotation.y = yachtYaw;
+                        yaw+=yachtYaw-boatGroup.rotation.y;boatGroup.rotation.y = yachtYaw;applyLookOrientation();
                         
                     } else if (isOnBoat && !isSittingOnSofa) {
                         
@@ -8453,7 +9248,7 @@ window.IslandRemodel = (() => {
                     targetHeight = terrainUnderPlayer;
                 }
                 targetHeight = Math.max(targetHeight, adventure?.walkHeight(player.position.x,player.position.z) ?? -Infinity);
-                player.position.y += (targetHeight + 1.8 - player.position.y) * (1-Math.exp(-12*delta));
+                if(!adventure?.diving)player.position.y += (targetHeight + 1.8 - player.position.y) * (1-Math.exp(-12*delta));
                 
             } else if (isOnBoat && !isDrivingBoat && !isSittingOnSofa && currentState === STATES.IDLE) {
                 const nearbyDock = getNearestDock(renderPos.x, renderPos.z);
@@ -8853,9 +9648,14 @@ window.IslandRemodel = (() => {
             const mistDensity = getIslandFogDensity(renderPos.x,renderPos.z,seaMist);
             scene.fog.density = isMapOverview ? 0 : mistDensity;
 
-            stars.visible = !isMapOverview;
+            stars.visible = !isMapOverview&&starsMat.opacity>.005;
             clouds.forEach(cloud => { cloud.visible = !isMapOverview; });
             updateAdventureFrame(delta);
+            updateTutorial(delta);
+            document.getElementById('controls-overlay').hidden=!gameSettings.showControls||menuOpen||currentState===STATES.MODAL_OPEN||tutorialActive;
+            if(!menuOpen&&currentState===STATES.IDLE&&!(isOnBoat&&!isDrivingBoat&&player.position.distanceTo(BOAT_HELM)<2.3)){
+                const target=interactionTarget(false);promptEl.style.display=target?'block':'none';if(target)promptEl.innerText='['+keyLabel('e')+'] '+target.label;
+            }
             if(!menuOpen&&promptEl.style.display==='block')promptEl.innerText=promptEl.innerText.replace(/\[([EFGR])\]/g,(_,key)=>'['+keyLabel(key.toLowerCase())+']');
             if(menuOpen){
                 if(voyageTransition)updateVoyageTransition(delta);
@@ -8869,6 +9669,7 @@ window.IslandRemodel = (() => {
                 moonMesh.position.copy(menuCamera.position).addScaledVector(sunDir,-1000);
             }
             sunMesh.visible=!isMapOverview&&sunMesh.position.y+40>0;
+            stars.position.copy(menuOpen?menuCamera.position:camera.getWorldPosition(effectPoint));
             moonMesh.visible=!isMapOverview&&moonMesh.position.y+30>0;
             updateRadar(renderPos);
             updateHeldTools(delta,elapsed,walking);
